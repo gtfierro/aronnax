@@ -1,6 +1,6 @@
-# JFSeb
+# Aronnax
 
-JFSeb is a document-based database that permits queries over the history of a
+Aronnax is a document-based database that permits queries over the history of a
 document (longitudinal) as well as normal relational queries. I would also like
 to support continuous views, in which query result sets are updated in
 real-time as the database applies changes to documents.
@@ -17,7 +17,7 @@ A `document` is identified by a UUID and consists of a bag of key/value pairs.
 Keys are variable-length strings, and values are most likely ints, flots or
 strings (maybe lists?).
 
-JFSeb stores `streams`. A `stream` is the history of the key/value pairs in the
+Aronnax stores `streams`. A `stream` is the history of the key/value pairs in the
 bag for a particular UUID. As such, a `document` at time `t` is the keys and
 values in the bag at time `t`. Over time, keys may have their values changed,
 or may be added (with a value) or removed from a document.
