@@ -53,37 +53,50 @@ at a time `t`, which default to "now". These queries return documents, keys and 
 * This query returns the unique set of UUIDs that matched the given predicate in the last day since the query was written.
     ```sql
     -- find all stream UUIDs that were in 410 Soda in the past day
-    select unique uuid where (Metadata/Location/Room = 410 and Metadata/Location/Building = Soda) in (now, now -1d);
+    select unique uuid where (Room = 410 and Building = Soda) in (now, now -1d);
     ```
 
 * On a modular sensor platform, the type of temperature sensor was changed from an SHT11 to an SHT13. We want to discover which motes
   had a sensor changed (assuming we know the time of the change)
     ```sql
-    select * where Metadata/Sensor/Model = 'SHT11' before 1447364866579373783 and Metadata/Sensor/Model = 'SHT13' after 1447364866579373783;
+    select * where Sensor/Model = 'SHT11' before 1447366661s and Sensor/Model = 'SHT13' after 1447366661s;
     ```
+
+    Note that the `s` in `1447366661s` indicates that the number is to be interpreted as a unix timestamp in seconds.
 
 Obviously, there are some new semantics that we would like to cover. `where` clauses need an additional qualification that identifies
 how the predicates are to be applied over time. These query semantics can be applied to a single clause, or a compound clause (using `and`
 or `or`):
 
-* `where key=val in <time range>`, e.g. `where Metadata/Loc/Room = 410 in (now, now -5min)`. True if the predicate was true *at any point*
+* `where key=val in <time range>`, e.g. `where Room = 410 in (now, now -5min)`. True if the predicate was true *at any point*
     within that time range.
-* `where key=val for <time range>`, e.g. `where Metadata/Loc/Room = 410 for (now, now -5min)`. True if the predicate is true *for the entire time range*.
-* `where key=val before <time>`, e.g. `where Metadata/Loc/Room = 410 before 1447366661s`. True if predicate true *at any time* before the given time.
+* `where key=val for <time range>`, e.g. `where Room = 410 for (now, now -5min)`. True if the predicate is true *for the entire time range*.
+* `where key=val before <time>`, e.g. `where Room = 410 before 1447366661s`. True if predicate true *at any time* before the given time.
 * `where key=value ibefore <time>`, e.g. `... ibefore 1447366661s`. True if the predicate is true in the most immediate edit before the given time.
-* `where key=val after <time>`, e.g. `where Metadata/Loc/Room = 410 after 1447366661s`. True if predicate true *at any time* after the given time.
+* `where key=val after <time>`, e.g. `where Room = 410 after 1447366661s`. True if predicate true *at any time* after the given time.
 * `where key=value iafater <time>`, e.g. `... iafter 1447366661s`. True if the predicate is true in the most immediate edit after the given time.
+
+Alternatively:
+
+* `in <time range>`
+* `for/during <time range>`
+* `before <time>`
+* `at <time>` (`ibefore`)
+* `since` (`after`)
+* `after` (`iafter`)
+
+Consider being able to select a special `@time` field on these queries, which will augment the results with the time they were fetched
+from.
 
 ---
 
 "Horizontal" queries operate across the historical values for a key in a document.
-These queries return times or ranges of times, augmented with keys or values.
-
-
+These queries return times or ranges of times, augmented with keys or values, and are useful for determining "when" something happened,
+and maybe some additional details about values at that time. The "vertical" queries assume there is knowledge about time.
 
 ## Data Structures
 
-Data  structure choice is going to be important here. Here are the influencing decisions,
+Data structure choice is going to be important here. Here are the influencing decisions,
 as determined by the queries we want to enable:
 
 * partial matches on strings in both keys and values
