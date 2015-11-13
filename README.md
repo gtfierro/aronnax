@@ -44,11 +44,11 @@ be much faster.
 
 ### Queries
 
-Want to enable two flavors of queries: vertical and horizontal (probably need better names?).
-
-"Vertical" queries behave like one would expect in a normal document database.
-These queries perform relational-type queries over all documents as they exist
-at a time `t`, which default to "now". These queries return documents, keys and values.
+"Vertical" queries behave like one would expect in a normal document database,
+but are indexed by when keys/values are added/removed/changed.  These queries
+are defined by special syntax in the `where` clause of a query, and perform
+relational-type queries over all documents as they exist at a time `t`, which
+default to "now". These queries return documents, keys and values.
 
 * This query returns the unique set of UUIDs that matched the given predicate in the last day since the query was written.
     ```sql
@@ -90,9 +90,12 @@ from.
 
 ---
 
-"Horizontal" queries operate across the historical values for a key in a document.
-These queries return times or ranges of times, augmented with keys or values, and are useful for determining "when" something happened,
-and maybe some additional details about values at that time. The "vertical" queries assume there is knowledge about time.
+"Horizontal" queries operate across the historical values for a key in a
+document, and are defined by special syntax in the `select` clause of a query.
+These queries return times or ranges of times, augmented with keys or values,
+and are useful for determining "when" something happened, and maybe some
+additional details about values at that time. The "vertical" queries assume
+there is knowledge about time, but the two types of queries can be mixed.
 
 ## Data Structures
 
