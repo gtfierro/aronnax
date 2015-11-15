@@ -1,2 +1,5 @@
 # lex/yacc output
 *.output
+
+# unforunately named binary
+sql/sql

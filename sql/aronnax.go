@@ -58,7 +58,6 @@ func newBackend(user, password, database string) *mysqlBackend {
 		if _, err = db.Exec(tableCreate); err != nil {
 			log.Fatal(err)
 		}
-
 	} else {
 		log.Println("Found table!")
 	}
