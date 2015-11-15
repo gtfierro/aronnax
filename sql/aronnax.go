@@ -14,6 +14,16 @@ type mysqlBackend struct {
 	db *sql.DB
 }
 
+var tableCreate = `
+CREATE TABLE data
+(
+    uuid CHAR(16) NOT NULL,
+    dkey VARCHAR(20) NOT NULL,
+    dval VARCHAR(20) NULL,
+    timestamp TIMESTAMP NOT NULL
+);
+`
+
 func newBackend(user, password, database string) *mysqlBackend {
 	var (
 		db     *sql.DB
@@ -45,7 +55,10 @@ func newBackend(user, password, database string) *mysqlBackend {
 
 	// if table not found, create it!
 	if !foundTable {
-		//result, err := db.Exec
+		if _, err = db.Exec(tableCreate); err != nil {
+			log.Fatal(err)
+		}
+
 	} else {
 		log.Println("Found table!")
 	}
