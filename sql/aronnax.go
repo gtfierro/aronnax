@@ -1,6 +1,8 @@
 package main
 
 import (
+	query "./lang"
+	"bufio"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
@@ -63,4 +65,16 @@ func main() {
 	dbname := os.Getenv("ARONNAXDB")
 	backend := newBackend(user, pass, dbname)
 	fmt.Println(backend)
+
+	fi := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Printf("aronnax> ")
+		s, err := fi.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
+		lex := query.NewQueryLexer(s)
+		query.QueryParse(lex)
+		fmt.Println("ERROR", lex.Err)
+	}
 }
