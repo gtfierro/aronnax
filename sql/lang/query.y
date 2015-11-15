@@ -10,10 +10,10 @@ import (
 
 %union{
 	str string
-    selectTerm  selectTerm
-    selectTermList  []selectTerm
-    whereTerm  whereTerm
-    whereTermList  []whereTerm
+    selectTerm  SelectTerm
+    selectTermList  []SelectTerm
+    whereTerm  WhereTerm
+    whereTermList  []WhereTerm
 }
 
 %token <str> SELECT DISTINCT WHERE
@@ -27,7 +27,7 @@ import (
 
 %type <selectTermList> selectTermList selectClause
 %type <selectTerm> selectTerm
-%type <whereTermList> whereClause
+%type <whereTermList> whereTermList whereClause
 %type <whereTerm> whereTerm
 
 %right EQ
@@ -36,7 +36,9 @@ import (
 
 query   :   selectClause    whereClause SEMICOLON
         {
-            //queryLex.(*queryLex).query.select
+            //QueryLex.(*QueryLex).query.select
+            Querylex.(*QueryLex).Query.Selects = $1
+            Querylex.(*QueryLex).Query.Wheres = $2
             fmt.Printf("Select: %v\n", $1)
             fmt.Printf("Where: %v\n", $2)
         }
@@ -44,48 +46,62 @@ query   :   selectClause    whereClause SEMICOLON
 
 selectClause    :   SELECT  selectTermList
                 {
+                    fmt.Println("select")
                     $$ = $2
                 }
                 ;
 
 selectTermList  :   selectTerm
                 {
-                    $$ = []selectTerm{$1}
+                    $$ = []SelectTerm{$1}
                 }
                 |   selectTerm  COMMA selectTermList
                 {
-                    $$ = append([]selectTerm{$1}, $3...)
+                    $$ = append([]SelectTerm{$1}, $3...)
                 }
                 ;
 
 selectTerm  :   LVALUE
             {
-                $$ = selectTerm{}
+                $$ = SelectTerm{Tag: $1}
             }
             ;
 
 
-whereClause :   WHERE   whereTerm
+whereClause :   WHERE   whereTermList
             {
-                $$ = []whereTerm{}
+                $$ = $2
             }
             ;
+
+whereTermList : whereTerm
+                {
+                    $$ = []WhereTerm{$1}
+                }
+              ;
+
+//whereTermList : whereTermList AND whereTermList
+//              | whereTermList OR whereTermList
+//              | NOT whereTermList
+//              | LPAREN whereTermList RPAREN
+//              | whereTerm
+//              ;
 
 whereTerm   : LVALUE LIKE QSTRING
             {
-                $$ = whereTerm{}
+                $$ = WhereTerm{Key: $1, Op: $2, Val: $3}
             }
             | LVALUE EQ QSTRING
             {
-                $$ = whereTerm{}
+                $$ = WhereTerm{Key: $1, Op: $2, Val: $3}
             }
             | LVALUE NEQ QSTRING
             {
-                $$ = whereTerm{}
+                $$ = WhereTerm{Key: $1, Op: $2, Val: $3}
             }
             | HAS LVALUE
             {
-                $$ = whereTerm{}
+                $$ = WhereTerm{Key: $2, Op: $1}
             }
             ;
 
@@ -99,18 +115,16 @@ var supported_formats = []string{"1/2/2006",
                                  "1/2/2006 15:04:05 MST",
                                  "1-2-2006 15:04:05 MST",
                                  "2006-1-2 15:04:05 MST"}
-type List []string
-
-type queryLex struct {
-    query   *query
+type QueryLex struct {
+    Query   *Query
     querystring   string
 	scanner *toki.Scanner
     lasttoken string
     tokens  []string
-    error   error
+    Err   error
 }
 
-func newQueryLexer(s string) *queryLex {
+func NewQueryLexer(s string) *QueryLex {
 	scanner := toki.NewScanner(
 		[]toki.Def{
 			{Token: WHERE, Pattern: "where"},
@@ -141,10 +155,10 @@ func newQueryLexer(s string) *queryLex {
 			{Token: QSTRING, Pattern: "(\"[^\"\\\\]*?(\\.[^\"\\\\]*?)*?\")|('[^'\\\\]*?(\\.[^'\\\\]*?)*?')"},
 		})
 	scanner.SetInput(s)
-	return &queryLex{querystring: s, scanner: scanner, error: nil, lasttoken: "", tokens: []string{}}
+	return &QueryLex{Query: &Query{}, querystring: s, scanner: scanner, Err: nil, lasttoken: "", tokens: []string{}}
 }
 
-func (lex *queryLex) Lex(lval *querySymType) int {
+func (lex *QueryLex) Lex(lval *QuerySymType) int {
 	r := lex.scanner.Next()
     lex.lasttoken = r.String()
 	if r.Pos.Line == 2 || len(r.Value) == 0 {
@@ -155,17 +169,15 @@ func (lex *queryLex) Lex(lval *querySymType) int {
 	return int(r.Token)
 }
 
-func (lex *queryLex) Error(s string) {
-    lex.error = fmt.Errorf(s)
+func (lex *QueryLex) Error(s string) {
+    lex.Err = fmt.Errorf(s)
 }
 
 func readline(fi *bufio.Reader) (string, bool) {
-	fmt.Printf("smap> ")
+	fmt.Printf("aronnax> ")
 	s, err := fi.ReadString('\n')
 	if err != nil {
 		return "", false
 	}
 	return s, true
 }
-
-//go:generate go tool yacc -o query.go -p query query.y

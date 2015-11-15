@@ -1,12 +1,17 @@
+//go:generate go tool yacc -o query.go -p Query query.y
 package query
 
-type query struct {
-	selects []selectTerm
-	wheres  []whereTerm
+type Query struct {
+	Selects []SelectTerm
+	Wheres  []WhereTerm
 }
 
-type selectTerm struct {
+type SelectTerm struct {
+	Tag string
 }
 
-type whereTerm struct {
+type WhereTerm struct {
+	Key string
+	Op  string
+	Val string
 }

@@ -11,13 +11,13 @@ import (
 )
 
 //line query.y:11
-type querySymType struct {
+type QuerySymType struct {
 	yys            int
 	str            string
-	selectTerm     selectTerm
-	selectTermList []selectTerm
-	whereTerm      whereTerm
-	whereTermList  []whereTerm
+	selectTerm     SelectTerm
+	selectTermList []SelectTerm
+	whereTerm      WhereTerm
+	whereTermList  []WhereTerm
 }
 
 const SELECT = 57346
@@ -47,7 +47,7 @@ const NEQ = 57369
 const COMMA = 57370
 const ALL = 57371
 
-var queryToknames = [...]string{
+var QueryToknames = [...]string{
 	"$end",
 	"error",
 	"$unk",
@@ -78,13 +78,13 @@ var queryToknames = [...]string{
 	"COMMA",
 	"ALL",
 }
-var queryStatenames = [...]string{}
+var QueryStatenames = [...]string{}
 
-const queryEofCode = 1
-const queryErrCode = 2
-const queryMaxDepth = 200
+const QueryEofCode = 1
+const QueryErrCode = 2
+const QueryMaxDepth = 200
 
-//line query.y:92
+//line query.y:108
 const eof = 0
 
 var supported_formats = []string{"1/2/2006",
@@ -95,18 +95,16 @@ var supported_formats = []string{"1/2/2006",
 	"1-2-2006 15:04:05 MST",
 	"2006-1-2 15:04:05 MST"}
 
-type List []string
-
-type queryLex struct {
-	query       *query
+type QueryLex struct {
+	Query       *Query
 	querystring string
 	scanner     *toki.Scanner
 	lasttoken   string
 	tokens      []string
-	error       error
+	Err         error
 }
 
-func newQueryLexer(s string) *queryLex {
+func NewQueryLexer(s string) *QueryLex {
 	scanner := toki.NewScanner(
 		[]toki.Def{
 			{Token: WHERE, Pattern: "where"},
@@ -137,10 +135,10 @@ func newQueryLexer(s string) *queryLex {
 			{Token: QSTRING, Pattern: "(\"[^\"\\\\]*?(\\.[^\"\\\\]*?)*?\")|('[^'\\\\]*?(\\.[^'\\\\]*?)*?')"},
 		})
 	scanner.SetInput(s)
-	return &queryLex{querystring: s, scanner: scanner, error: nil, lasttoken: "", tokens: []string{}}
+	return &QueryLex{Query: &Query{}, querystring: s, scanner: scanner, Err: nil, lasttoken: "", tokens: []string{}}
 }
 
-func (lex *queryLex) Lex(lval *querySymType) int {
+func (lex *QueryLex) Lex(lval *QuerySymType) int {
 	r := lex.scanner.Next()
 	lex.lasttoken = r.String()
 	if r.Pos.Line == 2 || len(r.Value) == 0 {
@@ -151,12 +149,12 @@ func (lex *queryLex) Lex(lval *querySymType) int {
 	return int(r.Token)
 }
 
-func (lex *queryLex) Error(s string) {
-	lex.error = fmt.Errorf(s)
+func (lex *QueryLex) Error(s string) {
+	lex.Err = fmt.Errorf(s)
 }
 
 func readline(fi *bufio.Reader) (string, bool) {
-	fmt.Printf("smap> ")
+	fmt.Printf("aronnax> ")
 	s, err := fi.ReadString('\n')
 	if err != nil {
 		return "", false
@@ -164,76 +162,74 @@ func readline(fi *bufio.Reader) (string, bool) {
 	return s, true
 }
 
-//go:generate go tool yacc -o query.go -p query query.y
-
 //line yacctab:1
-var queryExca = [...]int{
+var QueryExca = [...]int{
 	-1, 1,
 	1, -1,
 	-2, 0,
 }
 
-const queryNprod = 11
-const queryPrivate = 57344
+const QueryNprod = 12
+const QueryPrivate = 57344
 
-var queryTokenNames []string
-var queryStates []string
+var QueryTokenNames []string
+var QueryStates []string
 
-const queryLast = 21
+const QueryLast = 22
 
-var queryAct = [...]int{
+var QueryAct = [...]int{
 
-	14, 13, 9, 11, 8, 6, 12, 21, 20, 19,
-	17, 5, 3, 1, 10, 4, 7, 15, 16, 18,
-	2,
+	15, 14, 9, 12, 6, 22, 13, 21, 20, 8,
+	18, 5, 3, 1, 11, 4, 10, 16, 17, 19,
+	7, 2,
 }
-var queryPact = [...]int{
+var QueryPact = [...]int{
 
-	8, -1000, 5, -3, -23, -4, -1000, -27, -1000, -1000,
-	-1000, -9, 3, -3, 1, 0, -1, -1000, -1000, -1000,
-	-1000, -1000,
+	8, -1000, 5, 2, -23, -4, -1000, -27, -1000, -1000,
+	-1000, -1000, -9, 3, 2, 0, -1, -3, -1000, -1000,
+	-1000, -1000, -1000,
 }
-var queryPgo = [...]int{
+var QueryPgo = [...]int{
 
-	0, 5, 20, 16, 15, 14, 13,
+	0, 4, 21, 20, 16, 15, 14, 13,
 }
-var queryR1 = [...]int{
+var QueryR1 = [...]int{
 
-	0, 6, 2, 1, 1, 3, 4, 5, 5, 5,
-	5,
+	0, 7, 2, 1, 1, 3, 5, 4, 6, 6,
+	6, 6,
 }
-var queryR2 = [...]int{
+var QueryR2 = [...]int{
 
-	0, 3, 2, 1, 3, 1, 2, 3, 3, 3,
-	2,
+	0, 3, 2, 1, 3, 1, 2, 1, 3, 3,
+	3, 2,
 }
-var queryChk = [...]int{
+var QueryChk = [...]int{
 
-	-1000, -6, -2, 4, -4, 6, -1, -3, 7, 25,
-	-5, 7, 10, 28, 9, 26, 27, 7, -1, 8,
-	8, 8,
+	-1000, -7, -2, 4, -5, 6, -1, -3, 7, 25,
+	-4, -6, 7, 10, 28, 9, 26, 27, 7, -1,
+	8, 8, 8,
 }
-var queryDef = [...]int{
+var QueryDef = [...]int{
 
 	0, -2, 0, 0, 0, 0, 2, 3, 5, 1,
-	6, 0, 0, 0, 0, 0, 0, 10, 4, 7,
-	8, 9,
+	6, 7, 0, 0, 0, 0, 0, 0, 11, 4,
+	8, 9, 10,
 }
-var queryTok1 = [...]int{
+var QueryTok1 = [...]int{
 
 	1,
 }
-var queryTok2 = [...]int{
+var QueryTok2 = [...]int{
 
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 	12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
 	22, 23, 24, 25, 26, 27, 28, 29,
 }
-var queryTok3 = [...]int{
+var QueryTok3 = [...]int{
 	0,
 }
 
-var queryErrorMessages = [...]struct {
+var QueryErrorMessages = [...]struct {
 	state int
 	token int
 	msg   string
@@ -244,77 +240,77 @@ var queryErrorMessages = [...]struct {
 /*	parser for yacc output	*/
 
 var (
-	queryDebug        = 0
-	queryErrorVerbose = false
+	QueryDebug        = 0
+	QueryErrorVerbose = false
 )
 
-type queryLexer interface {
-	Lex(lval *querySymType) int
+type QueryLexer interface {
+	Lex(lval *QuerySymType) int
 	Error(s string)
 }
 
-type queryParser interface {
-	Parse(queryLexer) int
+type QueryParser interface {
+	Parse(QueryLexer) int
 	Lookahead() int
 }
 
-type queryParserImpl struct {
+type QueryParserImpl struct {
 	lookahead func() int
 }
 
-func (p *queryParserImpl) Lookahead() int {
+func (p *QueryParserImpl) Lookahead() int {
 	return p.lookahead()
 }
 
-func queryNewParser() queryParser {
-	p := &queryParserImpl{
+func QueryNewParser() QueryParser {
+	p := &QueryParserImpl{
 		lookahead: func() int { return -1 },
 	}
 	return p
 }
 
-const queryFlag = -1000
+const QueryFlag = -1000
 
-func queryTokname(c int) string {
-	if c >= 1 && c-1 < len(queryToknames) {
-		if queryToknames[c-1] != "" {
-			return queryToknames[c-1]
+func QueryTokname(c int) string {
+	if c >= 1 && c-1 < len(QueryToknames) {
+		if QueryToknames[c-1] != "" {
+			return QueryToknames[c-1]
 		}
 	}
 	return __yyfmt__.Sprintf("tok-%v", c)
 }
 
-func queryStatname(s int) string {
-	if s >= 0 && s < len(queryStatenames) {
-		if queryStatenames[s] != "" {
-			return queryStatenames[s]
+func QueryStatname(s int) string {
+	if s >= 0 && s < len(QueryStatenames) {
+		if QueryStatenames[s] != "" {
+			return QueryStatenames[s]
 		}
 	}
 	return __yyfmt__.Sprintf("state-%v", s)
 }
 
-func queryErrorMessage(state, lookAhead int) string {
+func QueryErrorMessage(state, lookAhead int) string {
 	const TOKSTART = 4
 
-	if !queryErrorVerbose {
+	if !QueryErrorVerbose {
 		return "syntax error"
 	}
 
-	for _, e := range queryErrorMessages {
+	for _, e := range QueryErrorMessages {
 		if e.state == state && e.token == lookAhead {
 			return "syntax error: " + e.msg
 		}
 	}
 
-	res := "syntax error: unexpected " + queryTokname(lookAhead)
+	res := "syntax error: unexpected " + QueryTokname(lookAhead)
 
 	// To match Bison, suggest at most four expected tokens.
 	expected := make([]int, 0, 4)
 
 	// Look for shiftable tokens.
-	base := queryPact[state]
-	for tok := TOKSTART; tok-1 < len(queryToknames); tok++ {
-		if n := base + tok; n >= 0 && n < queryLast && queryChk[queryAct[n]] == tok {
+	base := QueryPact[state]
+	for tok := TOKSTART; tok-1 < len(QueryToknames); tok++ {
+		if n := base + tok; n >= 0 && n < QueryLast && QueryChk[QueryAct[n]] == tok {
 			if len(expected) == cap(expected) {
 				return res
 			}
@@ -322,16 +318,16 @@ func queryErrorMessage(state, lookAhead int) string {
 		}
 	}
 
-	if queryDef[state] == -2 {
+	if QueryDef[state] == -2 {
 		i := 0
-		for queryExca[i] != -1 || queryExca[i+1] != state {
+		for QueryExca[i] != -1 || QueryExca[i+1] != state {
 			i += 2
 		}
 
 		// Look for tokens that we accept or reduce.
-		for i += 2; queryExca[i] >= 0; i += 2 {
-			tok := queryExca[i]
-			if tok < TOKSTART || queryExca[i+1] == 0 {
+		for i += 2; QueryExca[i] >= 0; i += 2 {
+			tok := QueryExca[i]
+			if tok < TOKSTART || QueryExca[i+1] == 0 {
 				continue
 			}
 			if len(expected) == cap(expected) {
@@ -341,7 +337,7 @@ func queryErrorMessage(state, lookAhead int) string {
 		}
 
 		// If the default action is to accept or reduce, give up.
-		if queryExca[i+1] != 0 {
+		if QueryExca[i+1] != 0 {
 			return res
 		}
 	}
@@ -352,72 +348,72 @@ func queryErrorMessage(state, lookAhead int) string {
 		} else {
 			res += " or "
 		}
-		res += queryTokname(tok)
+		res += QueryTokname(tok)
 	}
 	return res
 }
 
-func querylex1(lex queryLexer, lval *querySymType) (char, token int) {
+func Querylex1(lex QueryLexer, lval *QuerySymType) (char, token int) {
 	token = 0
 	char = lex.Lex(lval)
 	if char <= 0 {
-		token = queryTok1[0]
+		token = QueryTok1[0]
 		goto out
 	}
-	if char < len(queryTok1) {
-		token = queryTok1[char]
+	if char < len(QueryTok1) {
+		token = QueryTok1[char]
 		goto out
 	}
-	if char >= queryPrivate {
-		if char < queryPrivate+len(queryTok2) {
-			token = queryTok2[char-queryPrivate]
+	if char >= QueryPrivate {
+		if char < QueryPrivate+len(QueryTok2) {
+			token = QueryTok2[char-QueryPrivate]
 			goto out
 		}
 	}
-	for i := 0; i < len(queryTok3); i += 2 {
-		token = queryTok3[i+0]
+	for i := 0; i < len(QueryTok3); i += 2 {
+		token = QueryTok3[i+0]
 		if token == char {
-			token = queryTok3[i+1]
+			token = QueryTok3[i+1]
 			goto out
 		}
 	}
 
 out:
 	if token == 0 {
-		token = queryTok2[1] /* unknown char */
+		token = QueryTok2[1] /* unknown char */
 	}
-	if queryDebug >= 3 {
-		__yyfmt__.Printf("lex %s(%d)\n", queryTokname(token), uint(char))
+	if QueryDebug >= 3 {
+		__yyfmt__.Printf("lex %s(%d)\n", QueryTokname(token), uint(char))
 	}
 	return char, token
 }
 
-func queryParse(querylex queryLexer) int {
-	return queryNewParser().Parse(querylex)
+func QueryParse(Querylex QueryLexer) int {
+	return QueryNewParser().Parse(Querylex)
 }
 
-func (queryrcvr *queryParserImpl) Parse(querylex queryLexer) int {
-	var queryn int
-	var querylval querySymType
-	var queryVAL querySymType
-	var queryDollar []querySymType
-	_ = queryDollar // silence set and not used
-	queryS := make([]querySymType, queryMaxDepth)
+func (Queryrcvr *QueryParserImpl) Parse(Querylex QueryLexer) int {
+	var Queryn int
+	var Querylval QuerySymType
+	var QueryVAL QuerySymType
+	var QueryDollar []QuerySymType
+	_ = QueryDollar // silence set and not used
+	QueryS := make([]QuerySymType, QueryMaxDepth)
 
 	Nerrs := 0   /* number of errors */
 	Errflag := 0 /* error recovery flag */
-	querystate := 0
-	querychar := -1
-	querytoken := -1 // querychar translated into internal numbering
-	queryrcvr.lookahead = func() int { return querychar }
+	Querystate := 0
+	Querychar := -1
+	Querytoken := -1 // Querychar translated into internal numbering
+	Queryrcvr.lookahead = func() int { return Querychar }
 	defer func() {
 		// Make sure we report no lookahead when not parsing.
-		querystate = -1
-		querychar = -1
-		querytoken = -1
+		Querystate = -1
+		Querychar = -1
+		Querytoken = -1
 	}()
-	queryp := -1
-	goto querystack
+	Queryp := -1
+	goto Querystack
 
 ret0:
 	return 0
@@ -425,81 +421,81 @@ ret0:
 ret1:
 	return 1
 
-querystack:
+Querystack:
 	/* put a state and value onto the stack */
-	if queryDebug >= 4 {
-		__yyfmt__.Printf("char %v in %v\n", queryTokname(querytoken), queryStatname(querystate))
+	if QueryDebug >= 4 {
+		__yyfmt__.Printf("char %v in %v\n", QueryTokname(Querytoken), QueryStatname(Querystate))
 	}
 
-	queryp++
-	if queryp >= len(queryS) {
-		nyys := make([]querySymType, len(queryS)*2)
-		copy(nyys, queryS)
-		queryS = nyys
+	Queryp++
+	if Queryp >= len(QueryS) {
+		nyys := make([]QuerySymType, len(QueryS)*2)
+		copy(nyys, QueryS)
+		QueryS = nyys
 	}
-	queryS[queryp] = queryVAL
-	queryS[queryp].yys = querystate
+	QueryS[Queryp] = QueryVAL
+	QueryS[Queryp].yys = Querystate
 
-querynewstate:
-	queryn = queryPact[querystate]
-	if queryn <= queryFlag {
-		goto querydefault /* simple state */
+Querynewstate:
+	Queryn = QueryPact[Querystate]
+	if Queryn <= QueryFlag {
+		goto Querydefault /* simple state */
 	}
-	if querychar < 0 {
-		querychar, querytoken = querylex1(querylex, &querylval)
+	if Querychar < 0 {
+		Querychar, Querytoken = Querylex1(Querylex, &Querylval)
 	}
-	queryn += querytoken
-	if queryn < 0 || queryn >= queryLast {
-		goto querydefault
+	Queryn += Querytoken
+	if Queryn < 0 || Queryn >= QueryLast {
+		goto Querydefault
 	}
-	queryn = queryAct[queryn]
-	if queryChk[queryn] == querytoken { /* valid shift */
-		querychar = -1
-		querytoken = -1
-		queryVAL = querylval
-		querystate = queryn
+	Queryn = QueryAct[Queryn]
+	if QueryChk[Queryn] == Querytoken { /* valid shift */
+		Querychar = -1
+		Querytoken = -1
+		QueryVAL = Querylval
+		Querystate = Queryn
 		if Errflag > 0 {
 			Errflag--
 		}
-		goto querystack
+		goto Querystack
 	}
 
-querydefault:
+Querydefault:
 	/* default state action */
-	queryn = queryDef[querystate]
-	if queryn == -2 {
-		if querychar < 0 {
-			querychar, querytoken = querylex1(querylex, &querylval)
+	Queryn = QueryDef[Querystate]
+	if Queryn == -2 {
+		if Querychar < 0 {
+			Querychar, Querytoken = Querylex1(Querylex, &Querylval)
 		}
 
 		/* look through exception table */
 		xi := 0
 		for {
-			if queryExca[xi+0] == -1 && queryExca[xi+1] == querystate {
+			if QueryExca[xi+0] == -1 && QueryExca[xi+1] == Querystate {
 				break
 			}
 			xi += 2
 		}
 		for xi += 2; ; xi += 2 {
-			queryn = queryExca[xi+0]
-			if queryn < 0 || queryn == querytoken {
+			Queryn = QueryExca[xi+0]
+			if Queryn < 0 || Queryn == Querytoken {
 				break
 			}
 		}
-		queryn = queryExca[xi+1]
-		if queryn < 0 {
+		Queryn = QueryExca[xi+1]
+		if Queryn < 0 {
 			goto ret0
 		}
 	}
-	if queryn == 0 {
+	if Queryn == 0 {
 		/* error ... attempt to resume parsing */
 		switch Errflag {
 		case 0: /* brand new error */
-			querylex.Error(queryErrorMessage(querystate, querytoken))
+			Querylex.Error(QueryErrorMessage(Querystate, Querytoken))
 			Nerrs++
-			if queryDebug >= 1 {
-				__yyfmt__.Printf("%s", queryStatname(querystate))
-				__yyfmt__.Printf(" saw %s\n", queryTokname(querytoken))
+			if QueryDebug >= 1 {
+				__yyfmt__.Printf("%s", QueryStatname(Querystate))
+				__yyfmt__.Printf(" saw %s\n", QueryTokname(Querytoken))
 			}
 			fallthrough
 
@@ -507,134 +503,143 @@ querydefault:
 			Errflag = 3
 
 			/* find a state where "error" is a legal shift action */
-			for queryp >= 0 {
-				queryn = queryPact[queryS[queryp].yys] + queryErrCode
-				if queryn >= 0 && queryn < queryLast {
-					querystate = queryAct[queryn] /* simulate a shift of "error" */
-					if queryChk[querystate] == queryErrCode {
-						goto querystack
+			for Queryp >= 0 {
+				Queryn = QueryPact[QueryS[Queryp].yys] + QueryErrCode
+				if Queryn >= 0 && Queryn < QueryLast {
+					Querystate = QueryAct[Queryn] /* simulate a shift of "error" */
+					if QueryChk[Querystate] == QueryErrCode {
+						goto Querystack
 					}
 				}
 
 				/* the current p has no shift on "error", pop stack */
-				if queryDebug >= 2 {
-					__yyfmt__.Printf("error recovery pops state %d\n", queryS[queryp].yys)
+				if QueryDebug >= 2 {
+					__yyfmt__.Printf("error recovery pops state %d\n", QueryS[Queryp].yys)
 				}
-				queryp--
+				Queryp--
 			}
 			/* there is no state on the stack with an error shift ... abort */
 			goto ret1
 
 		case 3: /* no shift yet; clobber input char */
-			if queryDebug >= 2 {
-				__yyfmt__.Printf("error recovery discards %s\n", queryTokname(querytoken))
+			if QueryDebug >= 2 {
+				__yyfmt__.Printf("error recovery discards %s\n", QueryTokname(Querytoken))
 			}
-			if querytoken == queryEofCode {
+			if Querytoken == QueryEofCode {
 				goto ret1
 			}
-			querychar = -1
-			querytoken = -1
-			goto querynewstate /* try again in the same state */
+			Querychar = -1
+			Querytoken = -1
+			goto Querynewstate /* try again in the same state */
 		}
 	}
 
-	/* reduction by production queryn */
-	if queryDebug >= 2 {
-		__yyfmt__.Printf("reduce %v in:\n\t%v\n", queryn, queryStatname(querystate))
+	/* reduction by production Queryn */
+	if QueryDebug >= 2 {
+		__yyfmt__.Printf("reduce %v in:\n\t%v\n", Queryn, QueryStatname(Querystate))
 	}
 
-	querynt := queryn
-	querypt := queryp
-	_ = querypt // guard against "declared and not used"
+	Querynt := Queryn
+	Querypt := Queryp
+	_ = Querypt // guard against "declared and not used"
 
-	queryp -= queryR2[queryn]
-	// queryp is now the index of $0. Perform the default action. Iff the
+	Queryp -= QueryR2[Queryn]
+	// Queryp is now the index of $0. Perform the default action. Iff the
 	// reduced production is ε, $1 is possibly out of range.
-	if queryp+1 >= len(queryS) {
-		nyys := make([]querySymType, len(queryS)*2)
-		copy(nyys, queryS)
-		queryS = nyys
+	if Queryp+1 >= len(QueryS) {
+		nyys := make([]QuerySymType, len(QueryS)*2)
+		copy(nyys, QueryS)
+		QueryS = nyys
 	}
-	queryVAL = queryS[queryp+1]
+	QueryVAL = QueryS[Queryp+1]
 
 	/* consult goto table to find next state */
-	queryn = queryR1[queryn]
-	queryg := queryPgo[queryn]
-	queryj := queryg + queryS[queryp].yys + 1
+	Queryn = QueryR1[Queryn]
+	Queryg := QueryPgo[Queryn]
+	Queryj := Queryg + QueryS[Queryp].yys + 1
 
-	if queryj >= queryLast {
-		querystate = queryAct[queryg]
+	if Queryj >= QueryLast {
+		Querystate = QueryAct[Queryg]
 	} else {
-		querystate = queryAct[queryj]
-		if queryChk[querystate] != -queryn {
-			querystate = queryAct[queryg]
+		Querystate = QueryAct[Queryj]
+		if QueryChk[Querystate] != -Queryn {
+			Querystate = QueryAct[Queryg]
 		}
 	}
 	// dummy call; replaced with literal code
-	switch querynt {
+	switch Querynt {
 
 	case 1:
-		queryDollar = queryS[querypt-3 : querypt+1]
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
 		//line query.y:38
 		{
-			//queryLex.(*queryLex).query.select
-			fmt.Printf("Select: %v\n", queryDollar[1].selectTermList)
-			fmt.Printf("Where: %v\n", queryDollar[2].whereTermList)
+			//QueryLex.(*QueryLex).query.select
+			Querylex.(*QueryLex).Query.Selects = QueryDollar[1].selectTermList
+			Querylex.(*QueryLex).Query.Wheres = QueryDollar[2].whereTermList
+			fmt.Printf("Select: %v\n", QueryDollar[1].selectTermList)
+			fmt.Printf("Where: %v\n", QueryDollar[2].whereTermList)
 		}
 	case 2:
-		queryDollar = queryS[querypt-2 : querypt+1]
-		//line query.y:46
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		//line query.y:48
 		{
-			queryVAL.selectTermList = queryDollar[2].selectTermList
+			fmt.Println("select")
+			QueryVAL.selectTermList = QueryDollar[2].selectTermList
 		}
 	case 3:
-		queryDollar = queryS[querypt-1 : querypt+1]
-		//line query.y:52
+		QueryDollar = QueryS[Querypt-1 : Querypt+1]
+		//line query.y:55
 		{
-			queryVAL.selectTermList = []selectTerm{queryDollar[1].selectTerm}
+			QueryVAL.selectTermList = []SelectTerm{QueryDollar[1].selectTerm}
 		}
 	case 4:
-		queryDollar = queryS[querypt-3 : querypt+1]
-		//line query.y:56
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:59
 		{
-			queryVAL.selectTermList = append([]selectTerm{queryDollar[1].selectTerm}, queryDollar[3].selectTermList...)
+			QueryVAL.selectTermList = append([]SelectTerm{QueryDollar[1].selectTerm}, QueryDollar[3].selectTermList...)
 		}
 	case 5:
-		queryDollar = queryS[querypt-1 : querypt+1]
-		//line query.y:62
+		QueryDollar = QueryS[Querypt-1 : Querypt+1]
+		//line query.y:65
 		{
-			queryVAL.selectTerm = selectTerm{}
+			QueryVAL.selectTerm = SelectTerm{Tag: QueryDollar[1].str}
 		}
 	case 6:
-		queryDollar = queryS[querypt-2 : querypt+1]
-		//line query.y:69
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		//line query.y:72
 		{
-			queryVAL.whereTermList = []whereTerm{}
+			QueryVAL.whereTermList = QueryDollar[2].whereTermList
 		}
 	case 7:
-		queryDollar = queryS[querypt-3 : querypt+1]
-		//line query.y:75
+		QueryDollar = QueryS[Querypt-1 : Querypt+1]
+		//line query.y:78
 		{
-			queryVAL.whereTerm = whereTerm{}
+			QueryVAL.whereTermList = []WhereTerm{QueryDollar[1].whereTerm}
 		}
 	case 8:
-		queryDollar = queryS[querypt-3 : querypt+1]
-		//line query.y:79
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:91
 		{
-			queryVAL.whereTerm = whereTerm{}
+			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str}
 		}
 	case 9:
-		queryDollar = queryS[querypt-3 : querypt+1]
-		//line query.y:83
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:95
 		{
-			queryVAL.whereTerm = whereTerm{}
+			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str}
 		}
 	case 10:
-		queryDollar = queryS[querypt-2 : querypt+1]
-		//line query.y:87
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:99
 		{
-			queryVAL.whereTerm = whereTerm{}
+			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str}
+		}
+	case 11:
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		//line query.y:103
+		{
+			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[2].str, Op: QueryDollar[1].str}
 		}
 	}
-	goto querystack /* stack new state and value */
+	goto Querystack /* stack new state and value */
 }
