@@ -1,6 +1,10 @@
 //go:generate go tool yacc -o query.go -p Query query.y
 package query
 
+import (
+    "fmt"
+)
+
 type Query struct {
 	Selects []SelectTerm
 	Wheres  []WhereTerm
@@ -14,4 +18,13 @@ type WhereTerm struct {
 	Key string
 	Op  string
 	Val string
+}
+
+func (wt WhereTerm) ToSQL() string {
+    var s string
+    switch wt.Op {
+    case "=":
+        s = fmt.Sprintf(`data.dkey = "%s" and data.dval = %s`, wt.Key, wt.Val)
+    }
+    return s
 }

@@ -24,6 +24,17 @@ CREATE TABLE data
 );
 `
 
+var whereTemplate = `
+select data.uuid, data.dkey, data.dval
+from data
+inner join
+(
+    select distinct uuid, dkey, max(timestamp) as maxtime from data group by dkey order by timestamp desc
+) sorted
+on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+where data.dval is not null
+`
+
 func newBackend(user, password, database string) *mysqlBackend {
 	var (
 		db     *sql.DB
@@ -58,13 +69,7 @@ func newBackend(user, password, database string) *mysqlBackend {
 		if _, err = db.Exec(tableCreate); err != nil {
 			log.Fatal(err)
 		}
-	} else {
-		log.Println("Found table!")
 	}
-
-	fmt.Println(tables.Columns())
-	fmt.Println(tables.Next())
-	fmt.Println(tables.Err())
 
 	return &mysqlBackend{
 		db: db,
@@ -83,13 +88,22 @@ func (mbd *mysqlBackend) Insert(doc *Document) error {
 	return err
 }
 
-func main() {
-	user := os.Getenv("ARONNAXUSER")
-	pass := os.Getenv("ARONNAXPASS")
-	dbname := os.Getenv("ARONNAXDB")
-	backend := newBackend(user, pass, dbname)
-	fmt.Println(backend)
+func (mbd *mysqlBackend) Query(q *query.Query) *sql.Rows {
+	tosend := whereTemplate
+	// first, generate the where clause
+	for _, term := range q.Wheres {
+		fmt.Println("term", term, term.ToSQL())
+		tosend += "and " + term.ToSQL()
+	}
+	fmt.Println(tosend)
+	rows, err := mbd.db.Query(tosend)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return rows
+}
 
+func (mbd *mysqlBackend) StartInteractive() {
 	fi := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Printf("aronnax> ")
@@ -100,5 +114,34 @@ func main() {
 		lex := query.NewQueryLexer(s)
 		query.QueryParse(lex)
 		fmt.Println("ERROR", lex.Err)
+
+		rows := mbd.Query(lex.Query)
+		if cols, err := rows.Columns(); err != nil {
+			log.Fatal(err)
+		} else {
+			fmt.Println("cols: ", cols)
+		}
+
+		for rows.Next() {
+			var (
+				uuid string
+				key  string
+				val  string
+			)
+			if err := rows.Scan(&uuid, &key, &val); err != nil {
+				log.Fatal(err)
+			} else {
+				fmt.Printf("-> %s %s %s\n", uuid, key, val)
+			}
+		}
+
 	}
+}
+
+func main() {
+	user := os.Getenv("ARONNAXUSER")
+	pass := os.Getenv("ARONNAXPASS")
+	dbname := os.Getenv("ARONNAXDB")
+	backend := newBackend(user, pass, dbname)
+	backend.StartInteractive()
 }
