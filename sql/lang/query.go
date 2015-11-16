@@ -90,7 +90,8 @@ const QueryEofCode = 1
 const QueryErrCode = 2
 const QueryMaxDepth = 200
 
-//line query.y:203
+//line query.y:194
+
 const eof = 0
 
 var supported_formats = []string{"1/2/2006",
@@ -656,31 +657,31 @@ Querydefault:
 		}
 	case 11:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:102
+		//line query.y:95
 		{
 			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval LIKE %s`, QueryDollar[1].str, QueryDollar[3].str)}
 		}
 	case 12:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:106
+		//line query.y:99
 		{
 			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval = %s`, QueryDollar[1].str, QueryDollar[3].str)}
 		}
 	case 13:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:110
+		//line query.y:103
 		{
 			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval != %s`, QueryDollar[1].str, QueryDollar[3].str)}
 		}
 	case 14:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:114
+		//line query.y:107
 		{
 			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[2].str, Op: QueryDollar[1].str, SQL: fmt.Sprintf(`data.dkey = "%s"`, QueryDollar[1].str)}
 		}
 	case 15:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:118
+		//line query.y:111
 		{
 			QueryVAL.whereTerm = WhereTerm{SQL: fmt.Sprintf(`(%s)`, QueryDollar[2].whereClause.SQL)}
 		}

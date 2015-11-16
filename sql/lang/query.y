@@ -124,8 +124,6 @@ timeTerm    :   IN timerange
 timerange   :   LPAREN RPAREN
             ;
 
-//TODO: generate the mysql as we parse yacc!
-
 //TODO: fix this up
 //timeref		: abstime
 //			{
