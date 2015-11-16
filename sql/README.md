@@ -1,5 +1,15 @@
 SQL implementation to explore the semantics
 
+## Test User
+Unit tests should probably be run on a separate test database.
+
+```sql
+CREATE DATABASE aronnaxtest;
+CREATE USER 'aronnaxtest'@'%' IDENTIFIED BY 'aronnaxpass';
+GRANT ALL ON aronnaxtest.* TO 'aronnaxtest'@'%';
+FLUSH PRIVILEGES;
+```
+
 ## Schema
 
 We are using a single SQL table for now with the following columns:

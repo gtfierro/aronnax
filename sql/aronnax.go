@@ -71,6 +71,12 @@ func newBackend(user, password, database string) *mysqlBackend {
 	}
 }
 
+func (mbd *mysqlBackend) Insert(doc *Document) error {
+	result, err := mbd.db.Exec(doc.GenerateinsertStatement())
+	fmt.Println(result)
+	return err
+}
+
 func main() {
 	user := os.Getenv("ARONNAXUSER")
 	pass := os.Getenv("ARONNAXPASS")
