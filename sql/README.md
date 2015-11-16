@@ -28,3 +28,26 @@ CREATE TABLE data
     timestamp TIMESTAMP NOT NULL
 );
 ```
+
+## Queries
+
+To get the timestamp of the most recent change for each key, use
+
+```sql
+select distinct uuid, dkey, max(timestamp) from data group by dkey order by timestamp desc;
+```
+
+Then to get the actual values, we want
+
+```sql
+select data.uuid, data.dkey, data.dval
+from data
+inner join
+(
+    select distinct uuid, dkey, max(timestamp) as maxtime from data group by dkey order by timestamp desc
+) sorted
+on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+where data.dval is not null;
+```
+
+We should be able to augment these with appropriate where clauses for filtering on documents
