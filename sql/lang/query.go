@@ -8,9 +8,11 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/taylorchu/toki"
+	"strconv"
+	_time "time"
 )
 
-//line query.y:11
+//line query.y:13
 type QuerySymType struct {
 	yys            int
 	str            string
@@ -18,6 +20,8 @@ type QuerySymType struct {
 	selectTermList []SelectTerm
 	whereTerm      WhereTerm
 	whereClause    WhereClause
+	time           _time.Time
+	timediff       _time.Duration
 }
 
 const SELECT = 57346
@@ -90,8 +94,7 @@ const QueryEofCode = 1
 const QueryErrCode = 2
 const QueryMaxDepth = 200
 
-//line query.y:194
-
+//line query.y:267
 const eof = 0
 
 var supported_formats = []string{"1/2/2006",
@@ -179,61 +182,68 @@ var QueryExca = [...]int{
 	-2, 0,
 }
 
-const QueryNprod = 23
+const QueryNprod = 31
 const QueryPrivate = 57344
 
 var QueryTokenNames []string
 var QueryStates []string
 
-const QueryLast = 45
+const QueryLast = 55
 
 var QueryAct = [...]int{
 
-	27, 8, 23, 22, 25, 24, 19, 34, 16, 18,
-	20, 12, 21, 45, 13, 44, 35, 43, 4, 42,
-	28, 29, 9, 41, 30, 6, 11, 15, 14, 36,
-	37, 38, 39, 40, 26, 7, 2, 31, 17, 1,
-	10, 32, 33, 5, 3,
+	50, 27, 8, 23, 22, 25, 24, 19, 16, 40,
+	18, 20, 41, 21, 37, 51, 12, 9, 49, 13,
+	48, 28, 29, 35, 34, 4, 47, 46, 39, 26,
+	45, 11, 31, 14, 15, 53, 32, 33, 42, 43,
+	44, 52, 30, 6, 7, 2, 36, 17, 1, 38,
+	10, 5, 3, 0, 54,
 }
 var QueryPact = [...]int{
 
-	32, -1000, 18, 29, -1000, -30, -1000, 4, 18, -20,
-	-11, 4, -9, 17, 4, -1000, -1000, -1000, 4, 4,
-	-8, -8, -8, -8, -8, -8, -1000, 15, 11, 9,
-	-1000, -10, -1000, -1000, -1000, -12, -1000, -1000, -1000, -1000,
-	-1000, -1000, -1000, -1000, -1000, -1000,
+	41, -1000, 36, 38, -1000, -29, -1000, 9, 36, -20,
+	-10, 9, -8, 35, 9, -1000, -1000, -1000, 9, 9,
+	-1, -1, 1, 1, 1, 1, -1000, 22, 19, 18,
+	-1000, -5, -1000, -1000, -1000, -7, -1000, -1000, -12, 34,
+	-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
+	-1000, 28, -1000, -12, -1000,
 }
 var QueryPgo = [...]int{
 
-	0, 18, 44, 43, 22, 40, 39, 38, 7,
+	0, 25, 52, 51, 17, 50, 14, 49, 0, 48,
+	47, 24,
 }
 var QueryR1 = [...]int{
 
-	0, 6, 2, 1, 1, 3, 4, 4, 4, 4,
-	4, 5, 5, 5, 5, 5, 7, 7, 7, 7,
-	7, 7, 8,
+	0, 9, 2, 1, 1, 3, 4, 4, 4, 4,
+	4, 5, 5, 5, 5, 5, 10, 10, 10, 10,
+	10, 10, 11, 6, 6, 7, 7, 7, 7, 8,
+	8,
 }
 var QueryR2 = [...]int{
 
 	0, 5, 1, 1, 3, 1, 1, 2, 3, 3,
 	2, 3, 3, 3, 2, 3, 2, 2, 2, 2,
-	2, 2, 2,
+	2, 2, 2, 1, 2, 2, 1, 1, 1, 2,
+	3,
 }
 var QueryChk = [...]int{
 
-	-1000, -6, 4, -2, -1, -3, 7, 6, 31, -4,
-	-5, 22, 7, 10, 24, -1, 28, -7, 20, 17,
+	-1000, -9, 4, -2, -1, -3, 7, 6, 31, -4,
+	-5, 22, 7, 10, 24, -1, 28, -10, 20, 17,
 	21, 23, 14, 13, 16, 15, -4, 9, 29, 30,
-	7, -4, -4, -4, -8, 24, -8, -8, -8, -8,
-	-8, 8, 8, 8, 25, 25,
+	7, -4, -4, -4, -11, 24, -11, -6, -7, 27,
+	8, 11, -6, -6, -6, 8, 8, 8, 25, 25,
+	-8, 27, 7, 7, -8,
 }
 var QueryDef = [...]int{
 
 	0, -2, 0, 0, 2, 3, 5, 0, 0, 0,
 	6, 0, 0, 0, 0, 4, 1, 7, 0, 0,
 	0, 0, 0, 0, 0, 0, 10, 0, 0, 0,
-	14, 0, 8, 9, 16, 0, 17, 18, 19, 20,
-	21, 11, 12, 13, 15, 22,
+	14, 0, 8, 9, 16, 0, 17, 18, 23, 26,
+	27, 28, 19, 20, 21, 11, 12, 13, 15, 22,
+	24, 0, 25, 29, 30,
 }
 var QueryTok1 = [...]int{
 
@@ -592,7 +602,7 @@ Querydefault:
 
 	case 1:
 		QueryDollar = QueryS[Querypt-5 : Querypt+1]
-		//line query.y:38
+		//line query.y:45
 		{
 			//QueryLex.(*QueryLex).query.select
 			Querylex.(*QueryLex).Query.Selects = QueryDollar[2].selectTermList
@@ -602,88 +612,164 @@ Querydefault:
 		}
 	case 2:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:48
+		//line query.y:55
 		{
 			fmt.Println("select")
 			QueryVAL.selectTermList = QueryDollar[1].selectTermList
 		}
 	case 3:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:55
+		//line query.y:62
 		{
 			QueryVAL.selectTermList = []SelectTerm{QueryDollar[1].selectTerm}
 		}
 	case 4:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:59
+		//line query.y:66
 		{
 			QueryVAL.selectTermList = append([]SelectTerm{QueryDollar[1].selectTerm}, QueryDollar[3].selectTermList...)
 		}
 	case 5:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:65
+		//line query.y:72
 		{
 			QueryVAL.selectTerm = SelectTerm{Tag: QueryDollar[1].str}
 		}
 	case 6:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:72
+		//line query.y:79
 		{
 			QueryVAL.whereClause = WhereClause{SQL: QueryDollar[1].whereTerm.SQL}
 		}
 	case 7:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:76
+		//line query.y:83
 		{
 			QueryVAL.whereClause = WhereClause{SQL: QueryDollar[1].whereTerm.SQL}
 		}
 	case 8:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:80
+		//line query.y:87
 		{
 			QueryVAL.whereClause = WhereClause{SQL: fmt.Sprintf(`(%s) or (%s)`, QueryDollar[1].whereTerm.SQL, QueryDollar[3].whereClause.SQL)}
 		}
 	case 9:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:84
+		//line query.y:91
 		{
 			QueryVAL.whereClause = WhereClause{SQL: fmt.Sprintf(`(%s) and (%s)`, QueryDollar[1].whereTerm.SQL, QueryDollar[3].whereClause.SQL)}
 		}
 	case 10:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:88
+		//line query.y:95
 		{
 			QueryVAL.whereClause = WhereClause{SQL: fmt.Sprintf(`not (%s)`, QueryDollar[2].whereClause.SQL)}
 		}
 	case 11:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:95
+		//line query.y:102
 		{
 			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval LIKE %s`, QueryDollar[1].str, QueryDollar[3].str)}
 		}
 	case 12:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:99
+		//line query.y:106
 		{
 			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval = %s`, QueryDollar[1].str, QueryDollar[3].str)}
 		}
 	case 13:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:103
+		//line query.y:110
 		{
 			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval != %s`, QueryDollar[1].str, QueryDollar[3].str)}
 		}
 	case 14:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:107
+		//line query.y:114
 		{
 			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[2].str, Op: QueryDollar[1].str, SQL: fmt.Sprintf(`data.dkey = "%s"`, QueryDollar[1].str)}
 		}
 	case 15:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:111
+		//line query.y:118
 		{
 			QueryVAL.whereTerm = WhereTerm{SQL: fmt.Sprintf(`(%s)`, QueryDollar[2].whereClause.SQL)}
+		}
+	case 23:
+		QueryDollar = QueryS[Querypt-1 : Querypt+1]
+		//line query.y:135
+		{
+			QueryVAL.time = QueryDollar[1].time
+		}
+	case 24:
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		//line query.y:139
+		{
+			QueryVAL.time = QueryDollar[1].time.Add(QueryDollar[2].timediff)
+		}
+	case 25:
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		//line query.y:145
+		{
+			foundtime, err := parseAbsTime(QueryDollar[1].str, QueryDollar[2].str)
+			if err != nil {
+				Querylex.(*QueryLex).Error(fmt.Sprintf("Could not parse time \"%v %v\" (%v)", QueryDollar[1].str, QueryDollar[2].str, err.Error()))
+			}
+			QueryVAL.time = foundtime
+		}
+	case 26:
+		QueryDollar = QueryS[Querypt-1 : Querypt+1]
+		//line query.y:153
+		{
+			num, err := strconv.ParseInt(QueryDollar[1].str, 10, 64)
+			if err != nil {
+				Querylex.(*QueryLex).Error(fmt.Sprintf("Could not parse integer \"%v\" (%v)", QueryDollar[1].str, err.Error()))
+			}
+			QueryVAL.time = _time.Unix(num, 0)
+		}
+	case 27:
+		QueryDollar = QueryS[Querypt-1 : Querypt+1]
+		//line query.y:161
+		{
+			found := false
+			for _, format := range supported_formats {
+				t, err := _time.Parse(format, QueryDollar[1].str)
+				if err != nil {
+					continue
+				}
+				QueryVAL.time = t
+				found = true
+				break
+			}
+			if !found {
+				Querylex.(*QueryLex).Error(fmt.Sprintf("No time format matching \"%v\" found", QueryDollar[1].str))
+			}
+		}
+	case 28:
+		QueryDollar = QueryS[Querypt-1 : Querypt+1]
+		//line query.y:177
+		{
+			QueryVAL.time = _time.Now()
+		}
+	case 29:
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		//line query.y:183
+		{
+			var err error
+			QueryVAL.timediff, err = parseReltime(QueryDollar[1].str, QueryDollar[2].str)
+			if err != nil {
+				Querylex.(*QueryLex).Error(fmt.Sprintf("Error parsing relative time \"%v %v\" (%v)", QueryDollar[1].str, QueryDollar[2].str, err.Error()))
+			}
+		}
+	case 30:
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:191
+		{
+			newDuration, err := parseReltime(QueryDollar[1].str, QueryDollar[2].str)
+			if err != nil {
+				Querylex.(*QueryLex).Error(fmt.Sprintf("Error parsing relative time \"%v %v\" (%v)", QueryDollar[1].str, QueryDollar[2].str, err.Error()))
+			}
+			QueryVAL.timediff = addDurations(newDuration, QueryDollar[3].timediff)
 		}
 	}
 	goto Querystack /* stack new state and value */
