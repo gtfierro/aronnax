@@ -2,7 +2,7 @@
 package query
 
 import (
-    "fmt"
+	"fmt"
 )
 
 type Query struct {
@@ -21,10 +21,16 @@ type WhereTerm struct {
 }
 
 func (wt WhereTerm) ToSQL() string {
-    var s string
-    switch wt.Op {
-    case "=":
-        s = fmt.Sprintf(`data.dkey = "%s" and data.dval = %s`, wt.Key, wt.Val)
-    }
-    return s
+	var s string
+	switch wt.Op {
+	case "=":
+		s = fmt.Sprintf(`data.dkey = "%s" and data.dval = %s`, wt.Key, wt.Val)
+	case "!=":
+		s = fmt.Sprintf(`data.dkey = "%s" and data.dval != %s`, wt.Key, wt.Val)
+	case "has":
+		s = fmt.Sprintf(`data.dkey = "%s"`, wt.Key)
+	case "like":
+		s = fmt.Sprintf(`data.dkey = "%s" and data.dval LIKE %s`, wt.Key, wt.Val)
+	}
+	return s
 }
