@@ -12,6 +12,7 @@ func TestInsert(t *testing.T) {
 	dbname := os.Getenv("ARONNAXTESTDB")
 	backend := newBackend(user, pass, dbname)
 	uuid, _ := uuid.FromString("aa45f708-8be8-11e5-86ae-5cc5d4ded1ae")
+	backend.RemoveData()
 
 	for _, test := range []struct {
 		doc Document

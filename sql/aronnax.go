@@ -71,6 +71,12 @@ func newBackend(user, password, database string) *mysqlBackend {
 	}
 }
 
+// remove data from table
+func (mbd *mysqlBackend) RemoveData() error {
+	_, err := mbd.db.Exec("DELETE FROM data;")
+	return err
+}
+
 func (mbd *mysqlBackend) Insert(doc *Document) error {
 	result, err := mbd.db.Exec(doc.GenerateinsertStatement())
 	fmt.Println(result)
