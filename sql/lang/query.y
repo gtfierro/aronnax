@@ -18,7 +18,7 @@ import (
 
 %token <str> SELECT DISTINCT WHERE
 %token <str> LVALUE QSTRING LIKE HAS
-%token <str> NOW SET BEFORE AFTER AND AS TO OR IN NOT
+%token <str> NOW SET IBEFORE BEFORE IAFTER AFTER AND AS TO OR IN NOT FOR
 %token <str> LPAREN RPAREN NEWLINE
 %token NUMBER
 %token SEMICOLON
@@ -74,7 +74,7 @@ whereClause :   WHERE   whereTermList
             }
             ;
 
-whereTermList : whereTerm
+whereTermList : whereTerm timeTerm
                 {
                     $$ = []WhereTerm{$1}
                 }
@@ -105,6 +105,86 @@ whereTerm   : LVALUE LIKE QSTRING
             }
             ;
 
+timeTerm    :   IN timerange
+            |   FOR timerange
+            |   BEFORE timerange
+            |   IBEFORE timerange
+            |   AFTER timerange
+            |   IAFTER timerange
+            ;
+
+timerange   :   LPAREN RPAREN
+            ;
+
+//TODO: generate the mysql as we parse yacc!
+
+//TODO: fix this up
+//timeref		: abstime
+//			{
+//				$$ = $1
+//			}
+//			| abstime reltime
+//			{
+//                $$ = $1.Add($2)
+//			}
+//			;
+//
+//abstime		: NUMBER LVALUE
+//            {
+//                foundtime, err := parseAbsTime($1, $2)
+//                if err != nil {
+//				    SQlex.(*SQLex).Error(fmt.Sprintf("Could not parse time \"%v %v\" (%v)", $1, $2, err.Error()))
+//                }
+//                $$ = foundtime
+//            }
+//            | NUMBER
+//            {
+//                num, err := strconv.ParseInt($1, 10, 64)
+//                if err != nil {
+//				    SQlex.(*SQLex).Error(fmt.Sprintf("Could not parse integer \"%v\" (%v)", $1, err.Error()))
+//                }
+//                $$ = _time.Unix(num, 0)
+//            }
+//			| qstring
+//            {
+//                found := false
+//                for _, format := range supported_formats {
+//                    t, err := _time.Parse(format, $1)
+//                    if err != nil {
+//                        continue
+//                    }
+//                    $$ = t
+//                    found = true
+//                    break
+//                }
+//                if !found {
+//				    SQlex.(*SQLex).Error(fmt.Sprintf("No time format matching \"%v\" found", $1))
+//                }
+//            }
+//			| NOW
+//            {
+//                $$ = _time.Now()
+//            }
+//			;
+//
+//reltime		: NUMBER lvalue
+//            {
+//                var err error
+//                $$, err = parseReltime($1, $2)
+//                if err != nil {
+//				    SQlex.(*SQLex).Error(fmt.Sprintf("Error parsing relative time \"%v %v\" (%v)", $1, $2, err.Error()))
+//                }
+//            }
+//			| NUMBER lvalue reltime
+//            {
+//                newDuration, err := parseReltime($1, $2)
+//                if err != nil {
+//				    SQlex.(*SQLex).Error(fmt.Sprintf("Error parsing relative time \"%v %v\" (%v)", $1, $2, err.Error()))
+//                }
+//                $$ = addDurations(newDuration, $3)
+//            }
+//			;
+//
 %%
 
 const eof = 0
@@ -134,11 +214,14 @@ func NewQueryLexer(s string) *QueryLex {
 			{Token: NOW, Pattern: "now"},
 			{Token: SET, Pattern: "set"},
 			{Token: BEFORE, Pattern: "before"},
+			{Token: IBEFORE, Pattern: "ibefore"},
 			{Token: AFTER, Pattern: "after"},
+			{Token: IAFTER, Pattern: "iafter"},
 			{Token: COMMA, Pattern: ","},
 			{Token: AND, Pattern: "and"},
 			{Token: AS, Pattern: "as"},
 			{Token: TO, Pattern: "to"},
+			{Token: FOR, Pattern: "for"},
 			{Token: OR, Pattern: "or"},
 			{Token: IN, Pattern: "in"},
 			{Token: HAS, Pattern: "has"},

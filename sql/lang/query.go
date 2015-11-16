@@ -29,23 +29,26 @@ const LIKE = 57351
 const HAS = 57352
 const NOW = 57353
 const SET = 57354
-const BEFORE = 57355
-const AFTER = 57356
-const AND = 57357
-const AS = 57358
-const TO = 57359
-const OR = 57360
-const IN = 57361
-const NOT = 57362
-const LPAREN = 57363
-const RPAREN = 57364
-const NEWLINE = 57365
-const NUMBER = 57366
-const SEMICOLON = 57367
-const EQ = 57368
-const NEQ = 57369
-const COMMA = 57370
-const ALL = 57371
+const IBEFORE = 57355
+const BEFORE = 57356
+const IAFTER = 57357
+const AFTER = 57358
+const AND = 57359
+const AS = 57360
+const TO = 57361
+const OR = 57362
+const IN = 57363
+const NOT = 57364
+const FOR = 57365
+const LPAREN = 57366
+const RPAREN = 57367
+const NEWLINE = 57368
+const NUMBER = 57369
+const SEMICOLON = 57370
+const EQ = 57371
+const NEQ = 57372
+const COMMA = 57373
+const ALL = 57374
 
 var QueryToknames = [...]string{
 	"$end",
@@ -60,7 +63,9 @@ var QueryToknames = [...]string{
 	"HAS",
 	"NOW",
 	"SET",
+	"IBEFORE",
 	"BEFORE",
+	"IAFTER",
 	"AFTER",
 	"AND",
 	"AS",
@@ -68,6 +73,7 @@ var QueryToknames = [...]string{
 	"OR",
 	"IN",
 	"NOT",
+	"FOR",
 	"LPAREN",
 	"RPAREN",
 	"NEWLINE",
@@ -84,7 +90,7 @@ const QueryEofCode = 1
 const QueryErrCode = 2
 const QueryMaxDepth = 200
 
-//line query.y:108
+//line query.y:188
 const eof = 0
 
 var supported_formats = []string{"1/2/2006",
@@ -114,11 +120,14 @@ func NewQueryLexer(s string) *QueryLex {
 			{Token: NOW, Pattern: "now"},
 			{Token: SET, Pattern: "set"},
 			{Token: BEFORE, Pattern: "before"},
+			{Token: IBEFORE, Pattern: "ibefore"},
 			{Token: AFTER, Pattern: "after"},
+			{Token: IAFTER, Pattern: "iafter"},
 			{Token: COMMA, Pattern: ","},
 			{Token: AND, Pattern: "and"},
 			{Token: AS, Pattern: "as"},
 			{Token: TO, Pattern: "to"},
+			{Token: FOR, Pattern: "for"},
 			{Token: OR, Pattern: "or"},
 			{Token: IN, Pattern: "in"},
 			{Token: HAS, Pattern: "has"},
@@ -169,51 +178,55 @@ var QueryExca = [...]int{
 	-2, 0,
 }
 
-const QueryNprod = 12
+const QueryNprod = 19
 const QueryPrivate = 57344
 
 var QueryTokenNames []string
 var QueryStates []string
 
-const QueryLast = 22
+const QueryLast = 37
 
 var QueryAct = [...]int{
 
-	15, 14, 9, 12, 6, 22, 13, 21, 20, 8,
-	18, 5, 3, 1, 11, 4, 10, 16, 17, 19,
-	7, 2,
+	22, 14, 19, 18, 21, 20, 9, 27, 37, 28,
+	16, 12, 17, 36, 13, 6, 35, 34, 8, 25,
+	23, 24, 5, 3, 15, 29, 30, 31, 32, 33,
+	26, 1, 11, 4, 10, 7, 2,
 }
 var QueryPact = [...]int{
 
-	8, -1000, 5, 2, -23, -4, -1000, -27, -1000, -1000,
-	-1000, -1000, -9, 3, 2, 0, -1, -3, -1000, -1000,
-	-1000, -1000, -1000,
+	19, -1000, 16, 11, -22, 4, -1000, -30, -1000, -1000,
+	-1000, -11, -9, 12, 11, -1000, -15, -15, -15, -15,
+	-15, -15, 9, 8, 5, -1000, -1000, -1000, -17, -1000,
+	-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
 }
 var QueryPgo = [...]int{
 
-	0, 4, 21, 20, 16, 15, 14, 13,
+	0, 15, 36, 35, 34, 33, 32, 31, 24, 7,
 }
 var QueryR1 = [...]int{
 
 	0, 7, 2, 1, 1, 3, 5, 4, 6, 6,
-	6, 6,
+	6, 6, 8, 8, 8, 8, 8, 8, 9,
 }
 var QueryR2 = [...]int{
 
-	0, 3, 2, 1, 3, 1, 2, 1, 3, 3,
-	3, 2,
+	0, 3, 2, 1, 3, 1, 2, 2, 3, 3,
+	3, 2, 2, 2, 2, 2, 2, 2, 2,
 }
 var QueryChk = [...]int{
 
-	-1000, -7, -2, 4, -5, 6, -1, -3, 7, 25,
-	-4, -6, 7, 10, 28, 9, 26, 27, 7, -1,
-	8, 8, 8,
+	-1000, -7, -2, 4, -5, 6, -1, -3, 7, 28,
+	-4, -6, 7, 10, 31, -8, 21, 23, 14, 13,
+	16, 15, 9, 29, 30, 7, -1, -9, 24, -9,
+	-9, -9, -9, -9, 8, 8, 8, 25,
 }
 var QueryDef = [...]int{
 
 	0, -2, 0, 0, 0, 0, 2, 3, 5, 1,
-	6, 7, 0, 0, 0, 0, 0, 0, 11, 4,
-	8, 9, 10,
+	6, 0, 0, 0, 0, 7, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 11, 4, 12, 0, 13,
+	14, 15, 16, 17, 8, 9, 10, 18,
 }
 var QueryTok1 = [...]int{
 
@@ -223,7 +236,8 @@ var QueryTok2 = [...]int{
 
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 	12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-	22, 23, 24, 25, 26, 27, 28, 29,
+	22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+	32,
 }
 var QueryTok3 = [...]int{
 	0,
@@ -611,7 +625,7 @@ Querydefault:
 			QueryVAL.whereTermList = QueryDollar[2].whereTermList
 		}
 	case 7:
-		QueryDollar = QueryS[Querypt-1 : Querypt+1]
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
 		//line query.y:78
 		{
 			QueryVAL.whereTermList = []WhereTerm{QueryDollar[1].whereTerm}
