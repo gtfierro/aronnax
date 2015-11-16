@@ -17,10 +17,10 @@ type mysqlBackend struct {
 var tableCreate = `
 CREATE TABLE data
 (
-    uuid CHAR(16) NOT NULL,
+    uuid CHAR(37) NOT NULL,
     dkey VARCHAR(20) NOT NULL,
     dval VARCHAR(20) NULL,
-    timestamp TIMESTAMP NOT NULL
+    timestamp TIMESTAMP(6) NOT NULL
 );
 `
 
