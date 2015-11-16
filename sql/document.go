@@ -19,3 +19,14 @@ func (doc *Document) GenerateinsertStatement() string {
 	s = s[:len(s)-1]
 	return s + ";"
 }
+
+// Generate the VALUES input ("uuid","key","val") for the purposes
+// of checking w/ unit tests. This is because we don't get guaranteed
+// iteration order w/ maps (our tags field)
+func (doc *Document) GenerateValues() []string {
+	var ret []string
+	for key, val := range doc.Tags {
+		ret = append(ret, fmt.Sprintf(`("%s", "%s", "%s")`, doc.UUID.String(), key, val))
+	}
+	return ret
+}
