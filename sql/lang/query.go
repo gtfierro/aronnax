@@ -17,7 +17,7 @@ type QuerySymType struct {
 	selectTerm     SelectTerm
 	selectTermList []SelectTerm
 	whereTerm      WhereTerm
-	whereTermList  []WhereTerm
+	whereClause    WhereClause
 }
 
 const SELECT = 57346
@@ -90,7 +90,7 @@ const QueryEofCode = 1
 const QueryErrCode = 2
 const QueryMaxDepth = 200
 
-//line query.y:188
+//line query.y:203
 const eof = 0
 
 var supported_formats = []string{"1/2/2006",
@@ -178,55 +178,61 @@ var QueryExca = [...]int{
 	-2, 0,
 }
 
-const QueryNprod = 19
+const QueryNprod = 23
 const QueryPrivate = 57344
 
 var QueryTokenNames []string
 var QueryStates []string
 
-const QueryLast = 37
+const QueryLast = 45
 
 var QueryAct = [...]int{
 
-	22, 14, 19, 18, 21, 20, 9, 27, 37, 28,
-	16, 12, 17, 36, 13, 6, 35, 34, 8, 25,
-	23, 24, 5, 3, 15, 29, 30, 31, 32, 33,
-	26, 1, 11, 4, 10, 7, 2,
+	27, 8, 23, 22, 25, 24, 19, 34, 16, 18,
+	20, 12, 21, 45, 13, 44, 35, 43, 4, 42,
+	28, 29, 9, 41, 30, 6, 11, 15, 14, 36,
+	37, 38, 39, 40, 26, 7, 2, 31, 17, 1,
+	10, 32, 33, 5, 3,
 }
 var QueryPact = [...]int{
 
-	19, -1000, 16, 11, -22, 4, -1000, -30, -1000, -1000,
-	-1000, -11, -9, 12, 11, -1000, -15, -15, -15, -15,
-	-15, -15, 9, 8, 5, -1000, -1000, -1000, -17, -1000,
-	-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
+	32, -1000, 18, 29, -1000, -30, -1000, 4, 18, -20,
+	-11, 4, -9, 17, 4, -1000, -1000, -1000, 4, 4,
+	-8, -8, -8, -8, -8, -8, -1000, 15, 11, 9,
+	-1000, -10, -1000, -1000, -1000, -12, -1000, -1000, -1000, -1000,
+	-1000, -1000, -1000, -1000, -1000, -1000,
 }
 var QueryPgo = [...]int{
 
-	0, 15, 36, 35, 34, 33, 32, 31, 24, 7,
+	0, 18, 44, 43, 22, 40, 39, 38, 7,
 }
 var QueryR1 = [...]int{
 
-	0, 7, 2, 1, 1, 3, 5, 4, 6, 6,
-	6, 6, 8, 8, 8, 8, 8, 8, 9,
+	0, 6, 2, 1, 1, 3, 4, 4, 4, 4,
+	4, 5, 5, 5, 5, 5, 7, 7, 7, 7,
+	7, 7, 8,
 }
 var QueryR2 = [...]int{
 
-	0, 3, 2, 1, 3, 1, 2, 2, 3, 3,
-	3, 2, 2, 2, 2, 2, 2, 2, 2,
+	0, 5, 1, 1, 3, 1, 1, 2, 3, 3,
+	2, 3, 3, 3, 2, 3, 2, 2, 2, 2,
+	2, 2, 2,
 }
 var QueryChk = [...]int{
 
-	-1000, -7, -2, 4, -5, 6, -1, -3, 7, 28,
-	-4, -6, 7, 10, 31, -8, 21, 23, 14, 13,
-	16, 15, 9, 29, 30, 7, -1, -9, 24, -9,
-	-9, -9, -9, -9, 8, 8, 8, 25,
+	-1000, -6, 4, -2, -1, -3, 7, 6, 31, -4,
+	-5, 22, 7, 10, 24, -1, 28, -7, 20, 17,
+	21, 23, 14, 13, 16, 15, -4, 9, 29, 30,
+	7, -4, -4, -4, -8, 24, -8, -8, -8, -8,
+	-8, 8, 8, 8, 25, 25,
 }
 var QueryDef = [...]int{
 
-	0, -2, 0, 0, 0, 0, 2, 3, 5, 1,
-	6, 0, 0, 0, 0, 7, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 11, 4, 12, 0, 13,
-	14, 15, 16, 17, 8, 9, 10, 18,
+	0, -2, 0, 0, 2, 3, 5, 0, 0, 0,
+	6, 0, 0, 0, 0, 4, 1, 7, 0, 0,
+	0, 0, 0, 0, 0, 0, 10, 0, 0, 0,
+	14, 0, 8, 9, 16, 0, 17, 18, 19, 20,
+	21, 11, 12, 13, 15, 22,
 }
 var QueryTok1 = [...]int{
 
@@ -584,21 +590,21 @@ Querydefault:
 	switch Querynt {
 
 	case 1:
-		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		QueryDollar = QueryS[Querypt-5 : Querypt+1]
 		//line query.y:38
 		{
 			//QueryLex.(*QueryLex).query.select
-			Querylex.(*QueryLex).Query.Selects = QueryDollar[1].selectTermList
-			Querylex.(*QueryLex).Query.Wheres = QueryDollar[2].whereTermList
-			fmt.Printf("Select: %v\n", QueryDollar[1].selectTermList)
-			fmt.Printf("Where: %v\n", QueryDollar[2].whereTermList)
+			Querylex.(*QueryLex).Query.Selects = QueryDollar[2].selectTermList
+			Querylex.(*QueryLex).Query.Wheres = QueryDollar[4].whereClause
+			fmt.Printf("Select: %v\n", QueryDollar[1].str)
+			fmt.Printf("Where: %v\n", QueryDollar[2].selectTermList)
 		}
 	case 2:
-		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		QueryDollar = QueryS[Querypt-1 : Querypt+1]
 		//line query.y:48
 		{
 			fmt.Println("select")
-			QueryVAL.selectTermList = QueryDollar[2].selectTermList
+			QueryVAL.selectTermList = QueryDollar[1].selectTermList
 		}
 	case 3:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
@@ -619,40 +625,64 @@ Querydefault:
 			QueryVAL.selectTerm = SelectTerm{Tag: QueryDollar[1].str}
 		}
 	case 6:
-		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		QueryDollar = QueryS[Querypt-1 : Querypt+1]
 		//line query.y:72
 		{
-			QueryVAL.whereTermList = QueryDollar[2].whereTermList
+			QueryVAL.whereClause = WhereClause{SQL: QueryDollar[1].whereTerm.SQL}
 		}
 	case 7:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:78
+		//line query.y:76
 		{
-			QueryVAL.whereTermList = []WhereTerm{QueryDollar[1].whereTerm}
+			QueryVAL.whereClause = WhereClause{SQL: QueryDollar[1].whereTerm.SQL}
 		}
 	case 8:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:91
+		//line query.y:80
 		{
-			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str}
+			QueryVAL.whereClause = WhereClause{SQL: fmt.Sprintf(`(%s) or (%s)`, QueryDollar[1].whereTerm.SQL, QueryDollar[3].whereClause.SQL)}
 		}
 	case 9:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:95
+		//line query.y:84
 		{
-			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str}
+			QueryVAL.whereClause = WhereClause{SQL: fmt.Sprintf(`(%s) and (%s)`, QueryDollar[1].whereTerm.SQL, QueryDollar[3].whereClause.SQL)}
 		}
 	case 10:
-		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:99
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		//line query.y:88
 		{
-			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str}
+			QueryVAL.whereClause = WhereClause{SQL: fmt.Sprintf(`not (%s)`, QueryDollar[2].whereClause.SQL)}
 		}
 	case 11:
-		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:103
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:102
 		{
-			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[2].str, Op: QueryDollar[1].str}
+			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval LIKE %s`, QueryDollar[1].str, QueryDollar[3].str)}
+		}
+	case 12:
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:106
+		{
+			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval = %s`, QueryDollar[1].str, QueryDollar[3].str)}
+		}
+	case 13:
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:110
+		{
+			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval != %s`, QueryDollar[1].str, QueryDollar[3].str)}
+		}
+	case 14:
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		//line query.y:114
+		{
+			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[2].str, Op: QueryDollar[1].str, SQL: fmt.Sprintf(`data.dkey = "%s"`, QueryDollar[1].str)}
+		}
+	case 15:
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:118
+		{
+			QueryVAL.whereTerm = WhereTerm{SQL: fmt.Sprintf(`(%s)`, QueryDollar[2].whereClause.SQL)}
 		}
 	}
 	goto Querystack /* stack new state and value */

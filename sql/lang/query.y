@@ -13,7 +13,7 @@ import (
     selectTerm  SelectTerm
     selectTermList  []SelectTerm
     whereTerm  WhereTerm
-    whereTermList  []WhereTerm
+    whereClause  WhereClause
 }
 
 %token <str> SELECT DISTINCT WHERE
@@ -27,27 +27,27 @@ import (
 
 %type <selectTermList> selectTermList selectClause
 %type <selectTerm> selectTerm
-%type <whereTermList> whereTermList whereClause
+%type <whereClause> whereClause
 %type <whereTerm> whereTerm
 
 %right EQ
 
 %%
 
-query   :   selectClause    whereClause SEMICOLON
+query   :   SELECT selectClause WHERE whereClause SEMICOLON
         {
             //QueryLex.(*QueryLex).query.select
-            Querylex.(*QueryLex).Query.Selects = $1
-            Querylex.(*QueryLex).Query.Wheres = $2
+            Querylex.(*QueryLex).Query.Selects = $2
+            Querylex.(*QueryLex).Query.Wheres = $4
             fmt.Printf("Select: %v\n", $1)
             fmt.Printf("Where: %v\n", $2)
         }
         ;
 
-selectClause    :   SELECT  selectTermList
+selectClause    :   selectTermList
                 {
                     fmt.Println("select")
-                    $$ = $2
+                    $$ = $1
                 }
                 ;
 
@@ -68,40 +68,48 @@ selectTerm  :   LVALUE
             ;
 
 
-whereClause :   WHERE   whereTermList
+whereClause :   whereTerm
             {
-                $$ = $2
+                $$ = WhereClause{SQL: $1.SQL}
+            }
+            |   whereTerm timeTerm
+            {
+                $$ = WhereClause{SQL: $1.SQL}
+            }
+            |   whereTerm OR whereClause
+            {
+                $$ = WhereClause{SQL: fmt.Sprintf(`(%s) or (%s)`, $1.SQL, $3.SQL)}
+            }
+            |   whereTerm AND whereClause
+            {
+                $$ = WhereClause{SQL: fmt.Sprintf(`(%s) and (%s)`, $1.SQL, $3.SQL)}
+            }
+            |   NOT whereClause
+            {
+                $$ = WhereClause{SQL: fmt.Sprintf(`not (%s)`, $2.SQL)}
             }
             ;
 
-whereTermList : whereTerm timeTerm
-                {
-                    $$ = []WhereTerm{$1}
-                }
-              ;
-
-//whereTermList : whereTermList AND whereTermList
-//              | whereTermList OR whereTermList
-//              | NOT whereTermList
-//              | LPAREN whereTermList RPAREN
-//              | whereTerm
-//              ;
 
 whereTerm   : LVALUE LIKE QSTRING
             {
-                $$ = WhereTerm{Key: $1, Op: $2, Val: $3}
+                $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval LIKE %s`, $1, $3)}
             }
             | LVALUE EQ QSTRING
             {
-                $$ = WhereTerm{Key: $1, Op: $2, Val: $3}
+                $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval = %s`, $1, $3)}
             }
             | LVALUE NEQ QSTRING
             {
-                $$ = WhereTerm{Key: $1, Op: $2, Val: $3}
+                $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval != %s`, $1, $3)}
             }
             | HAS LVALUE
             {
-                $$ = WhereTerm{Key: $2, Op: $1}
+                $$ = WhereTerm{Key: $2, Op: $1, SQL: fmt.Sprintf(`data.dkey = "%s"`, $1)}
+            }
+            | LPAREN whereClause RPAREN
+            {
+                $$ = WhereTerm{SQL: fmt.Sprintf(`(%s)`, $2.SQL)}
             }
             ;
 

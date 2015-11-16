@@ -7,7 +7,8 @@ import (
 
 type Query struct {
 	Selects []SelectTerm
-	Wheres  []WhereTerm
+	Wheres  WhereClause
+	SQL     string
 }
 
 type SelectTerm struct {
@@ -18,6 +19,11 @@ type WhereTerm struct {
 	Key string
 	Op  string
 	Val string
+	SQL string
+}
+
+type WhereClause struct {
+	SQL string
 }
 
 func (wt WhereTerm) ToSQL() string {

@@ -90,11 +90,7 @@ func (mbd *mysqlBackend) Insert(doc *Document) error {
 
 func (mbd *mysqlBackend) Query(q *query.Query) *sql.Rows {
 	tosend := whereTemplate
-	// first, generate the where clause
-	for _, term := range q.Wheres {
-		fmt.Println("term", term, term.ToSQL())
-		tosend += "and " + term.ToSQL()
-	}
+	tosend += "and " + q.Wheres.SQL
 	fmt.Println(tosend)
 	rows, err := mbd.db.Query(tosend)
 	if err != nil {
