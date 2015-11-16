@@ -10,6 +10,13 @@ GRANT ALL ON aronnaxtest.* TO 'aronnaxtest'@'%';
 FLUSH PRIVILEGES;
 ```
 
+## Test the REPL
+
+```bash
+go build
+ARONNAXUSER=aronnaxtest ARONNAXPASS=aronnaxpass ARONNAXDB=aronnaxtest rlwrap ./sql
+```
+
 ## Schema
 
 We are using a single SQL table for now with the following columns:
