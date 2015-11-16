@@ -14,7 +14,12 @@ type Document struct {
 func (doc *Document) GenerateinsertStatement() string {
 	var s = "INSERT INTO data (uuid, dkey, dval) VALUES "
 	for key, val := range doc.Tags {
-		s += fmt.Sprintf(`("%s", "%s", "%s"),`, doc.UUID.String(), key, val)
+		if len(val) == 0 {
+			val = "NULL"
+		} else {
+			val = `"` + val + `"`
+		}
+		s += fmt.Sprintf(`("%s", "%s", %s),`, doc.UUID.String(), key, val)
 	}
 	s = s[:len(s)-1]
 	return s + ";"
@@ -26,7 +31,12 @@ func (doc *Document) GenerateinsertStatement() string {
 func (doc *Document) GenerateValues() []string {
 	var ret []string
 	for key, val := range doc.Tags {
-		ret = append(ret, fmt.Sprintf(`("%s", "%s", "%s")`, doc.UUID.String(), key, val))
+		if len(val) == 0 {
+			val = "NULL"
+		} else {
+			val = `"` + val + `"`
+		}
+		ret = append(ret, fmt.Sprintf(`("%s", "%s", %s)`, doc.UUID.String(), key, val))
 	}
 	return ret
 }

@@ -15,6 +15,10 @@ func TestGenerateDocumentInsert(t *testing.T) {
 			Document{UUID: uuid, Tags: map[string]string{"key1": "val1", "key2": "val2"}},
 			[]string{`("aa45f708-8be8-11e5-86ae-5cc5d4ded1ae", "key1", "val1")`, `("aa45f708-8be8-11e5-86ae-5cc5d4ded1ae", "key2", "val2")`},
 		},
+		{
+			Document{UUID: uuid, Tags: map[string]string{"key1": ""}},
+			[]string{`("aa45f708-8be8-11e5-86ae-5cc5d4ded1ae", "key1", NULL)`},
+		},
 	} {
 		generatedValues := test.doc.GenerateValues()
 		var found bool

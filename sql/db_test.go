@@ -22,6 +22,10 @@ func TestInsert(t *testing.T) {
 			Document{UUID: uuid, Tags: map[string]string{"key1": "val1", "key2": "val2"}},
 			true,
 		},
+		{
+			Document{UUID: uuid, Tags: map[string]string{"key1": ""}},
+			true,
+		},
 	} {
 		if err := backend.Insert(&test.doc); test.ok != (err == nil) {
 			t.Errorf("Insert test failed: Expected err? %v Err: %v", test.ok, err)
