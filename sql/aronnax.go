@@ -25,14 +25,27 @@ CREATE TABLE data
 `
 
 var whereTemplate = `
-select data.uuid, data.dkey, data.dval
-from data
-inner join
-(
-    select distinct uuid, dkey, max(timestamp) as maxtime from data group by dkey, uuid order by timestamp desc
-) sorted
-on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-where data.dval is not null
+select second.uuid, second.dkey, second.dval
+from (
+   select data.uuid, data.dkey, data.dval
+   from data
+   inner join
+   (
+        select distinct uuid, dkey, max(timestamp) as maxtime from data group by dkey, uuid order by timestamp desc
+   ) sorted
+   on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+   where data.dval is not null
+) as second
+where
+uuid in (
+    select distinct data.uuid
+    from data
+    inner join
+    (
+        select distinct uuid, dkey, max(timestamp) as maxtime from data group by dkey, uuid order by timestamp desc
+    ) sorted
+    on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+    where data.dval is not null
 `
 
 func newBackend(user, password, database string) *mysqlBackend {
@@ -93,6 +106,7 @@ func (mbd *mysqlBackend) Query(q *query.Query) *sql.Rows {
 	if q.Wheres.SQL != "" {
 		tosend += "and " + q.Wheres.SQL
 	}
+	tosend += ")"
 	fmt.Println(tosend)
 	rows, err := mbd.db.Query(tosend)
 	if err != nil {
