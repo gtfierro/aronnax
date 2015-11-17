@@ -75,6 +75,10 @@ selectTerm  :   LVALUE
             {
                 $$ = SelectTerm{Tag: $1}
             }
+            |   ALL
+            {
+                $$ = SelectTerm{Tag: $1}
+            }
             ;
 
 
@@ -103,19 +107,35 @@ whereClause :   whereTerm
 
 whereTerm   : LVALUE LIKE QSTRING
             {
-                $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval LIKE %s`, $1, $3)}
+                if $1 == "uuid" {
+                    $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.uuid LIKE %s`, $3)}
+                } else {
+                    $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval LIKE %s`, $1, $3)}
+                }
             }
             | LVALUE EQ QSTRING
             {
-                $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval = %s`, $1, $3)}
+                if $1 == "uuid" {
+                    $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.uuid = %s`, $3)}
+                } else {
+                    $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval = %s`, $1, $3)}
+                }
             }
             | LVALUE NEQ QSTRING
             {
-                $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval != %s`, $1, $3)}
+                if $1 == "uuid" {
+                    $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.uuid != %s`, $3)}
+                } else {
+                    $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval != %s`, $1, $3)}
+                }
             }
             | HAS LVALUE
             {
-                $$ = WhereTerm{Key: $2, Op: $1, SQL: fmt.Sprintf(`data.dkey = "%s"`, $2)}
+                if $2 == "uuid" {
+                    $$ = WhereTerm{Key: $1, Op: $1, SQL: `data.uuid is not null`}
+                } else {
+                    $$ = WhereTerm{Key: $2, Op: $1, SQL: fmt.Sprintf(`data.dkey = "%s"`, $2)}
+                }
             }
             | LPAREN whereClause RPAREN
             {
