@@ -686,7 +686,7 @@ Querydefault:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
 		//line query.y:113
 		{
-			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[2].str, Op: QueryDollar[1].str, SQL: fmt.Sprintf(`data.dkey = "%s"`, QueryDollar[1].str)}
+			QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[2].str, Op: QueryDollar[1].str, SQL: fmt.Sprintf(`data.dkey = "%s"`, QueryDollar[2].str)}
 		}
 	case 15:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]

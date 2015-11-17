@@ -111,7 +111,7 @@ whereTerm	: LVALUE LIKE QSTRING
 			}
 			| HAS LVALUE
 			{
-				$$ = WhereTerm{Key: $2, Op: $1, SQL: fmt.Sprintf(`data.dkey = "%s"`, $1)}
+				$$ = WhereTerm{Key: $2, Op: $1, SQL: fmt.Sprintf(`data.dkey = "%s"`, $2)}
 			}
 			| LPAREN whereClause RPAREN
 			{
