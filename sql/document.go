@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/satori/go.uuid"
 )
@@ -39,4 +41,42 @@ func (doc *Document) GenerateValues() []string {
 		ret = append(ret, fmt.Sprintf(`("%s", "%s", %s)`, doc.UUID.String(), key, val))
 	}
 	return ret
+}
+
+func (doc *Document) PrettyString() string {
+	if b, err := json.MarshalIndent(doc, "", "  "); err != nil {
+		return fmt.Sprintf("ERROR FORMATTING (%v) %v", err, doc)
+	} else {
+		return string(b)
+	}
+}
+
+// Generate a list of documents from the results of a SQL query
+func DocsFromRows(rows *sql.Rows) ([]*Document, error) {
+	var (
+		uniqueDocs = map[string]*Document{}
+		docs       = []*Document{}
+	)
+	for rows.Next() {
+		var (
+			duuid string
+			dkey  string
+			dval  string
+		)
+		if err := rows.Scan(&duuid, &dkey, &dval); err != nil {
+			return docs, err
+		}
+		if doc, found := uniqueDocs[duuid]; found {
+			doc.Tags[dkey] = dval
+		} else {
+			parsedUUID, err := uuid.FromString(duuid)
+			if err != nil {
+				return docs, err
+			}
+			doc = &Document{UUID: parsedUUID, Tags: map[string]string{dkey: dval}}
+			uniqueDocs[duuid] = doc
+			docs = append(docs, doc)
+		}
+	}
+	return docs, nil
 }

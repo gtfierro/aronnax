@@ -90,7 +90,9 @@ func (mbd *mysqlBackend) Insert(doc *Document) error {
 
 func (mbd *mysqlBackend) Query(q *query.Query) *sql.Rows {
 	tosend := whereTemplate
-	tosend += "and " + q.Wheres.SQL
+	if q.Wheres.SQL != "" {
+		tosend += "and " + q.Wheres.SQL
+	}
 	fmt.Println(tosend)
 	rows, err := mbd.db.Query(tosend)
 	if err != nil {
@@ -118,18 +120,26 @@ func (mbd *mysqlBackend) StartInteractive() {
 			fmt.Println("cols: ", cols)
 		}
 
-		for rows.Next() {
-			var (
-				uuid string
-				key  string
-				val  string
-			)
-			if err := rows.Scan(&uuid, &key, &val); err != nil {
-				log.Fatal(err)
-			} else {
-				fmt.Printf("-> %s %s %s\n", uuid, key, val)
+		if docs, err := DocsFromRows(rows); err != nil {
+			log.Fatal(err)
+		} else {
+			for _, doc := range docs {
+				fmt.Println(doc.PrettyString())
 			}
 		}
+
+		//for rows.Next() {
+		//	var (
+		//		uuid string
+		//		key  string
+		//		val  string
+		//	)
+		//	if err := rows.Scan(&uuid, &key, &val); err != nil {
+		//		log.Fatal(err)
+		//	} else {
+		//		fmt.Printf("-> %s %s %s\n", uuid, key, val)
+		//	}
+		//}
 
 	}
 }
