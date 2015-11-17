@@ -128,12 +128,6 @@ func (mbd *mysqlBackend) StartInteractive() {
 		fmt.Println("ERROR", lex.Err)
 
 		rows := mbd.Query(lex.Query)
-		if cols, err := rows.Columns(); err != nil {
-			log.Fatal(err)
-		} else {
-			fmt.Println("cols: ", cols)
-		}
-
 		if docs, err := DocsFromRows(rows); err != nil {
 			log.Fatal(err)
 		} else {
