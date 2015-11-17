@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/satori/go.uuid"
 	"log"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -97,4 +99,53 @@ func TestInsert(t *testing.T) {
 			t.Errorf("Insert test failed: Expected err? %v Err: %v", test.ok, err)
 		}
 	}
+}
+
+// these tests run over the documents inserted in TestMain setup
+func TestRecentDocument(t *testing.T) {
+	user := os.Getenv("ARONNAXTESTUSER")
+	pass := os.Getenv("ARONNAXTESTPASS")
+	dbname := os.Getenv("ARONNAXTESTDB")
+	backend := newBackend(user, pass, dbname)
+	uuid1, _ := uuid.FromString("2b365d6a-8cbd-11e5-8bb3-0cc47a0f7eea")
+	//uuid2, _ := uuid.FromString("370dd17c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	//uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
+	//uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
+	//uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
+
+	for _, test := range []struct {
+		uuid string
+		doc  Document
+	}{
+		{
+			uuid1.String(),
+			Document{UUID: uuid1,
+				Tags: map[string]string{
+					"Location/City":            "Berkeley",
+					"Location/Building":        "Soda",
+					"Location/Floor":           "4",
+					"Location/Room":            "411",
+					"Properties/Timezone":      "America/Los_Angeles",
+					"Properties/ReadingType":   "double",
+					"Properties/UnitofMeasure": "F",
+					"Properties/UnitofTime":    "ms",
+					"Properties/StreamType":    "numeric",
+					"Metadata/Point/Type":      "Sensor",
+					"Metadata/Point/Sensor":    "Temperature",
+					"Metadata/Exposure":        "South",
+				},
+			},
+		},
+	} {
+		query := fmt.Sprintf("select * where uuid = '%s';", test.uuid)
+		if docs, err := DocsFromRows(backend.Eval(backend.Parse(query))); err != nil {
+			t.Errorf("Query failed! %v", err)
+		} else if len(docs) != 1 {
+			t.Errorf("Only expected one doc! Got %v", len(docs))
+		} else if !reflect.DeepEqual(test.doc, *(docs[0])) {
+			t.Errorf("Does not match expected. Got\n%v\nwanted\n%v\n", docs[0], test.doc)
+		}
+
+	}
+
 }
