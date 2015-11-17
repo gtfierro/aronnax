@@ -18,8 +18,8 @@ var tableCreate = `
 CREATE TABLE data
 (
     uuid CHAR(37) NOT NULL,
-    dkey VARCHAR(20) NOT NULL,
-    dval VARCHAR(20) NULL,
+    dkey VARCHAR(128) NOT NULL,
+    dval VARCHAR(128) NULL,
     timestamp TIMESTAMP(6) NOT NULL
 );
 `

@@ -29,9 +29,9 @@ We are using a single SQL table for now with the following columns:
 ```sql
 CREATE TABLE data
 (
-    uuid CHAR(16) NOT NULL,
-    dkey VARCHAR(20) NOT NULL,
-    dval VARCHAR(20) NULL,
+    uuid CHAR(37) NOT NULL,
+    dkey VARCHAR(128) NOT NULL,
+    dval VARCHAR(128) NULL,
     timestamp TIMESTAMP NOT NULL
 );
 ```
