@@ -65,6 +65,9 @@ func TestMain(m *testing.M) {
 		Document{UUID: uuid3, Tags: map[string]string{"Metadata/Exposure": "North"}},
 		Document{UUID: uuid4, Tags: map[string]string{"Metadata/Exposure": "East"}},
 		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": "South"}},
+
+		// delete exposure from one
+		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": ""}},
 	} {
 		if err := backend.Insert(&doc); err != nil {
 			log.Fatal("Error inserting: %v", err)
@@ -208,7 +211,6 @@ func TestRecentDocument(t *testing.T) {
 					"Properties/StreamType":    "numeric",
 					"Metadata/Point/Type":      "Sensor",
 					"Metadata/Point/Sensor":    "Temperature",
-					"Metadata/Exposure":        "South",
 				},
 			},
 		},
