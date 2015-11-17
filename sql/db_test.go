@@ -108,10 +108,10 @@ func TestRecentDocument(t *testing.T) {
 	dbname := os.Getenv("ARONNAXTESTDB")
 	backend := newBackend(user, pass, dbname)
 	uuid1, _ := uuid.FromString("2b365d6a-8cbd-11e5-8bb3-0cc47a0f7eea")
-	//uuid2, _ := uuid.FromString("370dd17c-8cbd-11e5-8bb3-0cc47a0f7eea")
-	//uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
-	//uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
-	//uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid2, _ := uuid.FromString("370dd17c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
 
 	for _, test := range []struct {
 		uuid string
@@ -125,6 +125,82 @@ func TestRecentDocument(t *testing.T) {
 					"Location/Building":        "Soda",
 					"Location/Floor":           "4",
 					"Location/Room":            "411",
+					"Properties/Timezone":      "America/Los_Angeles",
+					"Properties/ReadingType":   "double",
+					"Properties/UnitofMeasure": "F",
+					"Properties/UnitofTime":    "ms",
+					"Properties/StreamType":    "numeric",
+					"Metadata/Point/Type":      "Sensor",
+					"Metadata/Point/Sensor":    "Temperature",
+					"Metadata/Exposure":        "South",
+				},
+			},
+		},
+		{
+			uuid2.String(),
+			Document{UUID: uuid2,
+				Tags: map[string]string{
+					"Location/City":            "Berkeley",
+					"Location/Building":        "Soda",
+					"Location/Floor":           "4",
+					"Location/Room":            "410",
+					"Properties/Timezone":      "America/Los_Angeles",
+					"Properties/ReadingType":   "double",
+					"Properties/UnitofMeasure": "F",
+					"Properties/UnitofTime":    "ms",
+					"Properties/StreamType":    "numeric",
+					"Metadata/Point/Type":      "Sensor",
+					"Metadata/Point/Sensor":    "Temperature",
+					"Metadata/Exposure":        "West",
+				},
+			},
+		},
+		{
+			uuid3.String(),
+			Document{UUID: uuid3,
+				Tags: map[string]string{
+					"Location/City":            "Berkeley",
+					"Location/Building":        "Soda",
+					"Location/Floor":           "4",
+					"Location/Room":            "420",
+					"Properties/Timezone":      "America/Los_Angeles",
+					"Properties/ReadingType":   "double",
+					"Properties/UnitofMeasure": "F",
+					"Properties/UnitofTime":    "ms",
+					"Properties/StreamType":    "numeric",
+					"Metadata/Point/Type":      "Sensor",
+					"Metadata/Point/Sensor":    "Temperature",
+					"Metadata/Exposure":        "North",
+				},
+			},
+		},
+		{
+			uuid4.String(),
+			Document{UUID: uuid4,
+				Tags: map[string]string{
+					"Location/City":            "Berkeley",
+					"Location/Building":        "Soda",
+					"Location/Floor":           "4",
+					"Location/Room":            "410",
+					"Properties/Timezone":      "America/Los_Angeles",
+					"Properties/ReadingType":   "double",
+					"Properties/UnitofMeasure": "F",
+					"Properties/UnitofTime":    "ms",
+					"Properties/StreamType":    "numeric",
+					"Metadata/Point/Type":      "Sensor",
+					"Metadata/Point/Sensor":    "Temperature",
+					"Metadata/Exposure":        "East",
+				},
+			},
+		},
+		{
+			uuid5.String(),
+			Document{UUID: uuid5,
+				Tags: map[string]string{
+					"Location/City":            "Berkeley",
+					"Location/Building":        "Soda",
+					"Location/Floor":           "4",
+					"Location/Room":            "405",
 					"Properties/Timezone":      "America/Los_Angeles",
 					"Properties/ReadingType":   "double",
 					"Properties/UnitofMeasure": "F",
