@@ -96,12 +96,11 @@ func (mbd *mysqlBackend) RemoveData() error {
 }
 
 func (mbd *mysqlBackend) Insert(doc *Document) error {
-	result, err := mbd.db.Exec(doc.GenerateinsertStatement())
-	fmt.Println(result)
+	_, err := mbd.db.Exec(doc.GenerateinsertStatement())
 	return err
 }
 
-func (mbd *mysqlBackend) Query(q *query.Query) *sql.Rows {
+func (mbd *mysqlBackend) Eval(q *query.Query) *sql.Rows {
 	tosend := whereTemplate
 	if q.Wheres.SQL != "" {
 		tosend += "and " + q.Wheres.SQL
@@ -115,6 +114,15 @@ func (mbd *mysqlBackend) Query(q *query.Query) *sql.Rows {
 	return rows
 }
 
+func (mbd *mysqlBackend) Parse(querystring string) *query.Query {
+	lex := query.NewQueryLexer(querystring)
+	query.QueryParse(lex)
+	if lex.Err != nil {
+		fmt.Println("ERROR", lex.Err)
+	}
+	return lex.Query
+}
+
 func (mbd *mysqlBackend) StartInteractive() {
 	fi := bufio.NewReader(os.Stdin)
 	for {
@@ -123,11 +131,7 @@ func (mbd *mysqlBackend) StartInteractive() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		lex := query.NewQueryLexer(s)
-		query.QueryParse(lex)
-		fmt.Println("ERROR", lex.Err)
-
-		rows := mbd.Query(lex.Query)
+		rows := mbd.Eval(mbd.Parse(s))
 		if docs, err := DocsFromRows(rows); err != nil {
 			log.Fatal(err)
 		} else {
@@ -135,20 +139,6 @@ func (mbd *mysqlBackend) StartInteractive() {
 				fmt.Println(doc.PrettyString())
 			}
 		}
-
-		//for rows.Next() {
-		//	var (
-		//		uuid string
-		//		key  string
-		//		val  string
-		//	)
-		//	if err := rows.Scan(&uuid, &key, &val); err != nil {
-		//		log.Fatal(err)
-		//	} else {
-		//		fmt.Printf("-> %s %s %s\n", uuid, key, val)
-		//	}
-		//}
-
 	}
 }
 
