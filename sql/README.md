@@ -79,7 +79,8 @@ from (
    from data
    inner join
    (
-        select distinct uuid, dkey, max(timestamp) as maxtime from data group by dkey, uuid order by timestamp desc
+        select distinct uuid, dkey, max(timestamp) as maxtime from data
+        group by dkey, uuid order by timestamp desc
    ) sorted
    on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
    where data.dval is not null
@@ -91,7 +92,8 @@ uuid in (
     from data
     inner join
     (
-        select distinct uuid, dkey, max(timestamp) as maxtime from data group by dkey, uuid order by timestamp desc
+        select distinct uuid, dkey, max(timestamp) as maxtime from data
+        group by dkey, uuid order by timestamp desc
     ) sorted
     on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
     where data.dval is not null
