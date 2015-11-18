@@ -69,6 +69,10 @@ selectTermList  :   selectTerm
                 {
                     $$ = append([]SelectTerm{$1}, $3...)
                 }
+                |   DISTINCT LVALUE
+                {
+                    $$ = []SelectTerm{{Tag: $2}}
+                }
                 ;
 
 selectTerm  :   LVALUE
