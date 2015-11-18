@@ -225,5 +225,63 @@ func TestRecentDocument(t *testing.T) {
 		}
 
 	}
+}
 
+func TestWhereRecentDocument(t *testing.T) {
+	user := os.Getenv("ARONNAXTESTUSER")
+	pass := os.Getenv("ARONNAXTESTPASS")
+	dbname := os.Getenv("ARONNAXTESTDB")
+	backend := newBackend(user, pass, dbname)
+	uuid1, _ := uuid.FromString("2b365d6a-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid2, _ := uuid.FromString("370dd17c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
+
+	for _, test := range []struct {
+		querystring string             // query
+		uuids       map[uuid.UUID]bool // expected matching UUIDs are keys. Initialize vals to false
+	}{
+		{
+			"select distinct uuid where Location/Room = '410';",
+			map[uuid.UUID]bool{uuid2: false, uuid4: false},
+		},
+		{
+			"select distinct uuid where Location/Room != '410';",
+			map[uuid.UUID]bool{uuid1: false, uuid3: false, uuid5: false},
+		},
+		{
+			"select distinct uuid where Metadata/Exposure = 'South' and has Properties/Timezone;",
+			map[uuid.UUID]bool{uuid1: false},
+		},
+		{
+			"select distinct uuid where Location/Room = '405' and has Metadata/Exposure;",
+			map[uuid.UUID]bool{},
+		},
+		{
+			"select distinct uuid where Location/Room = '405' and not has Metadata/Exposure;",
+			map[uuid.UUID]bool{uuid5: false},
+		},
+	} {
+		var (
+			docs []*Document
+			err  error
+		)
+		if docs, err = DocsFromRows(backend.Eval(backend.Parse(test.querystring))); err != nil {
+			t.Errorf("Query failed! %v", err)
+		}
+		for _, doc := range docs {
+			if _, found := test.uuids[doc.UUID]; !found {
+				t.Errorf("Query %v matched unexpected UUID %v", test.querystring, doc.UUID)
+			} else {
+				test.uuids[doc.UUID] = true
+			}
+		}
+
+		for uuid, covered := range test.uuids {
+			if !covered {
+				t.Errorf("Query %v did not match expected UUID %v", test.querystring, uuid)
+			}
+		}
+	}
 }
