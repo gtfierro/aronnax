@@ -102,3 +102,91 @@ uuid in (
 
 My guess is we can perform a basic SELECT by extending the where clause ("AND dkey in ('key1', 'key2')"), but we can do
 this easily enough in the frontend for now.
+
+### Problems with EAV (and more query variations)
+
+It was only at this point that I realized that what I'm actually building is a
+historical variation on an Entity-Attribute-Value database model (EAV model
+from here on out). EAV has its roots in LISP, evidently, but has since become a
+much-maligned antipattern in the relational database community because it becomes used
+in cases where a more traditional, strict-schema, relational model fits much
+better. EAV models, for databases at least, shine in some niche areas, namely
+when column names are not known or change (relatively) frequently.
+
+Saw a post on StackOverflow where a variation of Greenspun's 10th rule was
+applied to EAV models: "any sufficiently complex EAV project contains an ad
+hoc, informally-specified, bug-ridden, slow implementation of half of a DBMS".
+
+This is the general direction we're headed, but we do not require the full
+flexibility of the relational model (at least in practice). This assertion
+probably requires some thinking, but we're rolling with it for now.
+
+EAV models offer much flexibility in the kind of information they are able to
+represent, but querying them becomes an absolute nightmare due to lots of unions, joins, etc,
+which also make the queries much slower than their equivalents on a strictly relational database.
+
+The following query is for  the equivalent of
+```sql
+select * where Metadata/Exposure = 'South' and Location/Room = '411' and Location/Building = 'Soda'
+```
+
+```sql
+select second.uuid, second.dkey, second.dval
+from (
+   select data.uuid, data.dkey, data.dval
+   from data
+   inner join
+   (
+        select distinct uuid, dkey, max(timestamp) as maxtime from data
+        group by dkey, uuid order by timestamp desc
+   ) sorted
+   on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+   where data.dval is not null
+) as second
+right join
+(
+    select distinct a.uuid from
+    (
+        select distinct data.uuid
+        from data
+        inner join
+        (
+            select distinct uuid, dkey, max(timestamp) as maxtime from data
+            group by dkey, uuid order by timestamp desc
+        ) sorted
+        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+        where data.dval is not null
+            and (data.dkey = "Metadata/Exposure" and data.dval = 'South')
+    ) as a
+    inner join
+    (
+        select distinct data.uuid
+        from data
+        inner join
+        (
+            select distinct uuid, dkey, max(timestamp) as maxtime from data
+            group by dkey, uuid order by timestamp desc
+        ) sorted
+        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+        where data.dval is not null
+            and (data.dkey = "Location/Room" and data.dval = "411")
+    ) b
+    on a.uuid = b.uuid
+    inner join
+    (
+        select distinct data.uuid
+        from data
+        inner join
+        (
+            select distinct uuid, dkey, max(timestamp) as maxtime from data
+            group by dkey, uuid order by timestamp desc
+        ) sorted
+        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+        where data.dval is not null
+            and (data.dkey = "Location/Building" and data.dval = "Soda")
+    ) c
+    on b.uuid = c.uuid
+) internal
+on internal.uuid = second.uuid;
+```
+
