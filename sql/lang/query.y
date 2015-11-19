@@ -110,7 +110,15 @@ whereClause :   whereTerm
             }
             |   whereTerm OR whereClause
             {
-                $$ = WhereClause{SQL: fmt.Sprintf(`(%s) or (%s)`, $1.SQL, $3.SQL)}
+                letter := Querylex.(*QueryLex).NextLetter()
+                $1.Letter = letter
+                var clause string
+                if len($1.SQL) > 0 {
+                    clause = "and "+$1.SQL
+                }
+                sql := fmt.Sprintf(termTemplateUnion, clause)
+                ret := fmt.Sprintf("%s union %s", $3.SQL, sql)
+                $$ = WhereClause{SQL: ret, Letter: $1.Letter}
             }
             |   whereTerm AND whereClause
             {
@@ -285,6 +293,21 @@ var termTemplate = `
         where data.dval is not null
             %s
     ) as %s
+`
+
+var termTemplateUnion = `
+    (
+        select distinct data.uuid
+        from data
+        inner join
+        (
+            select distinct uuid, dkey, max(timestamp) as maxtime from data
+            group by dkey, uuid order by timestamp desc
+        ) sorted
+        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+        where data.dval is not null
+            %s
+    )
 `
 
 func NewQueryLexer(s string) *QueryLex {
