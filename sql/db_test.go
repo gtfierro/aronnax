@@ -299,7 +299,7 @@ func TestWhereRecentDocument(t *testing.T) {
 			map[uuid.UUID]bool{uuid5: false, uuid1: false},
 		},
 		{
-			"select distinct uuid where (Location/Room = '411' and (Location/City = 'Berkeley' and Metadata/Exposure='South') or Location/Room = '405'; ",
+			"select distinct uuid where (Location/Room = '411' and (Location/City = 'Berkeley' and Metadata/Exposure='South')) or Location/Room = '405'; ",
 			map[uuid.UUID]bool{uuid5: false, uuid1: false},
 		},
 	} {
