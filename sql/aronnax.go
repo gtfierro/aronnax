@@ -113,7 +113,7 @@ func (mbd *mysqlBackend) Parse(querystring string) *query.Query {
 	lex := query.NewQueryLexer(querystring)
 	query.QueryParse(lex)
 	if lex.Err != nil {
-		fmt.Println("ERROR", lex.Err)
+		fmt.Println("ERROR", lex.Err, querystring)
 	}
 	return lex.Query
 }

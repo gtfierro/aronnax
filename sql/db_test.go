@@ -251,6 +251,18 @@ func TestWhereRecentDocument(t *testing.T) {
 			map[uuid.UUID]bool{uuid1: false, uuid3: false, uuid5: false},
 		},
 		{
+			"select distinct uuid where Location/Room like '4%';",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
+		},
+		{
+			"select distinct uuid where has Location/Room;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
+		},
+		{
+			"select distinct uuid where not Location/Room like '4%';",
+			map[uuid.UUID]bool{},
+		},
+		{
 			"select distinct uuid where Metadata/Exposure = 'South' and has Properties/Timezone;",
 			map[uuid.UUID]bool{uuid1: false},
 		},
@@ -261,6 +273,34 @@ func TestWhereRecentDocument(t *testing.T) {
 		{
 			"select distinct uuid where Location/Room = '405' and not has Metadata/Exposure;",
 			map[uuid.UUID]bool{uuid5: false},
+		},
+		{
+			"select distinct uuid where Location/Room = '405' or Location/Room = '411';",
+			map[uuid.UUID]bool{uuid5: false, uuid1: false},
+		},
+		{
+			"select distinct uuid where Location/Room = '405' or Location/Room = '411' or Location/Room = '420';",
+			map[uuid.UUID]bool{uuid5: false, uuid3: false, uuid1: false},
+		},
+		{
+			"select distinct uuid where Location/Room = '405' or (Location/Room = '411' and Metadata/Exposure='East');",
+			map[uuid.UUID]bool{uuid5: false},
+		},
+		{
+			"select distinct uuid where Location/Room = '405' or (Location/Room = '411' and Metadata/Exposure='South');",
+			map[uuid.UUID]bool{uuid5: false, uuid1: false},
+		},
+		{
+			"select distinct uuid where (Location/Room = '411' and Metadata/Exposure='South') or Location/Room = '405';",
+			map[uuid.UUID]bool{uuid5: false, uuid1: false},
+		},
+		{
+			"select distinct uuid where Location/Room = '405' or (Location/Room = '411' and (Location/City = 'Berkeley' and Metadata/Exposure='South');",
+			map[uuid.UUID]bool{uuid5: false, uuid1: false},
+		},
+		{
+			"select distinct uuid where (Location/Room = '411' and (Location/City = 'Berkeley' and Metadata/Exposure='South') or Location/Room = '405'; ",
+			map[uuid.UUID]bool{uuid5: false, uuid1: false},
 		},
 	} {
 		var (
