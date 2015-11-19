@@ -36,16 +36,12 @@ from (
    on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
    where data.dval is not null
 ) as second
-where
-uuid in (
-    select distinct data.uuid
-    from data
-    inner join
-    (
-        select distinct uuid, dkey, max(timestamp) as maxtime from data group by dkey, uuid order by timestamp desc
-    ) sorted
-    on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-    where data.dval is not null
+right join
+(
+    select distinct A.uuid from
+    %s
+) internal
+on internal.uuid = second.uuid;
 `
 
 func newBackend(user, password, database string) *mysqlBackend {
@@ -101,12 +97,11 @@ func (mbd *mysqlBackend) Insert(doc *Document) error {
 }
 
 func (mbd *mysqlBackend) Eval(q *query.Query) *sql.Rows {
-	tosend := whereTemplate
+	var tosend string
 	if q.Wheres.SQL != "" {
-		tosend += "and " + q.Wheres.SQL
+		tosend = fmt.Sprintf(whereTemplate, q.Wheres.SQL)
 	}
-	tosend += ")"
-	fmt.Println(tosend)
+	//fmt.Println(tosend)
 	rows, err := mbd.db.Query(tosend)
 	if err != nil {
 		log.Fatal(err)

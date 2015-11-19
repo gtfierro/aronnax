@@ -88,11 +88,25 @@ selectTerm  :   LVALUE
 
 whereClause :   whereTerm
             {
-                $$ = WhereClause{SQL: $1.SQL}
+                letter := Querylex.(*QueryLex).NextLetter()
+                $1.Letter = letter
+                var clause string
+                if len($1.SQL) > 0 {
+                    clause = "and "+$1.SQL
+                }
+                sql := fmt.Sprintf(termTemplate, clause, letter)
+                $$ = WhereClause{SQL: sql, Letter: $1.Letter}
             }
             |   whereTerm timeTerm
             {
-                $$ = WhereClause{SQL: $1.SQL}
+                letter := Querylex.(*QueryLex).NextLetter()
+                $1.Letter = letter
+                var clause string
+                if len($1.SQL) > 0 {
+                    clause = "and "+$1.SQL
+                }
+                sql := fmt.Sprintf(termTemplate, clause, letter)
+                $$ = WhereClause{SQL: sql, Letter: $1.Letter}
             }
             |   whereTerm OR whereClause
             {
@@ -100,11 +114,20 @@ whereClause :   whereTerm
             }
             |   whereTerm AND whereClause
             {
-                $$ = WhereClause{SQL: fmt.Sprintf(`(%s) and (%s)`, $1.SQL, $3.SQL)}
+                letter := Querylex.(*QueryLex).NextLetter()
+                $1.Letter = letter
+                var clause string
+                if len($1.SQL) > 0 {
+                    clause = "and "+$1.SQL
+                }
+                sql := fmt.Sprintf(termTemplate, clause, letter)
+
+                ret := fmt.Sprintf("%s inner join %s on %s.uuid = %s.uuid", $3.SQL, sql, $3.Letter, letter)
+                $$ = WhereClause{SQL: ret, Letter: $1.Letter}
             }
             |   NOT whereClause
             {
-                $$ = WhereClause{SQL: fmt.Sprintf(`not (%s)`, $2.SQL)}
+                $$ = WhereClause{SQL: fmt.Sprintf(`not (%s)`, $2.SQL), Letter: $2.Letter}
             }
             ;
 
@@ -239,8 +262,30 @@ type QueryLex struct {
     scanner *toki.Scanner
     lasttoken string
     tokens  []string
+    innertable  int
     Err   error
 }
+
+func (ql *QueryLex) NextLetter() string {
+    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    ql.innertable += 1
+    return string(alphabet[ql.innertable-1])
+}
+
+var termTemplate = `
+    (
+        select distinct data.uuid
+        from data
+        inner join
+        (
+            select distinct uuid, dkey, max(timestamp) as maxtime from data
+            group by dkey, uuid order by timestamp desc
+        ) sorted
+        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+        where data.dval is not null
+            %s
+    ) as %s
+`
 
 func NewQueryLexer(s string) *QueryLex {
     scanner := toki.NewScanner(

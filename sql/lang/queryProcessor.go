@@ -16,14 +16,16 @@ type SelectTerm struct {
 }
 
 type WhereTerm struct {
-	Key string
-	Op  string
-	Val string
-	SQL string
+	Key    string
+	Op     string
+	Val    string
+	SQL    string
+	Letter string
 }
 
 type WhereClause struct {
-	SQL string
+	SQL    string
+	Letter string
 }
 
 func (wt WhereTerm) ToSQL() string {
