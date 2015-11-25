@@ -14,7 +14,9 @@ from (
    from data
    inner join
    (
-        select distinct uuid, dkey, max(timestamp) as maxtime from data group by dkey, uuid order by timestamp desc
+        select distinct uuid, dkey, max(timestamp) as maxtime
+        from data
+        group by dkey, uuid order by timestamp desc
    ) sorted
    on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
    where data.dval is not null
@@ -35,7 +37,7 @@ these principles to apply to time-based predicates.
 Let's work through the example of `select * where Location/Building = "Soda" and Location/City = "Berkeley";`
 
 AND is performed using an inner join between the sets of UUIDs created by evaluating the predicates `Location/Building="Soda"`
-and `Location/City="Berkeley"`. Those each look like 
+and `Location/City="Berkeley"`. Those each look like
 
 ```sql
 select distinct data.uuid
@@ -93,50 +95,66 @@ inner join
 on C.uuid = D.uuid;
 ```
 
-Here is the fully expanded 2-predicate example:
+This implies that for a grammar rule such as
 
-```sql
-select second.uuid, second.dkey, second.dval
-from (
-   select data.uuid, data.dkey, data.dval
-   from data
-   inner join
-   (
-        select distinct uuid, dkey, max(timestamp) as maxtime from data group by dkey, uuid order by timestamp desc
-   ) sorted
-   on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-   where data.dval is not null
-) as second
-right join
-(
-    select distinct A.uuid from
-    
-        (
-                select distinct data.uuid
-                from data
-                inner join
-                (
-                        select distinct uuid, dkey, max(timestamp) as maxtime from data
-                        group by dkey, uuid order by timestamp desc
-                ) sorted
-                on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-                where data.dval is not null
-                        and data.dkey = "Location/City" and data.dval = "Berkeley"
-        ) as A
- inner join 
-        (
-                select distinct data.uuid
-                from data
-                inner join
-                (
-                        select distinct uuid, dkey, max(timestamp) as maxtime from data
-                        group by dkey, uuid order by timestamp desc
-                ) sorted
-                on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-                where data.dval is not null
-                        and data.dkey = "Location/Building" and data.dval = "Soda"
-        ) as B
- on A.uuid = B.uuid
-) internal
-on internal.uuid = second.uuid;
 ```
+whereClause :   whereTerm
+            |   whereTerm AND whereClause
+            ;
+-- gives us (A and (B and (C and D)))
+```
+
+we want to generate something like
+
+```
+select A.uuid
+( $1 ) as A
+inner join
+( $2 ) as B
+on A.uuid = B.uuid
+```
+
+We have a quick function that gives us a new letter every time we call it, so
+we can generate new names for these ephemeral tables (created by the `SELECT`
+clauses). We only want to generate a new letter for `$1`, because this is the first
+time we've seen it.
+
+
+```
+whereClause: whereTerm
+            {
+                $1.Letter = nextletter()
+                // if whereTerm is just a predicate:
+                if ($1.IsPredicate) {
+                  $$ = whereClause{
+                  Select: `
+                    select distinct data.uuid
+                    from data
+                    inner join
+                    (
+                        select distinct uuid, dkey, max(timestamp) as maxtime from data
+                        group by dkey, uuid order by timestamp desc
+                    ) sorted
+                    on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+                    where data.dval is not null
+                    `
+                  }
+                } else { // it came from ( whereClause ), e.g. we have a full SQL statement so we pass it through
+                    $$ = whereClause{Select: $1.Select}
+                }
+            }
+            | whereTerm AND whereClause
+            {
+                $$ = whereClause{
+                    Select: `select $1.uuid
+                    from
+                    ($1) as $1.Letter
+                    inner join
+                    ($2) as $2.Letter
+                    on $1.uuid = $2.uuid`
+                    }
+            }
+            ;
+```
+
+This should recursively generate our AND clauses.
