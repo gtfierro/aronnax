@@ -16,16 +16,41 @@ type SelectTerm struct {
 }
 
 type WhereTerm struct {
-	Key    string
-	Op     string
-	Val    string
-	SQL    string
-	Letter string
+	Key         string
+	Op          string
+	Val         string
+	SQL         string
+	Letter      string
+	IsPredicate bool
+}
+
+func (wt WhereTerm) GetClause() WhereClause {
+	if wt.IsPredicate {
+		return WrapTermInSelect(wt.SQL, wt.Letter)
+	} else {
+		return WhereClause{SQL: wt.SQL, Letter: wt.Letter}
+	}
 }
 
 type WhereClause struct {
 	SQL    string
 	Letter string
+}
+
+func WrapTermInSelect(where, letter string) WhereClause {
+	sql := fmt.Sprintf(`
+    (
+    select distinct data.uuid
+    from data
+    inner join
+    (
+        select distinct uuid, dkey, max(timestamp) as maxtime from data
+        group by dkey, uuid order by timestamp desc
+    ) sorted
+    on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+    where data.dval is not null and
+    %s)`, where)
+	return WhereClause{SQL: sql, Letter: letter}
 }
 
 func (wt WhereTerm) ToSQL() string {
