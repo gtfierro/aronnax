@@ -267,6 +267,10 @@ func TestWhereRecentDocument(t *testing.T) {
 			map[uuid.UUID]bool{uuid1: false},
 		},
 		{
+			"select distinct uuid where (Metadata/Exposure = 'South' and has Properties/Timezone);",
+			map[uuid.UUID]bool{uuid1: false},
+		},
+		{
 			"select distinct uuid where Location/Room = '405' and has Metadata/Exposure;",
 			map[uuid.UUID]bool{},
 		},
@@ -307,6 +311,7 @@ func TestWhereRecentDocument(t *testing.T) {
 			docs []*Document
 			err  error
 		)
+		fmt.Println(test.querystring)
 		if docs, err = DocsFromRows(backend.Eval(backend.Parse(test.querystring))); err != nil {
 			t.Errorf("Query failed! %v", err)
 		}

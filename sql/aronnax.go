@@ -38,7 +38,6 @@ from (
 ) as second
 right join
 (
-    select distinct A.uuid from
     %s
 ) internal
 on internal.uuid = second.uuid;
@@ -128,7 +127,7 @@ func (mbd *mysqlBackend) StartInteractive() {
 		}
 		rows := mbd.Eval(mbd.Parse(s))
 		if docs, err := DocsFromRows(rows); err != nil {
-			log.Fatal(err)
+			log.Fatal("docs from", err)
 		} else {
 			for _, doc := range docs {
 				fmt.Println(doc.PrettyString())
