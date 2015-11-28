@@ -692,7 +692,7 @@ Querydefault:
 		{
 			letter := Querylex.(*QueryLex).NextLetter()
 			QueryDollar[1].whereTerm.Letter = letter
-			fmt.Println(QueryDollar[1].whereTerm.IsPredicate, QueryDollar[1].whereTerm.SQL)
+			//fmt.Println($1.IsPredicate, $1.SQL)
 			if QueryDollar[1].whereTerm.IsPredicate {
 				QueryVAL.whereClause = WrapTermInSelect(QueryDollar[1].whereTerm.SQL, QueryDollar[1].whereTerm.Letter)
 			} else { // have a full select clause
@@ -718,17 +718,18 @@ Querydefault:
 		{
 			letter := Querylex.(*QueryLex).NextLetter()
 			QueryDollar[1].whereTerm.Letter = letter
-			var clause string
-			if len(QueryDollar[1].whereTerm.SQL) > 0 {
-				clause = "and " + QueryDollar[1].whereTerm.SQL
-			}
-			sql := fmt.Sprintf(termTemplateUnion, clause)
-			ret := fmt.Sprintf("%s union %s", QueryDollar[3].whereClause.SQL, sql)
-			QueryVAL.whereClause = WhereClause{SQL: ret, Letter: QueryDollar[1].whereTerm.Letter}
+			var firstTerm = QueryDollar[1].whereTerm.GetClause()
+			sql := fmt.Sprintf(`
+	select uuid
+	from
+	%s as %s
+	union
+	%s`, firstTerm.SQL, firstTerm.Letter, QueryDollar[3].whereClause.SQL)
+			QueryVAL.whereClause = WhereClause{SQL: sql, Letter: firstTerm.Letter}
 		}
 	case 12:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:121
+		//line query.y:122
 		{
 			letter := Querylex.(*QueryLex).NextLetter()
 			QueryDollar[1].whereTerm.Letter = letter
@@ -744,13 +745,13 @@ Querydefault:
 		}
 	case 13:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:135
+		//line query.y:136
 		{
 			QueryVAL.whereClause = WhereClause{SQL: fmt.Sprintf(`not (%s)`, QueryDollar[2].whereClause.SQL), Letter: QueryDollar[2].whereClause.Letter}
 		}
 	case 14:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:142
+		//line query.y:143
 		{
 			if QueryDollar[1].str == "uuid" {
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.uuid LIKE %s`, QueryDollar[3].str), IsPredicate: true}
@@ -760,9 +761,8 @@ Querydefault:
 		}
 	case 15:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:150
+		//line query.y:151
 		{
-			fmt.Println("HERE", QueryDollar[3].str)
 			if QueryDollar[1].str == "uuid" {
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.uuid = %s`, QueryDollar[3].str), IsPredicate: true}
 			} else {

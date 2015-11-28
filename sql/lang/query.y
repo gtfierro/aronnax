@@ -87,7 +87,7 @@ whereClause :   whereTerm
             {
                 letter := Querylex.(*QueryLex).NextLetter()
                 $1.Letter = letter
-                fmt.Println($1.IsPredicate, $1.SQL)
+                //fmt.Println($1.IsPredicate, $1.SQL)
                 if ($1.IsPredicate) {
                     $$ = WrapTermInSelect($1.SQL, $1.Letter)
                 } else { // have a full select clause
@@ -109,13 +109,14 @@ whereClause :   whereTerm
             {
                 letter := Querylex.(*QueryLex).NextLetter()
                 $1.Letter = letter
-                var clause string
-                if len($1.SQL) > 0 {
-                    clause = "and "+$1.SQL
-                }
-                sql := fmt.Sprintf(termTemplateUnion, clause)
-                ret := fmt.Sprintf("%s union %s", $3.SQL, sql)
-                $$ = WhereClause{SQL: ret, Letter: $1.Letter}
+                var firstTerm = $1.GetClause()
+                sql := fmt.Sprintf(`
+select uuid
+from
+%s as %s
+union
+%s`, firstTerm.SQL, firstTerm.Letter, $3.SQL)
+                $$ = WhereClause{SQL: sql, Letter: firstTerm.Letter}
             }
             |   whereTerm AND whereClause
             {
@@ -148,7 +149,6 @@ whereTerm   : LVALUE LIKE QSTRING
             }
             | LVALUE EQ QSTRING
             {
-                fmt.Println("HERE", $3)
                 if $1 == "uuid" {
                     $$ = WhereTerm{Key: $1, Op: $2, Val: $3, SQL: fmt.Sprintf(`data.uuid = %s`, $3), IsPredicate: true}
                 } else {

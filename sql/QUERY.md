@@ -158,3 +158,34 @@ whereClause: whereTerm
 ```
 
 This should recursively generate our AND clauses.
+
+### `OR`
+
+`OR` is performed by a union between the sets of UUIDs created by evaluating the two predicates involved. We will
+be using a right-associative grouping as with the `AND` operator.
+
+As with `AND`, our predicates take the form of:
+
+```sql
+select distinct data.uuid
+from data
+inner join
+(
+        select distinct uuid, dkey, max(timestamp) as maxtime from data
+        group by dkey, uuid order by timestamp desc
+) sorted
+on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+where data.dval is not null
+and data.dkey = "Location/City" and data.dval = "Berkeley"
+```
+
+The basic syntax of a union is
+
+```sql
+-- optionally can be A.uuid, but every derived
+-- table needs an alias, so we do need the "as A"
+SELECT uuid FROM
+(<select clause 1>) as A
+union
+(<select clause 2>);
+```
