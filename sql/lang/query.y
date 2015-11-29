@@ -111,7 +111,7 @@ whereClause :   whereTerm
                 $1.Letter = letter
                 var firstTerm = $1.GetClause()
                 sql := fmt.Sprintf(`
-select uuid
+select distinct uuid
 from
 %s as %s
 union
@@ -124,7 +124,7 @@ union
                 $1.Letter = letter
                 var firstTerm = $1.GetClause()
                 sql := fmt.Sprintf(`
-select %s.uuid
+select distinct %s.uuid
 from
 %s as %s
 inner join
@@ -134,7 +134,12 @@ on %s.uuid = %s.uuid`, firstTerm.Letter, firstTerm.SQL, firstTerm.Letter, $3.SQL
             }
             |   NOT whereClause
             {
-                $$ = WhereClause{SQL: fmt.Sprintf(`not (%s)`, $2.SQL), Letter: $2.Letter}
+                sql := fmt.Sprintf(`
+select distinct data.uuid
+from
+data
+where data.uuid not in (%s)`, $2.SQL)
+                $$ = WhereClause{SQL: sql, Letter: $2.Letter}
             }
             ;
 

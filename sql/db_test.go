@@ -333,6 +333,7 @@ func TestWhereWithNotRecentDocument(t *testing.T) {
 	//uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
 	//uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
 	uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuiddummy, _ := uuid.FromString("aa45f708-8be8-11e5-86ae-5cc5d4ded1ae")
 
 	for _, test := range []struct {
 		querystring string             // query
@@ -340,7 +341,7 @@ func TestWhereWithNotRecentDocument(t *testing.T) {
 	}{
 		{
 			"select distinct uuid where not Location/Room like '4%';",
-			map[uuid.UUID]bool{},
+			map[uuid.UUID]bool{uuiddummy: false},
 		},
 		{
 			"select distinct uuid where Location/Room = '405' and not has Metadata/Exposure;",

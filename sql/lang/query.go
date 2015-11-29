@@ -94,7 +94,7 @@ const QueryEofCode = 1
 const QueryErrCode = 2
 const QueryMaxDepth = 200
 
-//line query.y:256
+//line query.y:261
 const eof = 0
 
 var supported_formats = []string{"1/2/2006",
@@ -720,7 +720,7 @@ Querydefault:
 			QueryDollar[1].whereTerm.Letter = letter
 			var firstTerm = QueryDollar[1].whereTerm.GetClause()
 			sql := fmt.Sprintf(`
-	select uuid
+	select distinct uuid
 	from
 	%s as %s
 	union
@@ -735,7 +735,7 @@ Querydefault:
 			QueryDollar[1].whereTerm.Letter = letter
 			var firstTerm = QueryDollar[1].whereTerm.GetClause()
 			sql := fmt.Sprintf(`
-	select %s.uuid
+	select distinct %s.uuid
 	from
 	%s as %s
 	inner join
@@ -747,11 +747,16 @@ Querydefault:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
 		//line query.y:136
 		{
-			QueryVAL.whereClause = WhereClause{SQL: fmt.Sprintf(`not (%s)`, QueryDollar[2].whereClause.SQL), Letter: QueryDollar[2].whereClause.Letter}
+			sql := fmt.Sprintf(`
+	select distinct data.uuid
+	from
+	data
+	where data.uuid not in (%s)`, QueryDollar[2].whereClause.SQL)
+			QueryVAL.whereClause = WhereClause{SQL: sql, Letter: QueryDollar[2].whereClause.Letter}
 		}
 	case 14:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:143
+		//line query.y:148
 		{
 			if QueryDollar[1].str == "uuid" {
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.uuid LIKE %s`, QueryDollar[3].str), IsPredicate: true}
@@ -761,7 +766,7 @@ Querydefault:
 		}
 	case 15:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:151
+		//line query.y:156
 		{
 			if QueryDollar[1].str == "uuid" {
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.uuid = %s`, QueryDollar[3].str), IsPredicate: true}
@@ -771,7 +776,7 @@ Querydefault:
 		}
 	case 16:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:159
+		//line query.y:164
 		{
 			if QueryDollar[1].str == "uuid" {
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.uuid != %s`, QueryDollar[3].str), IsPredicate: true}
@@ -781,7 +786,7 @@ Querydefault:
 		}
 	case 17:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:167
+		//line query.y:172
 		{
 			if QueryDollar[2].str == "uuid" {
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[1].str, SQL: `data.uuid is not null`, IsPredicate: true}
@@ -791,25 +796,25 @@ Querydefault:
 		}
 	case 18:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:175
+		//line query.y:180
 		{
 			QueryVAL.whereTerm = WhereTerm{SQL: fmt.Sprintf(`(%s)`, QueryDollar[2].whereClause.SQL), IsPredicate: false}
 		}
 	case 26:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:192
+		//line query.y:197
 		{
 			QueryVAL.time = QueryDollar[1].time
 		}
 	case 27:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:196
+		//line query.y:201
 		{
 			QueryVAL.time = QueryDollar[1].time.Add(QueryDollar[2].timediff)
 		}
 	case 28:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:202
+		//line query.y:207
 		{
 			foundtime, err := parseAbsTime(QueryDollar[1].str, QueryDollar[2].str)
 			if err != nil {
@@ -819,7 +824,7 @@ Querydefault:
 		}
 	case 29:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:210
+		//line query.y:215
 		{
 			num, err := strconv.ParseInt(QueryDollar[1].str, 10, 64)
 			if err != nil {
@@ -829,7 +834,7 @@ Querydefault:
 		}
 	case 30:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:218
+		//line query.y:223
 		{
 			found := false
 			for _, format := range supported_formats {
@@ -847,13 +852,13 @@ Querydefault:
 		}
 	case 31:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:234
+		//line query.y:239
 		{
 			QueryVAL.time = _time.Now()
 		}
 	case 32:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:240
+		//line query.y:245
 		{
 			var err error
 			QueryVAL.timediff, err = parseReltime(QueryDollar[1].str, QueryDollar[2].str)
@@ -863,7 +868,7 @@ Querydefault:
 		}
 	case 33:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:248
+		//line query.y:253
 		{
 			newDuration, err := parseReltime(QueryDollar[1].str, QueryDollar[2].str)
 			if err != nil {
