@@ -212,8 +212,13 @@ predicate, or the time predicate, or both? It makes the most sense to have `NOT`
     who have erased their value by writing `null` to it.
 * `WHERE NOT Location/Building = "Soda" ibefore "1/1/2014"`: following above, this maintains the same time predicate, so
     this will match all streams whose most immediate value before "1/1/2014" for `Location/Building` is not `Soda`.
-* `WHERE NOT Location/Building = "Soda" before "1/1/2014":  the choice here is between matching all streams who do not have a single
+* `WHERE NOT Location/Building = "Soda" before "1/1/2014"`:  the choice here is between matching all streams who do not have a single
     value before "1/1/2014" that is `Soda`, or matching all streams who have had any value that is not `Soda` before "1/1/2014". Because
     of the existance of the `for` time operator (which only returns matches if the relational predicate is true for the entire
     specified duration), it makes the most sense to match all streams who have any value before "1/1/2014" for the `Location/Building`
     key that is not `Soda`.
+
+Implementation-wise, I am using a very naive `not in` clause to perform the negation against the set of streams that
+match the relational predicate, which seems to work fine, even if it is supposed to be slow. The "correct" way would probably
+be using an outer join, which would have to be against the set of all UUIDs that match the same time predicate. This may be what
+I use in the future.
