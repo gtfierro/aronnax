@@ -189,3 +189,31 @@ SELECT uuid FROM
 union
 (<select clause 2>);
 ```
+
+We will use a similar grammar rule to the `AND` operator:
+
+```
+whereClause :   whereTerm
+            |   whereTerm AND whereClause
+            |   whereTerm OR whereClause
+            ;
+```
+
+### `NOT`
+
+Before we discuss how to implement `NOT`, we need to decide on the correct semantics for this. Because all of our
+predicates are set operations, we can think of `NOT` as a set inversion. This raises the question: which set are we inverting?
+So far, we have only been working with the most *recent* forms of documents, so does a `NOT` invert only the relational
+predicate, or the time predicate, or both? It makes the most sense to have `NOT` match only the relational predicate, as follows:
+
+* `WHERE NOT Location/Building = "Soda"`: The non-`NOT` variation matches all streams that have `Soda` as the most recent value
+    for their `Location/Building` key. The most obvious choice for how to negate this with `NOT` is to match all streams
+    whose most recent value of `Location/Building` is NOT `Soda`, but will not match streams who do not have the key, or
+    who have erased their value by writing `null` to it.
+* `WHERE NOT Location/Building = "Soda" ibefore "1/1/2014"`: following above, this maintains the same time predicate, so
+    this will match all streams whose most immediate value before "1/1/2014" for `Location/Building` is not `Soda`.
+* `WHERE NOT Location/Building = "Soda" before "1/1/2014":  the choice here is between matching all streams who do not have a single
+    value before "1/1/2014" that is `Soda`, or matching all streams who have had any value that is not `Soda` before "1/1/2014". Because
+    of the existance of the `for` time operator (which only returns matches if the relational predicate is true for the entire
+    specified duration), it makes the most sense to match all streams who have any value before "1/1/2014" for the `Location/Building`
+    key that is not `Soda`.
