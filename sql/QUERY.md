@@ -1,4 +1,6 @@
-## Constructing Queries
+# Constructing Queries
+
+## Relational Predicates
 
 `WHERE` clauses are constructed by evaluating each individual "term" (a single
 predicate, e.g. `Location/City = "Berkeley"`) to create sets of document
@@ -222,3 +224,52 @@ Implementation-wise, I am using a very naive `not in` clause to perform the nega
 match the relational predicate, which seems to work fine, even if it is supposed to be slow. The "correct" way would probably
 be using an outer join, which would have to be against the set of all UUIDs that match the same time predicate. This may be what
 I use in the future.
+
+## Time-Based Predicates
+
+From [this file](https://github.com/gtfierro/aronnax#queries), we define several time-based predicates that augment the relational predicates
+used in the `WHERE` clause:
+
+
+| operator | syntax | definition | example |
+|----------|--------|------------|---------|
+| `IN`     | `WHERE <relational predicate> IN <time range>` | True if predicate was true *at any point* within the provided time range | `where Room = 410 in (now, now -5min)` |
+| `FOR`    | `WHERE <relational predicate> FOR <time range>` | True if the predicate is true *for the entire time range* | `where Room = 410 for (now, now -5min)` |
+| `BEFORE` | `WHERE <relational predicate> BEFORE <timestamp>` | True if predicate true *at any time* before the given time. | `where Room = 410 before 1447366661s` |
+| `IBEFORE`| `WHERE <relational predicate> IBEFORE <timestamp>` | True if the predicate is true in the most immediate edit before the given time. | `where Room = 410 ibefore 1447366661s` |
+| `AFTER` | `WHERE <relational predicate> BEFORE <timestamp>` | True if predicate true *at any time* after the given time. | `where Room = 410 after 1447366661s` |
+| `IAFTER`| `WHERE <relational predicate> IBEFORE <timestamp>` | True if the predicate is true in the most immediate edit after the given time. | `where Room = 410 iafter 1447366661s` |
+
+In this section, we will discuss how to implement those in our SQL expression
+compiler. From above, we know that at the core of each of our relational
+predicates (such as `Location/City = "Berkeley"`), there is a `SELECT`
+statement like
+
+```sql
+select distinct data.uuid
+from data
+inner join
+(
+        select distinct uuid, dkey, max(timestamp) as maxtime from data
+        group by dkey, uuid order by timestamp desc
+) sorted
+on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+where data.dval is not null
+and data.dkey = "Location/City" and data.dval = "Berkeley"
+```
+
+The time-portion of the inner `SELECT` statement has been hardcoded to take the
+maximum (that is, most-recent) timestamp for all pairs of (`uuid`,`dkey`). The
+returned set of document IDs and their keys forms the set of documents to which
+we apply our relational predicate. The inner join restricts the evaluation to
+just those keys and values that pertain to the most recent form of each
+document. For the `in`,`for`,`before`,`ibefore`,`after`,`iafter` time predicates,
+we will likely follow very similar constructions that can be dropped in place of
+the "most recent" formulation.
+
+
+### `IBEFORE`
+
+This operator is most similar to the default construction, because it only
+considers a single document. The other operators will match across many
+documents.
