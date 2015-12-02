@@ -35,7 +35,8 @@ import (
 %type <whereTerm> whereTerm
 %type <time> timeref abstime
 %type <timediff> reltime
-%type <str> NUMBER
+%type <str> NUMBER timeTerm
+// timeTerm is a string because it returns a SQL clause
 
 %right EQ
 
@@ -87,7 +88,6 @@ whereClause :   whereTerm
             {
                 letter := Querylex.(*QueryLex).NextLetter()
                 $1.Letter = letter
-                //fmt.Println($1.IsPredicate, $1.SQL)
                 if ($1.IsPredicate) {
                     $$ = WrapTermInSelect($1.SQL, $1.Letter)
                 } else { // have a full select clause
@@ -98,12 +98,11 @@ whereClause :   whereTerm
             {
                 letter := Querylex.(*QueryLex).NextLetter()
                 $1.Letter = letter
-                var clause string
-                if len($1.SQL) > 0 {
-                    clause = "and "+$1.SQL
+                if ($1.IsPredicate) {
+                    $$ = WrapTermInSelectWithTime($1.SQL, $1.Letter, $2)
+                } else { // have a full select clause
+                    $$ = WhereClause{SQL: $1.SQL, Letter: $1.Letter}
                 }
-                sql := fmt.Sprintf(termTemplate, clause, letter)
-                $$ = WhereClause{SQL: sql, Letter: $1.Letter}
             }
             |   whereTerm OR whereClause
             {
@@ -183,11 +182,39 @@ whereTerm   : LVALUE LIKE QSTRING
             ;
 
 timeTerm    :   IN timerange
-            |   FOR timerange
+            {
+                //TODO: fix!
+                $$ = fmt.Sprintf(timePredicateRange, ">=", _time.Now())
+            }
             |   BEFORE timeref
+            {
+                template := `select distinct uuid, dkey, timestamp as maxtime from data
+                where timestamp <= "%s"
+                group by dkey, uuid order by timestamp desc`
+                $$ = fmt.Sprintf(template, $2.Format(_time.RFC3339))
+            }
             |   IBEFORE timeref
+            {
+                template := `select distinct uuid, dkey, max(timestamp) as maxtime from data
+                where timestamp <= "%s"
+                group by dkey, uuid order by timestamp desc`
+                $$ = fmt.Sprintf(template, $2.Format(_time.RFC3339))
+            }
             |   AFTER timeref
+            {
+                template := `select distinct uuid, dkey, timestamp as maxtime from data
+                where timestamp >= "%s"
+                group by dkey, uuid order by timestamp desc`
+                $$ = fmt.Sprintf(template, $2.Format(_time.RFC3339))
+            }
             |   IAFTER timeref
+            {
+                template := `select distinct uuid, dkey, min(timestamp) as maxtime from data
+                where timestamp >= "%s"
+                group by dkey, uuid order by timestamp desc`
+                $$ = fmt.Sprintf(template, $2.Format(_time.RFC3339))
+            }
+//            |   FOR timerange
             ;
 
 timerange   :   LPAREN RPAREN

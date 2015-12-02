@@ -53,6 +53,21 @@ func WrapTermInSelect(where, letter string) WhereClause {
 	return WhereClause{SQL: sql, Letter: letter}
 }
 
+func WrapTermInSelectWithTime(where, letter, inner string) WhereClause {
+	sql := fmt.Sprintf(`
+    (
+    select distinct data.uuid
+    from data
+    inner join
+    (
+        %s
+    ) sorted
+    on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+    where data.dval is not null and
+    %s)`, inner, where)
+	return WhereClause{SQL: sql, Letter: letter}
+}
+
 func (wt WhereTerm) ToSQL() string {
 	var s string
 	switch wt.Op {

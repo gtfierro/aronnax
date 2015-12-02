@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/satori/go.uuid"
+	"time"
 )
 
 type Document struct {
@@ -22,6 +23,20 @@ func (doc *Document) GenerateinsertStatement() string {
 			val = `"` + val + `"`
 		}
 		s += fmt.Sprintf(`("%s", "%s", %s),`, doc.UUID.String(), key, val)
+	}
+	s = s[:len(s)-1]
+	return s + ";"
+}
+
+func (doc *Document) GenerateinsertStatementWithTimestamp(timestamp time.Time) string {
+	var s = "INSERT INTO data (uuid, dkey, dval, timestamp) VALUES "
+	for key, val := range doc.Tags {
+		if len(val) == 0 {
+			val = "NULL"
+		} else {
+			val = `"` + val + `"`
+		}
+		s += fmt.Sprintf(`("%s", "%s", %s, "%s"),`, doc.UUID.String(), key, val, timestamp.Format(time.RFC3339))
 	}
 	s = s[:len(s)-1]
 	return s + ";"

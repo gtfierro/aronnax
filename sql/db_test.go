@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -40,36 +41,37 @@ func TestMain(m *testing.M) {
 		"Metadata/Point/Sensor": "Temperature",
 	}
 
-	for _, doc := range []Document{ // initial documents
-		Document{UUID: uuid1, Tags: initTags},
-		Document{UUID: uuid2, Tags: initTags},
-		Document{UUID: uuid3, Tags: initTags},
-		Document{UUID: uuid4, Tags: initTags},
-		Document{UUID: uuid5, Tags: initTags},
+	for i, doc := range []Document{ // initial documents
+		Document{UUID: uuid1, Tags: initTags}, // 0
+		Document{UUID: uuid2, Tags: initTags}, // 1
+		Document{UUID: uuid3, Tags: initTags}, // 2
+		Document{UUID: uuid4, Tags: initTags}, // 3
+		Document{UUID: uuid5, Tags: initTags}, // 4
 
 		// change location on uuid 1, 3, 5
-		Document{UUID: uuid1, Tags: map[string]string{"Location/Room": "411"}},
-		Document{UUID: uuid3, Tags: map[string]string{"Location/Room": "420"}},
-		Document{UUID: uuid5, Tags: map[string]string{"Location/Room": "405"}},
+		Document{UUID: uuid1, Tags: map[string]string{"Location/Room": "411"}}, // 5
+		Document{UUID: uuid3, Tags: map[string]string{"Location/Room": "420"}}, // 6
+		Document{UUID: uuid5, Tags: map[string]string{"Location/Room": "405"}}, // 7
 
 		// add new tags describing temperature
-		Document{UUID: uuid1, Tags: temperatureTags},
-		Document{UUID: uuid2, Tags: temperatureTags},
-		Document{UUID: uuid3, Tags: temperatureTags},
-		Document{UUID: uuid4, Tags: temperatureTags},
-		Document{UUID: uuid5, Tags: temperatureTags},
+		Document{UUID: uuid1, Tags: temperatureTags}, // 8
+		Document{UUID: uuid2, Tags: temperatureTags}, // 9
+		Document{UUID: uuid3, Tags: temperatureTags}, // 10
+		Document{UUID: uuid4, Tags: temperatureTags}, // 11
+		Document{UUID: uuid5, Tags: temperatureTags}, // 12
 
 		// add exposure
-		Document{UUID: uuid1, Tags: map[string]string{"Metadata/Exposure": "South"}},
-		Document{UUID: uuid2, Tags: map[string]string{"Metadata/Exposure": "West"}},
-		Document{UUID: uuid3, Tags: map[string]string{"Metadata/Exposure": "North"}},
-		Document{UUID: uuid4, Tags: map[string]string{"Metadata/Exposure": "East"}},
-		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": "South"}},
+		Document{UUID: uuid1, Tags: map[string]string{"Metadata/Exposure": "South"}}, // 13
+		Document{UUID: uuid2, Tags: map[string]string{"Metadata/Exposure": "West"}},  // 14
+		Document{UUID: uuid3, Tags: map[string]string{"Metadata/Exposure": "North"}}, // 15
+		Document{UUID: uuid4, Tags: map[string]string{"Metadata/Exposure": "East"}},  // 16
+		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": "South"}}, // 17
 
 		// delete exposure from one
-		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": ""}},
+		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": ""}}, // 18
 	} {
-		if err := backend.Insert(&doc); err != nil {
+		// generate stricly ordered times so that we can write tests easily
+		if err := backend.InsertWithTimestamp(&doc, time.Unix(int64(i), 0)); err != nil {
 			log.Fatal("Error inserting: %v", err)
 		}
 	}
@@ -346,6 +348,104 @@ func TestWhereWithNotRecentDocument(t *testing.T) {
 		{
 			"select distinct uuid where Location/Room = '405' and not has Metadata/Exposure;",
 			map[uuid.UUID]bool{uuid5: false},
+		},
+	} {
+		var (
+			docs []*Document
+			err  error
+		)
+		fmt.Println(test.querystring)
+		if docs, err = DocsFromRows(backend.Eval(backend.Parse(test.querystring))); err != nil {
+			t.Errorf("Query failed! %v", err)
+		}
+		for _, doc := range docs {
+			if _, found := test.uuids[doc.UUID]; !found {
+				t.Errorf("Query %v matched unexpected UUID %v", test.querystring, doc.UUID)
+			} else {
+				test.uuids[doc.UUID] = true
+			}
+		}
+
+		for uuid, covered := range test.uuids {
+			if !covered {
+				t.Errorf("Query %v did not match expected UUID %v", test.querystring, uuid)
+			}
+		}
+	}
+}
+
+func TestWhereWithTimePredicate(t *testing.T) {
+	user := os.Getenv("ARONNAXTESTUSER")
+	pass := os.Getenv("ARONNAXTESTPASS")
+	dbname := os.Getenv("ARONNAXTESTDB")
+	backend := newBackend(user, pass, dbname)
+	uuid1, _ := uuid.FromString("2b365d6a-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid2, _ := uuid.FromString("370dd17c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	for _, test := range []struct {
+		querystring string             // query
+		uuids       map[uuid.UUID]bool // expected matching UUIDs are keys. Initialize vals to false
+	}{
+		// BEFORE
+		{
+			"select distinct uuid where Location/Room = '410' before 4;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
+		},
+		{
+			"select distinct uuid where Location/Room = '410' before 5;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
+		},
+		{
+			"select distinct uuid where Location/Room = '410' before 7;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
+		},
+		{
+			"select distinct uuid where Location/Room = '410' before 8;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
+		},
+
+		// IBEFORE
+		{
+			"select distinct uuid where Location/Room = '410' ibefore 7;",
+			map[uuid.UUID]bool{uuid2: false, uuid4: false},
+		},
+		{
+			"select distinct uuid where Location/Room = '410' ibefore 5;",
+			map[uuid.UUID]bool{uuid2: false, uuid3: false, uuid4: false, uuid5: false},
+		},
+
+		// IAFTER
+		{
+			"select distinct uuid where Location/Room = '411' iafter 0;",
+			map[uuid.UUID]bool{uuid1: false},
+		},
+		{
+			"select distinct uuid where Location/Room = '411' iafter 5;",
+			map[uuid.UUID]bool{uuid1: false},
+		},
+		{
+			"select distinct uuid where has Metadata/Exposure iafter 4;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
+		},
+		{
+			"select distinct uuid where has Metadata/Exposure iafter 13;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
+		},
+		{
+			"select distinct uuid where has Metadata/Exposure iafter 17;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false},
+		},
+		{
+			"select distinct uuid where has Metadata/Exposure iafter 18;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false},
+		},
+
+		// AFTER
+		{
+			"select distinct uuid where has Metadata/Exposure after 17;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false},
 		},
 	} {
 		var (

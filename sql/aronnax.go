@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"os"
+	"time"
 )
 
 type mysqlBackend struct {
@@ -49,7 +50,7 @@ func newBackend(user, password, database string) *mysqlBackend {
 		err    error
 		tables *sql.Rows
 	)
-	if db, err = sql.Open("mysql", fmt.Sprintf("%s:%s@/%s", user, password, database)); err != nil {
+	if db, err = sql.Open("mysql", fmt.Sprintf("%s:%s@/%s?parseTime=true", user, password, database)); err != nil {
 		log.Fatal(err)
 	}
 
@@ -92,6 +93,11 @@ func (mbd *mysqlBackend) RemoveData() error {
 
 func (mbd *mysqlBackend) Insert(doc *Document) error {
 	_, err := mbd.db.Exec(doc.GenerateinsertStatement())
+	return err
+}
+
+func (mbd *mysqlBackend) InsertWithTimestamp(doc *Document, timestamp time.Time) error {
+	_, err := mbd.db.Exec(doc.GenerateinsertStatementWithTimestamp(timestamp))
 	return err
 }
 
