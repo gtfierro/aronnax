@@ -233,9 +233,6 @@ used in the `WHERE` clause:
 **All singular timestmpas are inclusive**; that is if there is a single bound, then the expressed time is included.
 **All time ranges are lower-inclusive, upper-exclusive: [time1, time2)**; [for these reasons](http://www.cs.utexas.edu/users/EWD/ewd08xx/EWD831.PDF)
 
-**All timestamps are inclusive**: this is because it is easy to get an
-exclusive range by altering with `+1ms` or `-1ms` in the query.
-
 | operator | syntax | definition | example |
 |----------|--------|------------|---------|
 | `IN`     | `WHERE <relational predicate> IN <time range>` | True if predicate was true *at any point* within the provided time range | `where Room = 410 in (now, now -5min)` |
@@ -374,4 +371,12 @@ and data.dkey = "Location/City" and data.dval = "Berkeley"
 ### `FOR`
 
 This one is tricky, because it involves verifying that the relational predicate is true for
-the whole expressed duration.
+the whole expressed duration. With the exception of this operator, the rest of these
+predicate constructions can be handled by rendering directly into the nested
+`SELECT` clause. 
+
+### Applying `NOT`
+
+Are we going to want to allow users to apply a `not` clause to the time predicates, independent
+of the relational predicates? I believe that these offer a sufficient coverage, so for now the
+answer is **NO**.
