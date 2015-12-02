@@ -230,15 +230,21 @@ I use in the future.
 From [this file](https://github.com/gtfierro/aronnax#queries), we define several time-based predicates that augment the relational predicates
 used in the `WHERE` clause:
 
+**All singular timestmpas are inclusive**; that is if there is a single bound, then the expressed time is included.
+**All time ranges are lower-inclusive, upper-exclusive: [time1, time2)**; [for these reasons](http://www.cs.utexas.edu/users/EWD/ewd08xx/EWD831.PDF)
+
+**All timestamps are inclusive**: this is because it is easy to get an
+exclusive range by altering with `+1ms` or `-1ms` in the query.
 
 | operator | syntax | definition | example |
 |----------|--------|------------|---------|
 | `IN`     | `WHERE <relational predicate> IN <time range>` | True if predicate was true *at any point* within the provided time range | `where Room = 410 in (now, now -5min)` |
 | `FOR`    | `WHERE <relational predicate> FOR <time range>` | True if the predicate is true *for the entire time range* | `where Room = 410 for (now, now -5min)` |
-| `BEFORE` | `WHERE <relational predicate> BEFORE <timestamp>` | True if predicate true *at any time* before the given time. | `where Room = 410 before 1447366661s` |
-| `IBEFORE`| `WHERE <relational predicate> IBEFORE <timestamp>` | True if the predicate is true in the most immediate edit before the given time. | `where Room = 410 ibefore 1447366661s` |
-| `AFTER` | `WHERE <relational predicate> BEFORE <timestamp>` | True if predicate true *at any time* after the given time. | `where Room = 410 after 1447366661s` |
-| `IAFTER`| `WHERE <relational predicate> IBEFORE <timestamp>` | True if the predicate is true in the most immediate edit after the given time. | `where Room = 410 iafter 1447366661s` |
+| `BEFORE` | `WHERE <relational predicate> BEFORE <timestamp>` | True if predicate true *at any time* before (and including) the given time. | `where Room = 410 before 1447366661s` |
+| `IBEFORE`| `WHERE <relational predicate> IBEFORE <timestamp>` | True if the predicate is true in the most immediate edit before (and including) the given time. | `where Room = 410 ibefore 1447366661s` |
+| `AFTER` | `WHERE <relational predicate> BEFORE <timestamp>` | True if predicate true *at any time* after (and including) the given time. | `where Room = 410 after 1447366661s` |
+| `IAFTER`| `WHERE <relational predicate> IBEFORE <timestamp>` | True if the predicate is true in the most immediate edit after (and including) the given time. | `where Room = 410 iafter 1447366661s` |
+
 
 In this section, we will discuss how to implement those in our SQL expression
 compiler. From above, we know that at the core of each of our relational
@@ -270,6 +276,102 @@ the "most recent" formulation.
 
 ### `IBEFORE`
 
-This operator is most similar to the default construction, because it only
-considers a single document. The other operators will match across many
-documents.
+This operator is most similar to the default construction, because it only considers a single document.
+The other operators will match across many documents.
+
+I believe that implementing this operator is as simple as augmenting the nested `SELECT` containing the
+`max(timestamp)` operation with using a `WHERE` clause to restrict the timestamps to be before the given
+timestamp.
+
+```sql
+select distinct data.uuid
+from data
+inner join
+(
+        select distinct uuid, dkey, max(timestamp) as maxtime from data
+        where timestamp <= 1234567890
+        group by dkey, uuid order by timestamp desc
+) sorted
+on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+where data.dval is not null
+and data.dkey = "Location/City" and data.dval = "Berkeley"
+```
+
+### `BEFORE`
+
+This operator should also be simply implemented by removing the `max` operator from the timestamp selector
+in the inner nested SELECT clause.
+
+```sql
+select distinct data.uuid
+from data
+inner join
+(
+        select distinct uuid, dkey, timestamp as maxtime from data
+        where timestamp <= 1234567890
+        group by dkey, uuid order by timestamp desc
+) sorted
+on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+where data.dval is not null
+and data.dkey = "Location/City" and data.dval = "Berkeley"
+```
+
+### `IAFTER`
+
+Simple inversion of `IBEFORE`, switching `min` with `max` and `<` with `>`.
+
+```sql
+select distinct data.uuid
+from data
+inner join
+(
+        select distinct uuid, dkey, min(timestamp) as maxtime from data
+        where timestamp >= 1234567890
+        group by dkey, uuid order by timestamp desc
+) sorted
+on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+where data.dval is not null
+and data.dkey = "Location/City" and data.dval = "Berkeley"
+```
+
+### `AFTER`
+
+Follows logically
+
+```sql
+select distinct data.uuid
+from data
+inner join
+(
+        select distinct uuid, dkey, timestamp as maxtime from data
+        where timestamp >= 1234567890
+        group by dkey, uuid order by timestamp desc
+) sorted
+on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+where data.dval is not null
+and data.dkey = "Location/City" and data.dval = "Berkeley"
+```
+
+### `IN`
+
+This wants to retrieve all documents between the two times, using lower-boudn inclusive,
+upper-bound exclusive:
+
+```sql
+select distinct data.uuid
+from data
+inner join
+(
+        select distinct uuid, dkey, timestamp as maxtime from data
+        where timestamp >= 1234567890 and timestamp < 9876543210
+        group by dkey, uuid order by timestamp desc
+) sorted
+on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+where data.dval is not null
+and data.dkey = "Location/City" and data.dval = "Berkeley"
+```
+
+### `FOR`
+
+This one is tricky, because it involves verifying that the relational predicate is true for
+the whole expressed duration.
