@@ -45,7 +45,7 @@ right join
 on internal.uuid = second.uuid;
 `
 
-var showQuery = flag.Bool("debug", true, "Show generated MySQL queries")
+var showQuery = flag.Bool("debug", false, "Show generated MySQL queries")
 
 func newBackend(user, password, database string) *mysqlBackend {
 	var (
@@ -109,7 +109,7 @@ func (mbd *mysqlBackend) Eval(q *query.Query) *sql.Rows {
 	if q.Wheres.SQL != "" {
 		tosend = fmt.Sprintf(whereTemplate, q.Wheres.SQL)
 	}
-	if showQuery {
+	if *showQuery {
 		fmt.Println(tosend)
 	}
 	rows, err := mbd.db.Query(tosend)
@@ -148,6 +148,7 @@ func (mbd *mysqlBackend) StartInteractive() {
 }
 
 func main() {
+	flag.Parse()
 	user := os.Getenv("ARONNAXUSER")
 	pass := os.Getenv("ARONNAXPASS")
 	dbname := os.Getenv("ARONNAXDB")
