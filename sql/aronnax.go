@@ -4,6 +4,7 @@ import (
 	query "./lang"
 	"bufio"
 	"database/sql"
+	"flag"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
@@ -43,6 +44,8 @@ right join
 ) internal
 on internal.uuid = second.uuid;
 `
+
+var showQuery = flag.Bool("debug", true, "Show generated MySQL queries")
 
 func newBackend(user, password, database string) *mysqlBackend {
 	var (
@@ -106,7 +109,9 @@ func (mbd *mysqlBackend) Eval(q *query.Query) *sql.Rows {
 	if q.Wheres.SQL != "" {
 		tosend = fmt.Sprintf(whereTemplate, q.Wheres.SQL)
 	}
-	//fmt.Println(tosend)
+	if showQuery {
+		fmt.Println(tosend)
+	}
 	rows, err := mbd.db.Query(tosend)
 	if err != nil {
 		log.Fatal(err)

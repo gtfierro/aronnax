@@ -42,36 +42,36 @@ func TestMain(m *testing.M) {
 	}
 
 	for i, doc := range []Document{ // initial documents
-		Document{UUID: uuid1, Tags: initTags}, // 0
-		Document{UUID: uuid2, Tags: initTags}, // 1
-		Document{UUID: uuid3, Tags: initTags}, // 2
-		Document{UUID: uuid4, Tags: initTags}, // 3
-		Document{UUID: uuid5, Tags: initTags}, // 4
+		Document{UUID: uuid1, Tags: initTags}, // 1
+		Document{UUID: uuid2, Tags: initTags}, // 2
+		Document{UUID: uuid3, Tags: initTags}, // 3
+		Document{UUID: uuid4, Tags: initTags}, // 4
+		Document{UUID: uuid5, Tags: initTags}, // 5
 
 		// change location on uuid 1, 3, 5
-		Document{UUID: uuid1, Tags: map[string]string{"Location/Room": "411"}}, // 5
-		Document{UUID: uuid3, Tags: map[string]string{"Location/Room": "420"}}, // 6
-		Document{UUID: uuid5, Tags: map[string]string{"Location/Room": "405"}}, // 7
+		Document{UUID: uuid1, Tags: map[string]string{"Location/Room": "411"}}, // 6
+		Document{UUID: uuid3, Tags: map[string]string{"Location/Room": "420"}}, // 7
+		Document{UUID: uuid5, Tags: map[string]string{"Location/Room": "405"}}, // 8
 
 		// add new tags describing temperature
-		Document{UUID: uuid1, Tags: temperatureTags}, // 8
-		Document{UUID: uuid2, Tags: temperatureTags}, // 9
-		Document{UUID: uuid3, Tags: temperatureTags}, // 10
-		Document{UUID: uuid4, Tags: temperatureTags}, // 11
-		Document{UUID: uuid5, Tags: temperatureTags}, // 12
+		Document{UUID: uuid1, Tags: temperatureTags}, // 9
+		Document{UUID: uuid2, Tags: temperatureTags}, // 10
+		Document{UUID: uuid3, Tags: temperatureTags}, // 11
+		Document{UUID: uuid4, Tags: temperatureTags}, // 12
+		Document{UUID: uuid5, Tags: temperatureTags}, // 13
 
 		// add exposure
-		Document{UUID: uuid1, Tags: map[string]string{"Metadata/Exposure": "South"}}, // 13
-		Document{UUID: uuid2, Tags: map[string]string{"Metadata/Exposure": "West"}},  // 14
-		Document{UUID: uuid3, Tags: map[string]string{"Metadata/Exposure": "North"}}, // 15
-		Document{UUID: uuid4, Tags: map[string]string{"Metadata/Exposure": "East"}},  // 16
-		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": "South"}}, // 17
+		Document{UUID: uuid1, Tags: map[string]string{"Metadata/Exposure": "South"}}, // 14
+		Document{UUID: uuid2, Tags: map[string]string{"Metadata/Exposure": "West"}},  // 15
+		Document{UUID: uuid3, Tags: map[string]string{"Metadata/Exposure": "North"}}, // 16
+		Document{UUID: uuid4, Tags: map[string]string{"Metadata/Exposure": "East"}},  // 17
+		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": "South"}}, // 18
 
 		// delete exposure from one
 		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": ""}}, // 18
 	} {
 		// generate stricly ordered times so that we can write tests easily
-		if err := backend.InsertWithTimestamp(&doc, time.Unix(int64(i), 0)); err != nil {
+		if err := backend.InsertWithTimestamp(&doc, time.Unix(int64(i)+1, 0)); err != nil {
 			log.Fatal("Error inserting: %v", err)
 		}
 	}
@@ -390,36 +390,36 @@ func TestWhereWithTimePredicate(t *testing.T) {
 	}{
 		// BEFORE
 		{
-			"select distinct uuid where Location/Room = '410' before 4;",
-			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
-		},
-		{
 			"select distinct uuid where Location/Room = '410' before 5;",
 			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
 		},
 		{
-			"select distinct uuid where Location/Room = '410' before 7;",
+			"select distinct uuid where Location/Room = '410' before 6;",
 			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
 		},
 		{
 			"select distinct uuid where Location/Room = '410' before 8;",
 			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
 		},
+		{
+			"select distinct uuid where Location/Room = '410' before 9;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
+		},
 
 		// IBEFORE
 		{
-			"select distinct uuid where Location/Room = '410' ibefore 7;",
+			"select distinct uuid where Location/Room = '410' ibefore 8;",
 			map[uuid.UUID]bool{uuid2: false, uuid4: false},
 		},
 		{
-			"select distinct uuid where Location/Room = '410' ibefore 5;",
+			"select distinct uuid where Location/Room = '410' ibefore 6;",
 			map[uuid.UUID]bool{uuid2: false, uuid3: false, uuid4: false, uuid5: false},
 		},
 
 		// IAFTER
 		{
 			"select distinct uuid where Location/Room = '411' iafter 0;",
-			map[uuid.UUID]bool{uuid1: false},
+			map[uuid.UUID]bool{},
 		},
 		{
 			"select distinct uuid where Location/Room = '411' iafter 5;",

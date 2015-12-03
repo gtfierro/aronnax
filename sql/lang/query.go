@@ -122,45 +122,45 @@ func (ql *QueryLex) NextLetter() string {
 }
 
 var termTemplate = `
-    (
-        select distinct data.uuid
-        from data
-        inner join
-        (
-            select distinct uuid, dkey, max(timestamp) as maxtime from data
-            group by dkey, uuid order by timestamp desc
-        ) sorted
-        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-        where data.dval is not null
-            %s
-    ) as %s
+	(
+		select distinct data.uuid
+		from data
+		inner join
+		(
+			select distinct uuid, dkey, max(timestamp) as maxtime from data
+			group by dkey, uuid order by timestamp desc
+		) sorted
+		on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+		where data.dval is not null
+			%s
+	) as %s
 `
 
 var termTemplateUnion = `
-    (
-        select distinct data.uuid
-        from data
-        inner join
-        (
-            select distinct uuid, dkey, max(timestamp) as maxtime from data
-            group by dkey, uuid order by timestamp desc
-        ) sorted
-        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-        where data.dval is not null
-            %s
-    )
+	(
+		select distinct data.uuid
+		from data
+		inner join
+		(
+			select distinct uuid, dkey, max(timestamp) as maxtime from data
+			group by dkey, uuid order by timestamp desc
+		) sorted
+		on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+		where data.dval is not null
+			%s
+	)
 `
 
 var timePredicateSingle = `
-    select distinct uuid, dkey, max(timestamp) as maxtime from data
-    where timestamp %s "%s"
-    group by dkey, uuid order by timestamp desc
+	select distinct uuid, dkey, max(timestamp) as maxtime from data
+	where timestamp %s "%s"
+	group by dkey, uuid order by timestamp desc
 `
 
 var timePredicateRange = `
-    select distinct uuid, dkey, max(timestamp) as maxtime from data
-    where timestamp %s "%s" and timestamp %s "%s"
-    group by dkey, uuid order by timestamp desc
+	select distinct uuid, dkey, max(timestamp) as maxtime from data
+	where timestamp %s "%s" and timestamp %s "%s"
+	group by dkey, uuid order by timestamp desc
 `
 
 func NewQueryLexer(s string) *QueryLex {
@@ -822,8 +822,8 @@ Querydefault:
 		//line query.y:190
 		{
 			template := `select distinct uuid, dkey, timestamp as maxtime from data
-	                where timestamp <= "%s"
-	                group by dkey, uuid order by timestamp desc`
+					where timestamp <= "%s"
+					group by dkey, uuid order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
 		}
 	case 21:
@@ -831,8 +831,8 @@ Querydefault:
 		//line query.y:197
 		{
 			template := `select distinct uuid, dkey, max(timestamp) as maxtime from data
-	                where timestamp <= "%s"
-	                group by dkey, uuid order by timestamp desc`
+					where timestamp <= "%s"
+					group by dkey, uuid order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
 		}
 	case 22:
@@ -840,8 +840,8 @@ Querydefault:
 		//line query.y:204
 		{
 			template := `select distinct uuid, dkey, timestamp as maxtime from data
-	                where timestamp >= "%s"
-	                group by dkey, uuid order by timestamp desc`
+					where timestamp > "%s"
+					group by dkey, uuid order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
 		}
 	case 23:
@@ -849,8 +849,8 @@ Querydefault:
 		//line query.y:211
 		{
 			template := `select distinct uuid, dkey, min(timestamp) as maxtime from data
-	                where timestamp >= "%s"
-	                group by dkey, uuid order by timestamp desc`
+					where timestamp >= "%s"
+					group by dkey, uuid order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
 		}
 	case 25:
