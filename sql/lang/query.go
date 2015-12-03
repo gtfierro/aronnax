@@ -823,7 +823,7 @@ Querydefault:
 		{
 			template := `select distinct uuid, dkey, timestamp as maxtime from data
 					where timestamp <= "%s"
-					group by dkey, uuid order by timestamp desc`
+					order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
 		}
 	case 21:
@@ -840,7 +840,7 @@ Querydefault:
 		//line query.y:204
 		{
 			template := `select distinct uuid, dkey, timestamp as maxtime from data
-					where timestamp > "%s"
+					where timestamp >= "%s"
 					group by dkey, uuid order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
 		}
