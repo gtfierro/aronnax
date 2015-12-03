@@ -299,6 +299,9 @@ and data.dkey = "Location/City" and data.dval = "Berkeley"
 This operator should also be simply implemented by removing the `max` operator from the timestamp selector
 in the inner nested SELECT clause.
 
+If we do not remove the `group by dkey, uuid`, then we only receive a single
+<`key`,`value`,`document`> for our query, which is incorrect.
+
 ```sql
 select distinct data.uuid
 from data
@@ -306,7 +309,7 @@ inner join
 (
         select distinct uuid, dkey, timestamp as maxtime from data
         where timestamp <= 1234567890
-        group by dkey, uuid order by timestamp desc
+        order by timestamp desc
 ) sorted
 on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
 where data.dval is not null

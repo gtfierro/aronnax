@@ -68,7 +68,7 @@ func TestMain(m *testing.M) {
 		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": "South"}}, // 18
 
 		// delete exposure from one
-		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": ""}}, // 18
+		Document{UUID: uuid5, Tags: map[string]string{"Metadata/Exposure": ""}}, // 19
 	} {
 		// generate stricly ordered times so that we can write tests easily
 		if err := backend.InsertWithTimestamp(&doc, time.Unix(int64(i)+1, 0)); err != nil {
@@ -374,7 +374,7 @@ func TestWhereWithNotRecentDocument(t *testing.T) {
 	}
 }
 
-func TestWhereWithTimePredicate(t *testing.T) {
+func TestWhereWithTimePredicateWithBefore(t *testing.T) {
 	user := os.Getenv("ARONNAXTESTUSER")
 	pass := os.Getenv("ARONNAXTESTPASS")
 	dbname := os.Getenv("ARONNAXTESTDB")
@@ -384,6 +384,7 @@ func TestWhereWithTimePredicate(t *testing.T) {
 	uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
 	uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
 	uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuiddummy, _ := uuid.FromString("aa45f708-8be8-11e5-86ae-5cc5d4ded1ae")
 	for _, test := range []struct {
 		querystring string             // query
 		uuids       map[uuid.UUID]bool // expected matching UUIDs are keys. Initialize vals to false
@@ -405,47 +406,21 @@ func TestWhereWithTimePredicate(t *testing.T) {
 			"select distinct uuid where Location/Room = '410' before 9;",
 			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
 		},
-
-		// IBEFORE
 		{
-			"select distinct uuid where Location/Room = '410' ibefore 8;",
-			map[uuid.UUID]bool{uuid2: false, uuid4: false},
-		},
-		{
-			"select distinct uuid where Location/Room = '410' ibefore 6;",
-			map[uuid.UUID]bool{uuid2: false, uuid3: false, uuid4: false, uuid5: false},
-		},
-
-		// IAFTER
-		{
-			"select distinct uuid where Location/Room = '411' iafter 0;",
+			"select distinct uuid where Location/Room = '411' before 5;",
 			map[uuid.UUID]bool{},
 		},
 		{
-			"select distinct uuid where Location/Room = '411' iafter 5;",
+			"select distinct uuid where Location/Room = '411' before 6;",
 			map[uuid.UUID]bool{uuid1: false},
 		},
 		{
-			"select distinct uuid where has Metadata/Exposure iafter 4;",
-			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
+			"select distinct uuid where not has Metadata/Exposure before 13;",
+			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false, uuiddummy: false},
 		},
 		{
-			"select distinct uuid where has Metadata/Exposure iafter 13;",
-			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
-		},
-		{
-			"select distinct uuid where has Metadata/Exposure iafter 17;",
-			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false},
-		},
-		{
-			"select distinct uuid where has Metadata/Exposure iafter 18;",
-			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false},
-		},
-
-		// AFTER
-		{
-			"select distinct uuid where has Metadata/Exposure after 17;",
-			map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false},
+			"select distinct uuid where not has Metadata/Exposure before 14;",
+			map[uuid.UUID]bool{uuid2: false, uuid3: false, uuid4: false, uuid5: false, uuiddummy: false},
 		},
 	} {
 		var (
