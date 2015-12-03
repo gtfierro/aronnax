@@ -46,6 +46,7 @@ on internal.uuid = second.uuid;
 `
 
 var showQuery = flag.Bool("debug", false, "Show generated MySQL queries")
+var httpPort = flag.Int("port", 2000, "Serve query interface on HTTP port")
 
 func newBackend(user, password, database string) *mysqlBackend {
 	var (
@@ -104,7 +105,8 @@ func (mbd *mysqlBackend) InsertWithTimestamp(doc *Document, timestamp time.Time)
 	return err
 }
 
-func (mbd *mysqlBackend) Eval(q *query.Query) *sql.Rows {
+// passes through the error if it is nil
+func (mbd *mysqlBackend) Eval(q *query.Query, err error) (*sql.Rows, error) {
 	var tosend string
 	if q.Wheres.SQL != "" {
 		tosend = fmt.Sprintf(whereTemplate, q.Wheres.SQL)
@@ -112,20 +114,21 @@ func (mbd *mysqlBackend) Eval(q *query.Query) *sql.Rows {
 	if *showQuery {
 		fmt.Println(tosend)
 	}
-	rows, err := mbd.db.Query(tosend)
-	if err != nil {
-		log.Fatal(err)
+	if err == nil {
+		return mbd.db.Query(tosend)
+	} else {
+		return nil, nil
 	}
-	return rows
 }
 
-func (mbd *mysqlBackend) Parse(querystring string) *query.Query {
+func (mbd *mysqlBackend) Parse(querystring string) (*query.Query, error) {
+	var parseErr error
 	lex := query.NewQueryLexer(querystring)
 	query.QueryParse(lex)
 	if lex.Err != nil {
-		fmt.Println("ERROR", lex.Err, querystring)
+		parseErr = fmt.Errorf("ERROR %s %s", lex.Err, querystring)
 	}
-	return lex.Query
+	return lex.Query, parseErr
 }
 
 func (mbd *mysqlBackend) StartInteractive() {
@@ -136,7 +139,10 @@ func (mbd *mysqlBackend) StartInteractive() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		rows := mbd.Eval(mbd.Parse(s))
+		rows, evalParseErr := mbd.Eval(mbd.Parse(s))
+		if evalParseErr != nil {
+			log.Fatal("Error parse/eval", evalParseErr)
+		}
 		if docs, err := DocsFromRows(rows); err != nil {
 			log.Fatal("docs from", err)
 		} else {
@@ -153,5 +159,8 @@ func main() {
 	pass := os.Getenv("ARONNAXPASS")
 	dbname := os.Getenv("ARONNAXDB")
 	backend := newBackend(user, pass, dbname)
-	backend.StartInteractive()
+
+	// setup HTTP server
+	go backend.StartInteractive()
+	StartHTTPServer(backend, *httpPort)
 }
