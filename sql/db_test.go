@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"github.com/satori/go.uuid"
@@ -217,10 +218,21 @@ func TestRecentDocument(t *testing.T) {
 			},
 		},
 	} {
+		var (
+			rows *sql.Rows
+			docs []*Document
+			err  error
+		)
 		query := fmt.Sprintf("select * where uuid = '%s';", test.uuid)
-		if docs, err := DocsFromRows(backend.Eval(backend.Parse(query))); err != nil {
+		if rows, err = backend.Eval(backend.Parse(query)); err != nil {
 			t.Errorf("Query failed! %v", err)
-		} else if len(docs) != 1 {
+			continue
+		}
+		if docs, err = DocsFromRows(rows); err != nil {
+			t.Errorf("Doc transform failed! %v", err)
+			continue
+		}
+		if len(docs) != 1 {
 			t.Errorf("Only expected one doc! Got %v", len(docs))
 		} else if !reflect.DeepEqual(test.doc, *(docs[0])) {
 			t.Errorf("Does not match expected. Got\n%v\nwanted\n%v\n", docs[0], test.doc)
@@ -303,6 +315,7 @@ func TestWhereRecentDocument(t *testing.T) {
 	} {
 		var (
 			docs            []*Document
+			rows            *sql.Rows
 			expectedMatches = make(map[uuid.UUID]bool)
 			err             error
 		)
@@ -310,8 +323,13 @@ func TestWhereRecentDocument(t *testing.T) {
 			expectedMatches[uid] = false
 		}
 		fmt.Println(test.querystring)
-		if docs, err = DocsFromRows(backend.Eval(backend.Parse(test.querystring))); err != nil {
+		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
 			t.Errorf("Query failed! %v", err)
+			continue
+		}
+		if docs, err = DocsFromRows(rows); err != nil {
+			t.Errorf("Doc transform failed! %v", err)
+			continue
 		}
 		for _, doc := range docs {
 			if _, found := expectedMatches[doc.UUID]; !found {
@@ -356,6 +374,7 @@ func TestWhereWithNotRecentDocument(t *testing.T) {
 	} {
 		var (
 			docs            []*Document
+			rows            *sql.Rows
 			expectedMatches = make(map[uuid.UUID]bool)
 			err             error
 		)
@@ -363,8 +382,13 @@ func TestWhereWithNotRecentDocument(t *testing.T) {
 			expectedMatches[uid] = false
 		}
 		fmt.Println(test.querystring)
-		if docs, err = DocsFromRows(backend.Eval(backend.Parse(test.querystring))); err != nil {
+		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
 			t.Errorf("Query failed! %v", err)
+			continue
+		}
+		if docs, err = DocsFromRows(rows); err != nil {
+			t.Errorf("Doc transform failed! %v", err)
+			continue
 		}
 		for _, doc := range docs {
 			if _, found := expectedMatches[doc.UUID]; !found {
@@ -433,6 +457,7 @@ func TestWhereWithTimePredicateWithBefore(t *testing.T) {
 	} {
 		var (
 			docs            []*Document
+			rows            *sql.Rows
 			expectedMatches = make(map[uuid.UUID]bool)
 			err             error
 		)
@@ -440,8 +465,13 @@ func TestWhereWithTimePredicateWithBefore(t *testing.T) {
 			expectedMatches[uid] = false
 		}
 		fmt.Println(test.querystring)
-		if docs, err = DocsFromRows(backend.Eval(backend.Parse(test.querystring))); err != nil {
+		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
 			t.Errorf("Query failed! %v", err)
+			continue
+		}
+		if docs, err = DocsFromRows(rows); err != nil {
+			t.Errorf("Doc transform failed! %v", err)
+			continue
 		}
 		for _, doc := range docs {
 			if _, found := expectedMatches[doc.UUID]; !found {
@@ -487,9 +517,22 @@ func TestWhereWithTimePredicateWithIBefore(t *testing.T) {
 			"select distinct uuid where not has Metadata/Exposure ibefore 13;",
 			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5, uuiddummy},
 		},
+		{
+			"select distinct uuid where not has Metadata/Exposure ibefore 14;",
+			[]uuid.UUID{uuid2, uuid3, uuid4, uuid5, uuiddummy},
+		},
+		{
+			"select distinct uuid where not has Metadata/Exposure ibefore 18;",
+			[]uuid.UUID{uuiddummy},
+		},
+		{
+			"select distinct uuid where not has Metadata/Exposure ibefore 20;",
+			[]uuid.UUID{uuiddummy, uuid5},
+		},
 	} {
 		var (
 			docs            []*Document
+			rows            *sql.Rows
 			expectedMatches = make(map[uuid.UUID]bool)
 			err             error
 		)
@@ -497,8 +540,68 @@ func TestWhereWithTimePredicateWithIBefore(t *testing.T) {
 			expectedMatches[uid] = false
 		}
 		fmt.Println(test.querystring)
-		if docs, err = DocsFromRows(backend.Eval(backend.Parse(test.querystring))); err != nil {
+		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
 			t.Errorf("Query failed! %v", err)
+			continue
+		}
+		if docs, err = DocsFromRows(rows); err != nil {
+			t.Errorf("Doc transform failed! %v", err)
+			continue
+		}
+		for _, doc := range docs {
+			if _, found := expectedMatches[doc.UUID]; !found {
+				t.Errorf("Query %v matched unexpected UUID %v", test.querystring, doc.UUID)
+			} else {
+				expectedMatches[doc.UUID] = true
+			}
+		}
+
+		for uuid, covered := range expectedMatches {
+			if !covered {
+				t.Errorf("Query %v did not match expected UUID %v", test.querystring, uuid)
+			}
+		}
+	}
+}
+
+func TestWhereWithTimePredicateWithAFTER(t *testing.T) {
+	user := os.Getenv("ARONNAXTESTUSER")
+	pass := os.Getenv("ARONNAXTESTPASS")
+	dbname := os.Getenv("ARONNAXTESTDB")
+	backend := newBackend(user, pass, dbname)
+	uuid1, _ := uuid.FromString("2b365d6a-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid2, _ := uuid.FromString("370dd17c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
+	//uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	//uuiddummy, _ := uuid.FromString("aa45f708-8be8-11e5-86ae-5cc5d4ded1ae")
+	for _, test := range []struct {
+		querystring string // query
+		uuids       []uuid.UUID
+	}{
+		// AFTER
+		{
+			"select distinct uuid where has Metadata/Exposure after 17;",
+			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4},
+		},
+	} {
+		var (
+			docs            []*Document
+			rows            *sql.Rows
+			expectedMatches = make(map[uuid.UUID]bool)
+			err             error
+		)
+		for _, uid := range test.uuids {
+			expectedMatches[uid] = false
+		}
+		fmt.Println(test.querystring)
+		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+			t.Errorf("Query failed! %v", err)
+			continue
+		}
+		if docs, err = DocsFromRows(rows); err != nil {
+			t.Errorf("Doc transform failed! %v", err)
+			continue
 		}
 		for _, doc := range docs {
 			if _, found := expectedMatches[doc.UUID]; !found {

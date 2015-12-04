@@ -316,6 +316,29 @@ where data.dval is not null
 and data.dkey = "Location/City" and data.dval = "Berkeley"
 ```
 
+### `AFTER`
+
+It would first seem that this follows logically from `BEFORE`, using something like:
+
+```sql
+select distinct data.uuid
+from data
+inner join
+(
+        select distinct uuid, dkey, timestamp as maxtime from data
+        where timestamp >= 1234567890
+        group by dkey, uuid order by timestamp desc
+) sorted
+on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+where data.dval is not null
+and data.dkey = "Location/City" and data.dval = "Berkeley"
+```
+
+but this actually fails to match tags that are still valid: it only matches tags that are applied
+after the given timestamp. This may actually be serendipitous, as "only applied after" is a flavor
+of query that was not covered by the previous imagining of these operators, and is actually more
+helpful.
+
 ### `IAFTER`
 
 Simple inversion of `IBEFORE`, switching `min` with `max` and `<` with `>`.
@@ -334,27 +357,10 @@ where data.dval is not null
 and data.dkey = "Location/City" and data.dval = "Berkeley"
 ```
 
-### `AFTER`
-
-Follows logically
-
-```sql
-select distinct data.uuid
-from data
-inner join
-(
-        select distinct uuid, dkey, timestamp as maxtime from data
-        where timestamp >= 1234567890
-        group by dkey, uuid order by timestamp desc
-) sorted
-on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-where data.dval is not null
-and data.dkey = "Location/City" and data.dval = "Berkeley"
-```
 
 ### `IN`
 
-This wants to retrieve all documents between the two times, using lower-boudn inclusive,
+This wants to retrieve all documents between the two times, using lower-bound inclusive,
 upper-bound exclusive:
 
 ```sql
@@ -364,7 +370,7 @@ inner join
 (
         select distinct uuid, dkey, timestamp as maxtime from data
         where timestamp >= 1234567890 and timestamp < 9876543210
-        group by dkey, uuid order by timestamp desc
+        order by timestamp desc
 ) sorted
 on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
 where data.dval is not null
