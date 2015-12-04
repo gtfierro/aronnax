@@ -204,7 +204,7 @@ timeTerm	:	IN timerange
 			{
 				template := `select distinct uuid, dkey, timestamp as maxtime from data
 				where timestamp >= "%s"
-				group by dkey, uuid order by timestamp desc`
+				order by timestamp desc`
 				$$ = fmt.Sprintf(template, $2.Format(_time.RFC3339))
 			}
 			|	IAFTER timeref
