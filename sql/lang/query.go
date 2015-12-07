@@ -35,24 +35,23 @@ const NOW = 57353
 const SET = 57354
 const IBEFORE = 57355
 const BEFORE = 57356
-const IAFTER = 57357
-const AFTER = 57358
-const AND = 57359
-const AS = 57360
-const TO = 57361
-const OR = 57362
-const IN = 57363
-const NOT = 57364
-const FOR = 57365
-const LPAREN = 57366
-const RPAREN = 57367
-const NEWLINE = 57368
-const NUMBER = 57369
-const SEMICOLON = 57370
-const EQ = 57371
-const NEQ = 57372
-const COMMA = 57373
-const ALL = 57374
+const AFTER = 57357
+const AND = 57358
+const AS = 57359
+const TO = 57360
+const OR = 57361
+const IN = 57362
+const NOT = 57363
+const FOR = 57364
+const LPAREN = 57365
+const RPAREN = 57366
+const NEWLINE = 57367
+const NUMBER = 57368
+const SEMICOLON = 57369
+const EQ = 57370
+const NEQ = 57371
+const COMMA = 57372
+const ALL = 57373
 
 var QueryToknames = [...]string{
 	"$end",
@@ -69,7 +68,6 @@ var QueryToknames = [...]string{
 	"SET",
 	"IBEFORE",
 	"BEFORE",
-	"IAFTER",
 	"AFTER",
 	"AND",
 	"AS",
@@ -94,7 +92,7 @@ const QueryEofCode = 1
 const QueryErrCode = 2
 const QueryMaxDepth = 200
 
-//line query.y:288
+//line query.y:281
 const eof = 0
 
 var supported_formats = []string{"1/2/2006",
@@ -175,7 +173,6 @@ func NewQueryLexer(s string) *QueryLex {
 			{Token: BEFORE, Pattern: "before"},
 			{Token: IBEFORE, Pattern: "ibefore"},
 			{Token: AFTER, Pattern: "after"},
-			{Token: IAFTER, Pattern: "iafter"},
 			{Token: COMMA, Pattern: ","},
 			{Token: AND, Pattern: "and"},
 			{Token: AS, Pattern: "as"},
@@ -231,68 +228,68 @@ var QueryExca = [...]int{
 	-2, 0,
 }
 
-const QueryNprod = 33
+const QueryNprod = 32
 const QueryPrivate = 57344
 
 var QueryTokenNames []string
 var QueryStates []string
 
-const QueryLast = 57
+const QueryLast = 55
 
 var QueryAct = [...]int{
 
-	52, 6, 30, 7, 11, 39, 42, 9, 20, 43,
-	53, 51, 26, 25, 28, 27, 23, 50, 38, 22,
-	24, 16, 31, 32, 17, 41, 13, 4, 8, 10,
-	49, 48, 44, 45, 46, 47, 15, 55, 18, 19,
-	54, 33, 29, 12, 2, 34, 37, 1, 21, 35,
-	36, 40, 14, 5, 3, 0, 56,
+	50, 6, 29, 7, 11, 38, 41, 9, 20, 42,
+	51, 49, 48, 37, 47, 13, 46, 45, 4, 53,
+	52, 30, 31, 32, 40, 12, 16, 8, 10, 17,
+	19, 28, 43, 44, 33, 2, 36, 1, 34, 35,
+	15, 21, 18, 26, 25, 27, 23, 39, 14, 22,
+	24, 5, 3, 0, 54,
 }
 var QueryPact = [...]int{
 
-	40, -1000, -4, 1, -1000, -27, 36, -1000, -1000, 14,
-	-1000, -4, -1000, -20, -1, 14, -7, 34, 14, -1000,
-	-1000, -1000, 14, 14, -6, -2, -2, -2, -2, -1000,
-	27, 23, 22, -1000, -8, -1000, -1000, -1000, -14, -1000,
-	-17, 33, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
-	-1000, -1000, -1000, 30, -1000, -17, -1000,
+	31, -1000, -4, 1, -1000, -26, 18, -1000, -1000, 19,
+	-1000, -4, -1000, -19, 30, 19, -7, 16, 19, -1000,
+	-1000, -1000, 19, 19, -10, -2, -2, -2, -1000, 9,
+	8, 6, -1000, -12, -1000, -1000, -1000, -13, -1000, -16,
+	13, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
+	-1000, 12, -1000, -16, -1000,
 }
 var QueryPgo = [...]int{
 
-	0, 27, 54, 53, 26, 52, 5, 51, 0, 48,
-	47, 46,
+	0, 18, 52, 51, 15, 48, 5, 47, 0, 41,
+	37, 36,
 }
 var QueryR1 = [...]int{
 
 	0, 10, 10, 2, 1, 1, 1, 3, 3, 4,
 	4, 4, 4, 4, 5, 5, 5, 5, 5, 9,
-	9, 9, 9, 9, 11, 6, 6, 7, 7, 7,
-	7, 8, 8,
+	9, 9, 9, 11, 6, 6, 7, 7, 7, 7,
+	8, 8,
 }
 var QueryR2 = [...]int{
 
 	0, 5, 3, 1, 1, 3, 2, 1, 1, 1,
 	2, 3, 3, 2, 3, 3, 3, 2, 3, 2,
-	2, 2, 2, 2, 2, 1, 2, 2, 1, 1,
-	1, 2, 3,
+	2, 2, 2, 2, 1, 2, 2, 1, 1, 1,
+	2, 3,
 }
 var QueryChk = [...]int{
 
-	-1000, -10, 4, -2, -1, -3, 5, 7, 32, 6,
-	28, 31, 7, -4, -5, 22, 7, 10, 24, -1,
-	28, -9, 20, 17, 21, 14, 13, 16, 15, -4,
-	9, 29, 30, 7, -4, -4, -4, -11, 24, -6,
-	-7, 27, 8, 11, -6, -6, -6, 8, 8, 8,
-	25, 25, -8, 27, 7, 7, -8,
+	-1000, -10, 4, -2, -1, -3, 5, 7, 31, 6,
+	27, 30, 7, -4, -5, 21, 7, 10, 23, -1,
+	27, -9, 19, 16, 20, 14, 13, 15, -4, 9,
+	28, 29, 7, -4, -4, -4, -11, 23, -6, -7,
+	26, 8, 11, -6, -6, 8, 8, 8, 24, 24,
+	-8, 26, 7, 7, -8,
 }
 var QueryDef = [...]int{
 
 	0, -2, 0, 0, 3, 4, 0, 7, 8, 0,
 	2, 0, 6, 0, 9, 0, 0, 0, 0, 5,
-	1, 10, 0, 0, 0, 0, 0, 0, 0, 13,
-	0, 0, 0, 17, 0, 11, 12, 19, 0, 20,
-	25, 28, 29, 30, 21, 22, 23, 14, 15, 16,
-	18, 24, 26, 0, 27, 31, 32,
+	1, 10, 0, 0, 0, 0, 0, 0, 13, 0,
+	0, 0, 17, 0, 11, 12, 19, 0, 20, 24,
+	27, 28, 29, 21, 22, 14, 15, 16, 18, 23,
+	25, 0, 26, 30, 31,
 }
 var QueryTok1 = [...]int{
 
@@ -303,7 +300,6 @@ var QueryTok2 = [...]int{
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 	12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
 	22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-	32,
 }
 var QueryTok3 = [...]int{
 	0,
@@ -844,30 +840,21 @@ Querydefault:
 					order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
 		}
-	case 23:
-		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:211
-		{
-			template := `select distinct uuid, dkey, min(timestamp) as maxtime from data
-					where timestamp >= "%s"
-					group by dkey, uuid order by timestamp desc`
-			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
-		}
-	case 25:
+	case 24:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:224
+		//line query.y:217
 		{
 			QueryVAL.time = QueryDollar[1].time
 		}
-	case 26:
+	case 25:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:228
+		//line query.y:221
 		{
 			QueryVAL.time = QueryDollar[1].time.Add(QueryDollar[2].timediff)
 		}
-	case 27:
+	case 26:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:234
+		//line query.y:227
 		{
 			foundtime, err := parseAbsTime(QueryDollar[1].str, QueryDollar[2].str)
 			if err != nil {
@@ -875,9 +862,9 @@ Querydefault:
 			}
 			QueryVAL.time = foundtime
 		}
-	case 28:
+	case 27:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:242
+		//line query.y:235
 		{
 			num, err := strconv.ParseInt(QueryDollar[1].str, 10, 64)
 			if err != nil {
@@ -885,9 +872,9 @@ Querydefault:
 			}
 			QueryVAL.time = _time.Unix(num, 0)
 		}
-	case 29:
+	case 28:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:250
+		//line query.y:243
 		{
 			found := false
 			for _, format := range supported_formats {
@@ -903,15 +890,15 @@ Querydefault:
 				Querylex.(*QueryLex).Error(fmt.Sprintf("No time format matching \"%v\" found", QueryDollar[1].str))
 			}
 		}
-	case 30:
+	case 29:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:266
+		//line query.y:259
 		{
 			QueryVAL.time = _time.Now()
 		}
-	case 31:
+	case 30:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:272
+		//line query.y:265
 		{
 			var err error
 			QueryVAL.timediff, err = parseReltime(QueryDollar[1].str, QueryDollar[2].str)
@@ -919,9 +906,9 @@ Querydefault:
 				Querylex.(*QueryLex).Error(fmt.Sprintf("Error parsing relative time \"%v %v\" (%v)", QueryDollar[1].str, QueryDollar[2].str, err.Error()))
 			}
 		}
-	case 32:
+	case 31:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:280
+		//line query.y:273
 		{
 			newDuration, err := parseReltime(QueryDollar[1].str, QueryDollar[2].str)
 			if err != nil {

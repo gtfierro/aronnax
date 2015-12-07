@@ -573,16 +573,31 @@ func TestWhereWithTimePredicateWithAFTER(t *testing.T) {
 	uuid2, _ := uuid.FromString("370dd17c-8cbd-11e5-8bb3-0cc47a0f7eea")
 	uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
 	uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
-	//uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
-	//uuiddummy, _ := uuid.FromString("aa45f708-8be8-11e5-86ae-5cc5d4ded1ae")
+	uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
 	for _, test := range []struct {
 		querystring string // query
 		uuids       []uuid.UUID
 	}{
 		// AFTER
 		{
+			"select distinct uuid where has Metadata/Exposure after 14;",
+			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
+		},
+		{
+			"select distinct uuid where has Metadata/Exposure after 15;",
+			[]uuid.UUID{uuid2, uuid3, uuid4, uuid5},
+		},
+		{
 			"select distinct uuid where has Metadata/Exposure after 17;",
-			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4},
+			[]uuid.UUID{uuid4, uuid5},
+		},
+		{
+			"select distinct uuid where has Metadata/Exposure after 18;",
+			[]uuid.UUID{uuid5},
+		},
+		{
+			"select distinct uuid where has Metadata/Exposure after 19;",
+			[]uuid.UUID{},
 		},
 	} {
 		var (
