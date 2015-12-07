@@ -33,7 +33,7 @@ const LIKE = 57351
 const HAS = 57352
 const NOW = 57353
 const SET = 57354
-const IBEFORE = 57355
+const AT = 57355
 const BEFORE = 57356
 const AFTER = 57357
 const AND = 57358
@@ -66,7 +66,7 @@ var QueryToknames = [...]string{
 	"HAS",
 	"NOW",
 	"SET",
-	"IBEFORE",
+	"AT",
 	"BEFORE",
 	"AFTER",
 	"AND",
@@ -171,7 +171,7 @@ func NewQueryLexer(s string) *QueryLex {
 			{Token: NOW, Pattern: "now"},
 			{Token: SET, Pattern: "set"},
 			{Token: BEFORE, Pattern: "before"},
-			{Token: IBEFORE, Pattern: "ibefore"},
+			{Token: AT, Pattern: "at"},
 			{Token: AFTER, Pattern: "after"},
 			{Token: COMMA, Pattern: ","},
 			{Token: AND, Pattern: "and"},

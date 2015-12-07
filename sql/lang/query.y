@@ -22,7 +22,7 @@ import (
 
 %token <str> SELECT DISTINCT WHERE
 %token <str> LVALUE QSTRING LIKE HAS
-%token <str> NOW SET IBEFORE BEFORE AFTER AND AS TO OR IN NOT FOR
+%token <str> NOW SET AT BEFORE AFTER AND AS TO OR IN NOT FOR
 %token <str> LPAREN RPAREN NEWLINE
 %token NUMBER
 %token SEMICOLON
@@ -193,7 +193,7 @@ timeTerm	:	IN timerange
 				order by timestamp desc`
 				$$ = fmt.Sprintf(template, $2.Format(_time.RFC3339))
 			}
-			|	IBEFORE timeref
+			|	AT timeref
 			{
 				template := `select distinct uuid, dkey, max(timestamp) as maxtime from data
 				where timestamp <= "%s"
@@ -356,7 +356,7 @@ func NewQueryLexer(s string) *QueryLex {
 			{Token: NOW, Pattern: "now"},
 			{Token: SET, Pattern: "set"},
 			{Token: BEFORE, Pattern: "before"},
-			{Token: IBEFORE, Pattern: "ibefore"},
+			{Token: AT, Pattern: "at"},
 			{Token: AFTER, Pattern: "after"},
 			{Token: COMMA, Pattern: ","},
 			{Token: AND, Pattern: "and"},
