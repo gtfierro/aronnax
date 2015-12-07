@@ -322,18 +322,21 @@ func TestWhereRecentDocument(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		fmt.Println(test.querystring)
 		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
 		}
 		if docs, err = DocsFromRows(rows); err != nil {
+			fmt.Println(test.querystring)
 			t.Errorf("Doc transform failed! %v", err)
 			continue
 		}
 		for _, doc := range docs {
 			if _, found := expectedMatches[doc.UUID]; !found {
+				fmt.Println(test.querystring)
 				t.Errorf("Query %v matched unexpected UUID %v", test.querystring, doc.UUID)
+				continue
 			} else {
 				expectedMatches[doc.UUID] = true
 			}
@@ -381,18 +384,21 @@ func TestWhereWithNotRecentDocument(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		fmt.Println(test.querystring)
 		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
 		}
 		if docs, err = DocsFromRows(rows); err != nil {
+			fmt.Println(test.querystring)
 			t.Errorf("Doc transform failed! %v", err)
 			continue
 		}
 		for _, doc := range docs {
 			if _, found := expectedMatches[doc.UUID]; !found {
+				fmt.Println(test.querystring)
 				t.Errorf("Query %v matched unexpected UUID %v", test.querystring, doc.UUID)
+				continue
 			} else {
 				expectedMatches[doc.UUID] = true
 			}
@@ -464,18 +470,21 @@ func TestWhereWithTimePredicateWithBefore(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		fmt.Println(test.querystring)
 		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
 		}
 		if docs, err = DocsFromRows(rows); err != nil {
+			fmt.Println(test.querystring)
 			t.Errorf("Doc transform failed! %v", err)
 			continue
 		}
 		for _, doc := range docs {
 			if _, found := expectedMatches[doc.UUID]; !found {
+				fmt.Println(test.querystring)
 				t.Errorf("Query %v matched unexpected UUID %v", test.querystring, doc.UUID)
+				continue
 			} else {
 				expectedMatches[doc.UUID] = true
 			}
@@ -489,7 +498,7 @@ func TestWhereWithTimePredicateWithBefore(t *testing.T) {
 	}
 }
 
-func TestWhereWithTimePredicateWithIBefore(t *testing.T) {
+func TestWhereWithTimePredicateWithAt(t *testing.T) {
 	user := os.Getenv("ARONNAXTESTUSER")
 	pass := os.Getenv("ARONNAXTESTPASS")
 	dbname := os.Getenv("ARONNAXTESTDB")
@@ -504,29 +513,29 @@ func TestWhereWithTimePredicateWithIBefore(t *testing.T) {
 		querystring string // query
 		uuids       []uuid.UUID
 	}{
-		// IBEFORE
+		// AT
 		{
-			"select distinct uuid where Location/Room = '410' ibefore 8;",
+			"select distinct uuid where Location/Room = '410' at 8;",
 			[]uuid.UUID{uuid2, uuid4},
 		},
 		{
-			"select distinct uuid where Location/Room = '410' ibefore 6;",
+			"select distinct uuid where Location/Room = '410' at 6;",
 			[]uuid.UUID{uuid2, uuid3, uuid4, uuid5},
 		},
 		{
-			"select distinct uuid where not has Metadata/Exposure ibefore 13;",
+			"select distinct uuid where not has Metadata/Exposure at 13;",
 			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5, uuiddummy},
 		},
 		{
-			"select distinct uuid where not has Metadata/Exposure ibefore 14;",
+			"select distinct uuid where not has Metadata/Exposure at 14;",
 			[]uuid.UUID{uuid2, uuid3, uuid4, uuid5, uuiddummy},
 		},
 		{
-			"select distinct uuid where not has Metadata/Exposure ibefore 18;",
+			"select distinct uuid where not has Metadata/Exposure at 18;",
 			[]uuid.UUID{uuiddummy},
 		},
 		{
-			"select distinct uuid where not has Metadata/Exposure ibefore 20;",
+			"select distinct uuid where not has Metadata/Exposure at 20;",
 			[]uuid.UUID{uuiddummy, uuid5},
 		},
 	} {
@@ -539,18 +548,21 @@ func TestWhereWithTimePredicateWithIBefore(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		fmt.Println(test.querystring)
 		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
 		}
 		if docs, err = DocsFromRows(rows); err != nil {
+			fmt.Println(test.querystring)
 			t.Errorf("Doc transform failed! %v", err)
 			continue
 		}
 		for _, doc := range docs {
 			if _, found := expectedMatches[doc.UUID]; !found {
+				fmt.Println(test.querystring)
 				t.Errorf("Query %v matched unexpected UUID %v", test.querystring, doc.UUID)
+				continue
 			} else {
 				expectedMatches[doc.UUID] = true
 			}
@@ -609,18 +621,21 @@ func TestWhereWithTimePredicateWithAFTER(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		fmt.Println(test.querystring)
 		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
 		}
 		if docs, err = DocsFromRows(rows); err != nil {
+			fmt.Println(test.querystring)
 			t.Errorf("Doc transform failed! %v", err)
 			continue
 		}
 		for _, doc := range docs {
 			if _, found := expectedMatches[doc.UUID]; !found {
+				fmt.Println(test.querystring)
 				t.Errorf("Query %v matched unexpected UUID %v", test.querystring, doc.UUID)
+				continue
 			} else {
 				expectedMatches[doc.UUID] = true
 			}

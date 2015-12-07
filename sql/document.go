@@ -72,6 +72,9 @@ func DocsFromRows(rows *sql.Rows) ([]*Document, error) {
 		uniqueDocs = map[string]*Document{}
 		docs       = []*Document{}
 	)
+	if rows == nil {
+		return docs, fmt.Errorf("No rows returned")
+	}
 	for rows.Next() {
 		var (
 			duuid string
