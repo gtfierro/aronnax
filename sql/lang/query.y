@@ -117,6 +117,19 @@ union
 %s`, firstTerm.SQL, firstTerm.Letter, $3.SQL)
 				$$ = WhereClause{SQL: sql, Letter: firstTerm.Letter}
 			}
+			|	whereTerm timeTerm OR whereClause
+			{
+				letter := Querylex.(*QueryLex).NextLetter()
+				$1.Letter = letter
+				var firstTerm = $1.GetClauseWithTime($2)
+				sql := fmt.Sprintf(`
+select distinct uuid
+from
+%s as %s
+union
+%s`, firstTerm.SQL, firstTerm.Letter, $4.SQL)
+				$$ = WhereClause{SQL: sql, Letter: firstTerm.Letter}
+			}
 			|	whereTerm AND whereClause
 			{
 				letter := Querylex.(*QueryLex).NextLetter()
@@ -129,6 +142,20 @@ from
 inner join
 (%s) as %s
 on %s.uuid = %s.uuid`, firstTerm.Letter, firstTerm.SQL, firstTerm.Letter, $3.SQL, $3.Letter, firstTerm.Letter, $3.Letter)
+				$$ = WhereClause{SQL: sql, Letter: firstTerm.Letter}
+			}
+			|	whereTerm timeTerm AND whereClause
+			{
+				letter := Querylex.(*QueryLex).NextLetter()
+				$1.Letter = letter
+				var firstTerm = $1.GetClauseWithTime($2)
+				sql := fmt.Sprintf(`
+select distinct %s.uuid
+from
+%s as %s
+inner join
+(%s) as %s
+on %s.uuid = %s.uuid`, firstTerm.Letter, firstTerm.SQL, firstTerm.Letter, $4.SQL, $4.Letter, firstTerm.Letter, $4.Letter)
 				$$ = WhereClause{SQL: sql, Letter: firstTerm.Letter}
 			}
 			|	NOT whereClause
@@ -181,10 +208,14 @@ whereTerm	: LVALUE LIKE QSTRING
 			}
 			;
 
-timeTerm	:	IN timerange
+timeTerm	:	IN LPAREN timeref COMMA timeref RPAREN
 			{
 				//TODO: fix!
 				$$ = fmt.Sprintf(timePredicateRange, ">=", _time.Now())
+				template := `select distinct uuid, dkey, timestamp as maxtime from data
+				where timestamp >= "%s" and timestamp < "%s"
+				order by timestamp desc`
+				$$ = fmt.Sprintf(template, $3.Format(_time.RFC3339), $5.Format(_time.RFC3339))
 			}
 			|	BEFORE timeref
 			{
@@ -207,10 +238,7 @@ timeTerm	:	IN timerange
 				order by timestamp desc`
 				$$ = fmt.Sprintf(template, $2.Format(_time.RFC3339))
 			}
-//			  |   FOR timerange
-			;
-
-timerange	:	LPAREN RPAREN
+//			  |   FOR timeRange
 			;
 
 timeref		: abstime

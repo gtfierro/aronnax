@@ -32,6 +32,14 @@ func (wt WhereTerm) GetClause() WhereClause {
 	}
 }
 
+func (wt WhereTerm) GetClauseWithTime(inner string) WhereClause {
+	if wt.IsPredicate {
+		return WrapTermInSelectWithTime(wt.SQL, wt.Letter, inner)
+	} else {
+		return WhereClause{SQL: wt.SQL, Letter: wt.Letter}
+	}
+}
+
 type WhereClause struct {
 	SQL    string
 	Letter string
