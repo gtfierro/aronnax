@@ -212,7 +212,7 @@ predicate, or the time predicate, or both? It makes the most sense to have `NOT`
     for their `Location/Building` key. The most obvious choice for how to negate this with `NOT` is to match all streams
     whose most recent value of `Location/Building` is NOT `Soda`, but will not match streams who do not have the key, or
     who have erased their value by writing `null` to it.
-* `WHERE NOT Location/Building = "Soda" ibefore "1/1/2014"`: following above, this maintains the same time predicate, so
+* `WHERE NOT Location/Building = "Soda" at "1/1/2014"`: following above, this maintains the same time predicate, so
     this will match all streams whose most immediate value before "1/1/2014" for `Location/Building` is not `Soda`.
 * `WHERE NOT Location/Building = "Soda" before "1/1/2014"`:  the choice here is between matching all streams who do not have a single
     value before "1/1/2014" that is `Soda`, or matching all streams who have had any value that is not `Soda` before "1/1/2014". Because
@@ -235,12 +235,11 @@ used in the `WHERE` clause:
 
 | operator | syntax | definition | example |
 |----------|--------|------------|---------|
-| `IN`     | `WHERE <relational predicate> IN <time range>` | True if predicate was true *at any point* within the provided time range | `where Room = 410 in (now, now -5min)` |
-| `FOR`    | `WHERE <relational predicate> FOR <time range>` | True if the predicate is true *for the entire time range* | `where Room = 410 for (now, now -5min)` |
+| `IN`     | `WHERE <relational predicate> IN <time range>`    | True if predicate was true *at any point* within the provided time range | `where Room = 410 in (now, now -5min)` |
+| `FOR`    | `WHERE <relational predicate> FOR <time range>`   | True if the predicate is true *for the entire time range* | `where Room = 410 for (now, now -5min)` |
 | `BEFORE` | `WHERE <relational predicate> BEFORE <timestamp>` | True if predicate true *at any time* before (and including) the given time. | `where Room = 410 before 1447366661s` |
-| `IBEFORE`| `WHERE <relational predicate> IBEFORE <timestamp>` | True if the predicate is true in the most immediate edit before (and including) the given time. | `where Room = 410 ibefore 1447366661s` |
-| `AFTER` | `WHERE <relational predicate> BEFORE <timestamp>` | True if predicate true *at any time* after (and including) the given time. | `where Room = 410 after 1447366661s` |
-| `IAFTER`| `WHERE <relational predicate> IBEFORE <timestamp>` | True if the predicate is true in the most immediate edit after (and including) the given time. | `where Room = 410 iafter 1447366661s` |
+| `AT`     | `WHERE <relational predicate> AT <timestamp>`     | True if the predicate is true at that point in time | `where Room = 410 at 1447366661s` |
+| `AFTER`  | `WHERE <relational predicate> AFTER <timestamp>`  | True if predicate *becomes* true after (and including) the current time | `where Room = 410 after 1447366661s` |
 
 
 In this section, we will discuss how to implement those in our SQL expression
@@ -266,12 +265,12 @@ maximum (that is, most-recent) timestamp for all pairs of (`uuid`,`dkey`). The
 returned set of document IDs and their keys forms the set of documents to which
 we apply our relational predicate. The inner join restricts the evaluation to
 just those keys and values that pertain to the most recent form of each
-document. For the `in`,`for`,`before`,`ibefore`,`after`,`iafter` time predicates,
+document. For the `in`,`for`,`before`,`at`,`after`,`iafter` time predicates,
 we will likely follow very similar constructions that can be dropped in place of
 the "most recent" formulation.
 
 
-### `IBEFORE`
+### `AT`
 
 This operator is most similar to the default construction, because it only considers a single document.
 The other operators will match across many documents.
@@ -337,26 +336,21 @@ and data.dkey = "Location/City" and data.dval = "Berkeley"
 but this actually fails to match tags that are still valid: it only matches tags that are applied
 after the given timestamp. This may actually be serendipitous, as "only applied after" is a flavor
 of query that was not covered by the previous imagining of these operators, and is actually more
-helpful.
-
-### `IAFTER`
-
-Simple inversion of `IBEFORE`, switching `min` with `max` and `<` with `>`.
+helpful, so this is what we use:
 
 ```sql
 select distinct data.uuid
 from data
 inner join
 (
-        select distinct uuid, dkey, min(timestamp) as maxtime from data
+        select distinct uuid, dkey, timestamp as maxtime from data
         where timestamp >= 1234567890
-        group by dkey, uuid order by timestamp desc
+        order by timestamp desc
 ) sorted
 on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
 where data.dval is not null
 and data.dkey = "Location/City" and data.dval = "Berkeley"
 ```
-
 
 ### `IN`
 
@@ -382,7 +376,7 @@ and data.dkey = "Location/City" and data.dval = "Berkeley"
 This one is tricky, because it involves verifying that the relational predicate is true for
 the whole expressed duration. With the exception of this operator, the rest of these
 predicate constructions can be handled by rendering directly into the nested
-`SELECT` clause. 
+`SELECT` clause.
 
 ### Applying `NOT`
 
