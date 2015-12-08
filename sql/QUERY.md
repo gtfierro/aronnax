@@ -227,6 +227,8 @@ I use in the future.
 
 ## Time-Based Predicates
 
+**TODO: some of these predicates should match multiple document, so we should look at removing the `distinct` from the outer layers of the select clauses for `IN`,`HAPPENS BEFORE`,`HAPPENS AFTER`**
+
 From [this file](https://github.com/gtfierro/aronnax#queries), we define several time-based predicates that augment the relational predicates
 used in the `WHERE` clause:
 
