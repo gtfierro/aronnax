@@ -117,7 +117,7 @@ func (mbd *mysqlBackend) Eval(q *query.Query, err error) (*sql.Rows, error) {
 	if err == nil {
 		return mbd.db.Query(tosend)
 	} else {
-		return nil, nil
+		return nil, err
 	}
 }
 
@@ -141,7 +141,7 @@ func (mbd *mysqlBackend) StartInteractive() {
 		}
 		rows, evalParseErr := mbd.Eval(mbd.Parse(s))
 		if evalParseErr != nil {
-			log.Fatal("Error parse/eval", evalParseErr)
+			log.Fatal("Error parse/eval: ", evalParseErr)
 		}
 		if docs, err := DocsFromRows(rows); err != nil {
 			log.Fatal("docs from", err)
