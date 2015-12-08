@@ -447,3 +447,47 @@ Among an array of matched keys for a single document, we may want to select
 Each of these temporal modifiers can be applied to a tag or group of tags in the `SELECT` clause,
 and the `SELECT` clause should also include the ability to return the actual time that was matched,
 probably through some special tag like `@time`.
+
+## Difficulties
+
+It occured to me that I should be keeping track of problems that I run into in the process of developing
+this query language.
+
+### Computing the Valid Timestamp for a Document
+
+When you receive a document in response to a query, especially a query which
+covered a range of times, it is often important to know the point in time at
+which that document was matched. In Aronnax, tags (a key/value pair) are
+applied at a point in time and persist until they are changed or deleted.
+Queries return a bag of tags associated with a particular document; each of
+these tags also has an associated time, which is the point in tiem at which
+that tag was applied -- that is, created, changed or deleted (for which the
+value is `NULL`).
+
+In most cases, it is sufficient to perform a query that does our usual process
+of computing right joins and unions among the sets of `<UUID, key, value>` tuples
+returned by each individual term in the `WHERE` clause. Each of these tuples
+has a time attached to it, and so when Aronnax receives the results of the MySQL
+query, it can simply take the max timesetamp among all returned tags to compute
+the earliest valid time for the document.
+
+This gets more complicated in cases that involve the deletion of tags. Consider
+the following progression of the `Metadata/Exposure` tag for a single document:
+
+* Apply some tags, not including `Metadata/Exposure`, at time 1. Doc UUID is XYZ.
+* Set `Metadata/Exposure` to `South` at time 5
+* Delete key `Metadata/Exposure` at time 10
+* Execute a query: `select * where uuid = XYZ` (equivalent to `select * where uuid = XYZ at now`)
+
+Using the current approach, the document's last valid time will be 1, rather
+than 10. This is because of the `where data.dval is not null` in the generated
+queries. With this term in the `WHERE` clauses, the query successfully
+identifies that the `Metadata/Exposure` key is not part of the document at the
+current time (having been deleted at time 10). However, this means that the
+deletion record `<XYZ, Metadata/Exposure, NULL, 10>` is not returned by the
+lower clause (the Aronnax `WHERE`), the Aronnax `SELECT` clause (the upper
+select) does not see it, so when it performs its `RIGHT JOIN`, it will match an
+earlier form of the document that is equivalent. Here, because the query knows
+that the returned document does not have a `Metadata/Exposure` key, it looks
+for the latest document change that made that true, which is the edits at time
+1.
