@@ -403,3 +403,45 @@ predicate constructions can be handled by rendering directly into the nested
 Are we going to want to allow users to apply a `not` clause to the time predicates, independent
 of the relational predicates? I believe that these offer a sufficient coverage, so for now the
 answer is **NO**.
+
+## Select Clauses
+
+We now discuss the semantics of the select clauses in these queries. Certainly the easist thing to do is
+just to return the most recent version of a document, but this does not always make sense. Let's consider
+the following where clause:
+
+```sql
+where has Location/Room happens before 1234567890
+```
+
+The only time-invariant term we could request in a corresponding `SELECT` clause would be the UUID of the stream. For
+the rest of the document, we have several options that we may express:
+
+* select the most recent version of a key
+* select the version(s) of a key at the time(s) that it was matched
+* select the version of a key at an arbitrary time
+
+Supporting all three of these is important (though the first one is really just
+a specialization of the third), because it enforces a separation of the
+filtering for streams from what we want to know about them: "select the current
+room for all streams that were in Room 410 on Jan 1, 2014".
+
+It is important to note that, as implied by the temporal predicates, multiple
+versions of a single document can be matched by a `WHERE` clause. Our `SELECT`
+statements should provide a means of filtering those and specifying which ones
+we want.
+
+Among an array of matched keys for a single document, we may want to select
+* the first (temporally) one
+* the last (temporally) one
+* all of them
+* the one at time *T*
+* the one before time *T*
+* the one after time *T*
+* all that appear before time *T*
+* all that appear after time *T*
+* all that appear between times *T1* and *T2* (using `[T1, T2)`)
+
+Each of these temporal modifiers can be applied to a tag or group of tags in the `SELECT` clause,
+and the `SELECT` clause should also include the ability to return the actual time that was matched,
+probably through some special tag like `@time`.

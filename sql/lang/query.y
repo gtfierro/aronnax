@@ -238,7 +238,10 @@ timeTerm	:	HAPPENS IN LPAREN timeref COMMA timeref RPAREN
 				order by timestamp desc`
 				$$ = fmt.Sprintf(template, $3.Format(_time.RFC3339))
 			}
-//			  |   FOR timeRange
+//			|   FOR LPAREN timeref COMMA timeref RPAREN
+//			{
+//				
+//			}
 			;
 
 timeref		: abstime
