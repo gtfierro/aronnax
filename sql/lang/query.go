@@ -43,15 +43,16 @@ const OR = 57361
 const IN = 57362
 const NOT = 57363
 const FOR = 57364
-const LPAREN = 57365
-const RPAREN = 57366
-const NEWLINE = 57367
-const NUMBER = 57368
-const SEMICOLON = 57369
-const EQ = 57370
-const NEQ = 57371
-const COMMA = 57372
-const ALL = 57373
+const HAPPENS = 57365
+const LPAREN = 57366
+const RPAREN = 57367
+const NEWLINE = 57368
+const NUMBER = 57369
+const SEMICOLON = 57370
+const EQ = 57371
+const NEQ = 57372
+const COMMA = 57373
+const ALL = 57374
 
 var QueryToknames = [...]string{
 	"$end",
@@ -76,6 +77,7 @@ var QueryToknames = [...]string{
 	"IN",
 	"NOT",
 	"FOR",
+	"HAPPENS",
 	"LPAREN",
 	"RPAREN",
 	"NEWLINE",
@@ -171,6 +173,7 @@ func NewQueryLexer(s string) *QueryLex {
 			{Token: NOW, Pattern: "now"},
 			{Token: SET, Pattern: "set"},
 			{Token: BEFORE, Pattern: "before"},
+			{Token: HAPPENS, Pattern: "happens"},
 			{Token: AT, Pattern: "at"},
 			{Token: AFTER, Pattern: "after"},
 			{Token: COMMA, Pattern: ","},
@@ -195,6 +198,9 @@ func NewQueryLexer(s string) *QueryLex {
 		})
 	scanner.SetInput(s)
 	return &QueryLex{Query: &Query{}, querystring: s, scanner: scanner, Err: nil, lasttoken: "", tokens: []string{}}
+}
+
+func (lex *QueryLex) Rewrite() {
 }
 
 func (lex *QueryLex) Lex(lval *QuerySymType) int {
@@ -234,31 +240,32 @@ const QueryPrivate = 57344
 var QueryTokenNames []string
 var QueryStates []string
 
-const QueryLast = 60
+const QueryLast = 61
 
 var QueryAct = [...]int{
 
-	39, 53, 13, 6, 29, 7, 56, 11, 20, 54,
-	60, 9, 42, 49, 38, 43, 35, 16, 28, 34,
-	17, 33, 4, 30, 31, 36, 37, 44, 45, 8,
-	41, 15, 10, 18, 19, 2, 48, 50, 51, 52,
-	26, 25, 27, 23, 47, 46, 22, 24, 57, 55,
-	32, 12, 1, 21, 40, 14, 5, 58, 3, 59,
+	39, 13, 53, 6, 58, 7, 27, 11, 20, 42,
+	9, 54, 43, 61, 47, 50, 46, 26, 33, 16,
+	31, 32, 17, 45, 34, 35, 28, 29, 41, 4,
+	8, 44, 10, 15, 48, 49, 18, 25, 51, 52,
+	23, 19, 57, 22, 37, 38, 55, 24, 30, 12,
+	36, 56, 2, 1, 21, 40, 14, 5, 3, 60,
+	59,
 }
 var QueryPact = [...]int{
 
-	31, -1000, -2, 5, -1000, -23, 44, -1000, -1000, 10,
-	-1000, -2, -1000, -19, 27, 10, -5, 43, 10, -1000,
-	-1000, 0, 10, 10, -9, 4, 4, 4, -1000, 37,
-	36, 28, -1000, -11, 10, 10, -1000, -1000, 4, -1000,
-	-17, 42, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
-	-1000, -1000, -24, -1000, 41, -1000, 4, -17, -14, -1000,
-	-1000,
+	48, -1000, -2, 4, -1000, -24, 42, -1000, -1000, 12,
+	-1000, -2, -1000, -20, 24, 12, -3, 41, 12, -1000,
+	-1000, 2, 12, 12, 30, 1, -1000, 23, 15, 8,
+	-1000, -11, 12, 12, -1000, -1000, -9, 1, 1, -1000,
+	-16, 39, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
+	1, -1000, -1000, -1000, 35, -1000, -27, -16, 1, -1000,
+	-12, -1000,
 }
 var QueryPgo = [...]int{
 
-	0, 22, 58, 56, 2, 55, 0, 54, 1, 53,
-	52,
+	0, 29, 58, 57, 1, 56, 0, 55, 2, 54,
+	53,
 }
 var QueryR1 = [...]int{
 
@@ -271,28 +278,28 @@ var QueryR2 = [...]int{
 
 	0, 5, 3, 1, 1, 3, 2, 1, 1, 1,
 	2, 3, 4, 3, 4, 2, 3, 3, 3, 2,
-	3, 6, 2, 2, 2, 1, 2, 2, 1, 1,
+	3, 7, 3, 2, 3, 1, 2, 2, 1, 1,
 	1, 2, 3,
 }
 var QueryChk = [...]int{
 
-	-1000, -10, 4, -2, -1, -3, 5, 7, 31, 6,
-	27, 30, 7, -4, -5, 21, 7, 10, 23, -1,
-	27, -9, 19, 16, 20, 14, 13, 15, -4, 9,
-	28, 29, 7, -4, 19, 16, -4, -4, 23, -6,
-	-7, 26, 8, 11, -6, -6, 8, 8, 8, 24,
-	-4, -4, -6, -8, 26, 7, 30, 7, -6, -8,
-	24,
+	-1000, -10, 4, -2, -1, -3, 5, 7, 32, 6,
+	28, 31, 7, -4, -5, 21, 7, 10, 24, -1,
+	28, -9, 19, 16, 23, 13, -4, 9, 29, 30,
+	7, -4, 19, 16, -4, -4, 20, 14, 15, -6,
+	-7, 27, 8, 11, 8, 8, 8, 25, -4, -4,
+	24, -6, -6, -8, 27, 7, -6, 7, 31, -8,
+	-6, 25,
 }
 var QueryDef = [...]int{
 
 	0, -2, 0, 0, 3, 4, 0, 7, 8, 0,
 	2, 0, 6, 0, 9, 0, 0, 0, 0, 5,
-	1, 10, 0, 0, 0, 0, 0, 0, 15, 0,
-	0, 0, 19, 0, 0, 0, 11, 13, 0, 22,
-	25, 28, 29, 30, 23, 24, 16, 17, 18, 20,
-	12, 14, 0, 26, 0, 27, 0, 31, 0, 32,
-	21,
+	1, 10, 0, 0, 0, 0, 15, 0, 0, 0,
+	19, 0, 0, 0, 11, 13, 0, 0, 0, 23,
+	25, 28, 29, 30, 16, 17, 18, 20, 12, 14,
+	0, 22, 24, 26, 0, 27, 0, 31, 0, 32,
+	0, 21,
 }
 var QueryTok1 = [...]int{
 
@@ -303,6 +310,7 @@ var QueryTok2 = [...]int{
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 	12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
 	22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+	32,
 }
 var QueryTok3 = [...]int{
 	0,
@@ -841,7 +849,7 @@ Querydefault:
 			QueryVAL.whereTerm = WhereTerm{SQL: fmt.Sprintf(`(%s)`, QueryDollar[2].whereClause.SQL), IsPredicate: false}
 		}
 	case 21:
-		QueryDollar = QueryS[Querypt-6 : Querypt+1]
+		QueryDollar = QueryS[Querypt-7 : Querypt+1]
 		//line query.y:212
 		{
 			//TODO: fix!
@@ -849,16 +857,16 @@ Querydefault:
 			template := `select distinct uuid, dkey, timestamp as maxtime from data
 					where timestamp >= "%s" and timestamp < "%s"
 					order by timestamp desc`
-			QueryVAL.str = fmt.Sprintf(template, QueryDollar[3].time.Format(_time.RFC3339), QueryDollar[5].time.Format(_time.RFC3339))
+			QueryVAL.str = fmt.Sprintf(template, QueryDollar[4].time.Format(_time.RFC3339), QueryDollar[6].time.Format(_time.RFC3339))
 		}
 	case 22:
-		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
 		//line query.y:221
 		{
 			template := `select distinct uuid, dkey, timestamp as maxtime from data
-					where timestamp <= "%s"
+					where timestamp <  "%s"
 					order by timestamp desc`
-			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
+			QueryVAL.str = fmt.Sprintf(template, QueryDollar[3].time.Format(_time.RFC3339))
 		}
 	case 23:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
@@ -870,13 +878,13 @@ Querydefault:
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
 		}
 	case 24:
-		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
 		//line query.y:235
 		{
 			template := `select distinct uuid, dkey, timestamp as maxtime from data
 					where timestamp >= "%s"
 					order by timestamp desc`
-			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
+			QueryVAL.str = fmt.Sprintf(template, QueryDollar[3].time.Format(_time.RFC3339))
 		}
 	case 25:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]

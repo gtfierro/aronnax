@@ -22,7 +22,7 @@ import (
 
 %token <str> SELECT DISTINCT WHERE
 %token <str> LVALUE QSTRING LIKE HAS
-%token <str> NOW SET AT BEFORE AFTER AND AS TO OR IN NOT FOR
+%token <str> NOW SET AT BEFORE AFTER AND AS TO OR IN NOT FOR HAPPENS
 %token <str> LPAREN RPAREN NEWLINE
 %token NUMBER
 %token SEMICOLON
@@ -208,21 +208,21 @@ whereTerm	: LVALUE LIKE QSTRING
 			}
 			;
 
-timeTerm	:	IN LPAREN timeref COMMA timeref RPAREN
+timeTerm	:	HAPPENS IN LPAREN timeref COMMA timeref RPAREN
 			{
 				//TODO: fix!
 				$$ = fmt.Sprintf(timePredicateRange, ">=", _time.Now())
 				template := `select distinct uuid, dkey, timestamp as maxtime from data
 				where timestamp >= "%s" and timestamp < "%s"
 				order by timestamp desc`
-				$$ = fmt.Sprintf(template, $3.Format(_time.RFC3339), $5.Format(_time.RFC3339))
+				$$ = fmt.Sprintf(template, $4.Format(_time.RFC3339), $6.Format(_time.RFC3339))
 			}
-			|	BEFORE timeref
+			|	HAPPENS BEFORE timeref
 			{
 				template := `select distinct uuid, dkey, timestamp as maxtime from data
-				where timestamp <= "%s"
+				where timestamp <  "%s"
 				order by timestamp desc`
-				$$ = fmt.Sprintf(template, $2.Format(_time.RFC3339))
+				$$ = fmt.Sprintf(template, $3.Format(_time.RFC3339))
 			}
 			|	AT timeref
 			{
@@ -231,12 +231,12 @@ timeTerm	:	IN LPAREN timeref COMMA timeref RPAREN
 				group by dkey, uuid order by timestamp desc`
 				$$ = fmt.Sprintf(template, $2.Format(_time.RFC3339))
 			}
-			|	AFTER timeref
+			|	HAPPENS AFTER timeref
 			{
 				template := `select distinct uuid, dkey, timestamp as maxtime from data
 				where timestamp >= "%s"
 				order by timestamp desc`
-				$$ = fmt.Sprintf(template, $2.Format(_time.RFC3339))
+				$$ = fmt.Sprintf(template, $3.Format(_time.RFC3339))
 			}
 //			  |   FOR timeRange
 			;
@@ -384,6 +384,7 @@ func NewQueryLexer(s string) *QueryLex {
 			{Token: NOW, Pattern: "now"},
 			{Token: SET, Pattern: "set"},
 			{Token: BEFORE, Pattern: "before"},
+			{Token: HAPPENS, Pattern: "happens"},
 			{Token: AT, Pattern: "at"},
 			{Token: AFTER, Pattern: "after"},
 			{Token: COMMA, Pattern: ","},
@@ -408,6 +409,9 @@ func NewQueryLexer(s string) *QueryLex {
 		})
 	scanner.SetInput(s)
 	return &QueryLex{Query: &Query{}, querystring: s, scanner: scanner, Err: nil, lasttoken: "", tokens: []string{}}
+}
+
+func (lex *QueryLex) Rewrite() {
 }
 
 func (lex *QueryLex) Lex(lval *QuerySymType) int {
