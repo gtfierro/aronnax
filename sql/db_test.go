@@ -412,7 +412,7 @@ func TestWhereWithNotRecentDocument(t *testing.T) {
 	}
 }
 
-func TestWhereWithTimePredicateWithBefore(t *testing.T) {
+func TestWhereWithTimePredicateWithHappensBefore(t *testing.T) {
 	user := os.Getenv("ARONNAXTESTUSER")
 	pass := os.Getenv("ARONNAXTESTPASS")
 	dbname := os.Getenv("ARONNAXTESTDB")
@@ -427,37 +427,123 @@ func TestWhereWithTimePredicateWithBefore(t *testing.T) {
 		querystring string // query
 		uuids       []uuid.UUID
 	}{
-		// BEFORE
+		// HAPPENS BEFORE
 		{
-			"select distinct uuid where Location/Room = '410' before 5;",
+			"select distinct uuid where Location/Room = '410' happens before 6;",
 			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
 		},
 		{
-			"select distinct uuid where Location/Room = '410' before 6;",
+			"select distinct uuid where Location/Room = '410' happens before 7;",
 			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
 		},
 		{
-			"select distinct uuid where Location/Room = '410' before 8;",
+			"select distinct uuid where Location/Room = '410' happens before 8;",
 			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
 		},
 		{
-			"select distinct uuid where Location/Room = '410' before 9;",
+			"select distinct uuid where Location/Room = '410' happens before 9;",
 			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
 		},
 		{
-			"select distinct uuid where Location/Room = '411' before 5;",
+			"select distinct uuid where Location/Room = '411' happens before 5;",
 			[]uuid.UUID{},
 		},
 		{
-			"select distinct uuid where Location/Room = '411' before 6;",
+			"select distinct uuid where Location/Room = '411' happens before 7;",
 			[]uuid.UUID{uuid1},
 		},
 		{
-			"select distinct uuid where not has Metadata/Exposure before 13;",
+			"select distinct uuid where not has Metadata/Exposure happens before 13;",
 			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5, uuiddummy},
 		},
 		{
-			"select distinct uuid where not has Metadata/Exposure before 14;",
+			"select distinct uuid where not has Metadata/Exposure happens before 15;",
+			[]uuid.UUID{uuid2, uuid3, uuid4, uuid5, uuiddummy},
+		},
+	} {
+		var (
+			docs            []*Document
+			rows            *sql.Rows
+			expectedMatches = make(map[uuid.UUID]bool)
+			err             error
+		)
+		for _, uid := range test.uuids {
+			expectedMatches[uid] = false
+		}
+		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+			fmt.Println(test.querystring)
+			t.Errorf("Query failed! %v", err)
+			continue
+		}
+		if docs, err = DocsFromRows(rows); err != nil {
+			fmt.Println(test.querystring)
+			t.Errorf("Doc transform failed! %v", err)
+			continue
+		}
+		for _, doc := range docs {
+			if _, found := expectedMatches[doc.UUID]; !found {
+				fmt.Println(test.querystring)
+				t.Errorf("Query %v matched unexpected UUID %v", test.querystring, doc.UUID)
+				continue
+			} else {
+				expectedMatches[doc.UUID] = true
+			}
+		}
+
+		for uuid, covered := range expectedMatches {
+			if !covered {
+				t.Errorf("Query %v did not match expected UUID %v", test.querystring, uuid)
+			}
+		}
+	}
+}
+
+func TestWhereWithTimePredicateWithBeforeWorkaround(t *testing.T) {
+	user := os.Getenv("ARONNAXTESTUSER")
+	pass := os.Getenv("ARONNAXTESTPASS")
+	dbname := os.Getenv("ARONNAXTESTDB")
+	backend := newBackend(user, pass, dbname)
+	uuid1, _ := uuid.FromString("2b365d6a-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid2, _ := uuid.FromString("370dd17c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuiddummy, _ := uuid.FromString("aa45f708-8be8-11e5-86ae-5cc5d4ded1ae")
+	for _, test := range []struct {
+		querystring string // query
+		uuids       []uuid.UUID
+	}{
+		// HAPPENS BEFORE OR AT
+		{
+			"select distinct uuid where Location/Room = '410' happens before 5 or Location/Room = '410' at 5;",
+			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
+		},
+		{
+			"select distinct uuid where Location/Room = '410' happens before 6 or Location/Room = '410' at 6;",
+			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
+		},
+		{
+			"select distinct uuid where Location/Room = '410' happens before 8 or Location/Room = '410' at 8;",
+			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
+		},
+		{
+			"select distinct uuid where Location/Room = '410' happens before 9 or Location/Room = '410' at 9;",
+			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
+		},
+		{
+			"select distinct uuid where Location/Room = '411' happens before 5 or Location/Room = '411' at 5;",
+			[]uuid.UUID{},
+		},
+		{
+			"select distinct uuid where Location/Room = '411' happens before 6 or Location/Room = '411' at 6;",
+			[]uuid.UUID{uuid1},
+		},
+		{
+			"select distinct uuid where not has Metadata/Exposure happens before 13 or has Metadata/Exposure at 13;",
+			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5, uuiddummy},
+		},
+		{
+			"select distinct uuid where not has Metadata/Exposure happens before 14 or has Metadata/Exposure at 14;",
 			[]uuid.UUID{uuid2, uuid3, uuid4, uuid5, uuiddummy},
 		},
 	} {
@@ -576,7 +662,7 @@ func TestWhereWithTimePredicateWithAt(t *testing.T) {
 	}
 }
 
-func TestWhereWithTimePredicateWithAFTER(t *testing.T) {
+func TestWhereWithTimePredicateWithHappensAfter(t *testing.T) {
 	user := os.Getenv("ARONNAXTESTUSER")
 	pass := os.Getenv("ARONNAXTESTPASS")
 	dbname := os.Getenv("ARONNAXTESTDB")
@@ -590,25 +676,25 @@ func TestWhereWithTimePredicateWithAFTER(t *testing.T) {
 		querystring string // query
 		uuids       []uuid.UUID
 	}{
-		// AFTER
+		// HAPPENS AFTER
 		{
-			"select distinct uuid where has Metadata/Exposure after 14;",
+			"select distinct uuid where has Metadata/Exposure happens after 14;",
 			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
 		},
 		{
-			"select distinct uuid where has Metadata/Exposure after 15;",
+			"select distinct uuid where has Metadata/Exposure happens after 15;",
 			[]uuid.UUID{uuid2, uuid3, uuid4, uuid5},
 		},
 		{
-			"select distinct uuid where has Metadata/Exposure after 17;",
+			"select distinct uuid where has Metadata/Exposure happens after 17;",
 			[]uuid.UUID{uuid4, uuid5},
 		},
 		{
-			"select distinct uuid where has Metadata/Exposure after 18;",
+			"select distinct uuid where has Metadata/Exposure happens after 18;",
 			[]uuid.UUID{uuid5},
 		},
 		{
-			"select distinct uuid where has Metadata/Exposure after 19;",
+			"select distinct uuid where has Metadata/Exposure happens after 19;",
 			[]uuid.UUID{},
 		},
 	} {
@@ -649,37 +735,132 @@ func TestWhereWithTimePredicateWithAFTER(t *testing.T) {
 	}
 }
 
-/*
+func TestWhereWithTimePredicateWithHappensIn(t *testing.T) {
+	user := os.Getenv("ARONNAXTESTUSER")
+	pass := os.Getenv("ARONNAXTESTPASS")
+	dbname := os.Getenv("ARONNAXTESTDB")
+	backend := newBackend(user, pass, dbname)
+	uuid1, _ := uuid.FromString("2b365d6a-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid2, _ := uuid.FromString("370dd17c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	for _, test := range []struct {
+		querystring string // query
+		uuids       []uuid.UUID
+	}{
+		// HAPPENS IN
+		{
+			"select distinct uuid where Location/Room='410' happens in (1, 6);",
+			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
+		},
+		{
+			"select distinct uuid where Location/Room='410' happens in (1, 8);",
+			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
+		},
+		{
+			"select distinct uuid where Location/Room='410' happens in (6, 8);",
+			[]uuid.UUID{},
+		},
+	} {
+		var (
+			docs            []*Document
+			rows            *sql.Rows
+			expectedMatches = make(map[uuid.UUID]bool)
+			err             error
+		)
+		for _, uid := range test.uuids {
+			expectedMatches[uid] = false
+		}
+		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+			fmt.Println(test.querystring)
+			t.Errorf("Query failed! %v", err)
+			continue
+		}
+		if docs, err = DocsFromRows(rows); err != nil {
+			fmt.Println(test.querystring)
+			t.Errorf("Doc transform failed! %v", err)
+			continue
+		}
+		for _, doc := range docs {
+			if _, found := expectedMatches[doc.UUID]; !found {
+				fmt.Println(test.querystring)
+				t.Errorf("Query %v matched unexpected UUID %v", test.querystring, doc.UUID)
+				continue
+			} else {
+				expectedMatches[doc.UUID] = true
+			}
+		}
 
-	// IAFTER
-	{
-		"select distinct uuid where Location/Room = '411' iafter 0;",
-		map[uuid.UUID]bool{},
-	},
-	{
-		"select distinct uuid where Location/Room = '411' iafter 5;",
-		map[uuid.UUID]bool{uuid1: false},
-	},
-	{
-		"select distinct uuid where has Metadata/Exposure iafter 4;",
-		map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
-	},
-	{
-		"select distinct uuid where has Metadata/Exposure iafter 13;",
-		map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false, uuid5: false},
-	},
-	{
-		"select distinct uuid where has Metadata/Exposure iafter 17;",
-		map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false},
-	},
-	{
-		"select distinct uuid where has Metadata/Exposure iafter 18;",
-		map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false},
-	},
+		for uuid, covered := range expectedMatches {
+			if !covered {
+				t.Errorf("Query %v did not match expected UUID %v", test.querystring, uuid)
+			}
+		}
+	}
+}
 
-	// AFTER
-	{
-		"select distinct uuid where has Metadata/Exposure after 17;",
-		map[uuid.UUID]bool{uuid1: false, uuid2: false, uuid3: false, uuid4: false},
-	},
-*/
+func TestWhereWithTimePredicateWithHappensInWorkaround(t *testing.T) {
+	user := os.Getenv("ARONNAXTESTUSER")
+	pass := os.Getenv("ARONNAXTESTPASS")
+	dbname := os.Getenv("ARONNAXTESTDB")
+	backend := newBackend(user, pass, dbname)
+	uuid1, _ := uuid.FromString("2b365d6a-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid2, _ := uuid.FromString("370dd17c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid3, _ := uuid.FromString("3a77a0e0-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid4, _ := uuid.FromString("3da1cafc-8cbd-11e5-8bb3-0cc47a0f7eea")
+	uuid5, _ := uuid.FromString("411ce89c-8cbd-11e5-8bb3-0cc47a0f7eea")
+	for _, test := range []struct {
+		querystring string // query
+		uuids       []uuid.UUID
+	}{
+		// HAPPENS IN OR AT
+		{
+			"select distinct uuid where Location/Room='410' happens in (1, 6) or Location/Room='410' at 1;",
+			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
+		},
+		{
+			"select distinct uuid where Location/Room='410' happens in (1, 8) or Location/Room='410' at 1;",
+			[]uuid.UUID{uuid1, uuid2, uuid3, uuid4, uuid5},
+		},
+		{
+			"select distinct uuid where Location/Room='410' happens in (6, 8) or Location/Room='410' at 6;",
+			[]uuid.UUID{uuid2, uuid3, uuid4, uuid5},
+		},
+	} {
+		var (
+			docs            []*Document
+			rows            *sql.Rows
+			expectedMatches = make(map[uuid.UUID]bool)
+			err             error
+		)
+		for _, uid := range test.uuids {
+			expectedMatches[uid] = false
+		}
+		if rows, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+			fmt.Println(test.querystring)
+			t.Errorf("Query failed! %v", err)
+			continue
+		}
+		if docs, err = DocsFromRows(rows); err != nil {
+			fmt.Println(test.querystring)
+			t.Errorf("Doc transform failed! %v", err)
+			continue
+		}
+		for _, doc := range docs {
+			if _, found := expectedMatches[doc.UUID]; !found {
+				fmt.Println(test.querystring)
+				t.Errorf("Query %v matched unexpected UUID %v", test.querystring, doc.UUID)
+				continue
+			} else {
+				expectedMatches[doc.UUID] = true
+			}
+		}
+
+		for uuid, covered := range expectedMatches {
+			if !covered {
+				t.Errorf("Query %v did not match expected UUID %v", test.querystring, uuid)
+			}
+		}
+	}
+}

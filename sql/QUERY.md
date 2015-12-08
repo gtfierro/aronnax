@@ -230,17 +230,27 @@ I use in the future.
 From [this file](https://github.com/gtfierro/aronnax#queries), we define several time-based predicates that augment the relational predicates
 used in the `WHERE` clause:
 
-**All singular timestmpas are inclusive**; that is if there is a single bound, then the expressed time is included.
+**All singular timestmpas are exclusive**; that is if there is a single bound, then the expressed time is excluded. Including the time can easily be done with `OR` and `AT`.
 **All time ranges are lower-inclusive, upper-exclusive: [time1, time2)**; [for these reasons](http://www.cs.utexas.edu/users/EWD/ewd08xx/EWD831.PDF)
 
 | operator | syntax | definition | example |
 |----------|--------|------------|---------|
-| `IN`     | `WHERE <relational predicate> IN <time range>`    | True if predicate was true *at any point* within the provided time range | `where Room = 410 in (now, now -5min)` |
 | `FOR`    | `WHERE <relational predicate> FOR <time range>`   | True if the predicate is true *for the entire time range* | `where Room = 410 for (now, now -5min)` |
-| `BEFORE` | `WHERE <relational predicate> BEFORE <timestamp>` | True if predicate true *at any time* before (and including) the given time. | `where Room = 410 before 1447366661s` |
+| `BEFORE` | `WHERE <relational predicate> BEFORE <timestamp>` | True if predicate true *at any time* before (not including) the given time. | `where Room = 410 before 1447366661s` |
 | `AT`     | `WHERE <relational predicate> AT <timestamp>`     | True if the predicate is true at that point in time | `where Room = 410 at 1447366661s` |
-| `AFTER`  | `WHERE <relational predicate> AFTER <timestamp>`  | True if predicate *becomes* true after (and including) the current time | `where Room = 410 after 1447366661s` |
+| `HAPPENS AFTER`  | `WHERE <relational predicate> HAPPENS AFTER <timestamp>`  | True if predicate is true after (not including) the current time | `where Room = 410 after 1447366661s` |
+| `HAPPENS IN`     | `WHERE <relational predicate> HAPPENS IN <time range>`    | True if predicate *becomes* true within the given time range | `where Room = 410 in (now, now -5min)` |
+| SOON: `AFTER`  | `WHERE <relational predicate> AFTER <timestamp>`  | True if predicate *becomes* true after (and including) the current time | `where Room = 410 after 1447366661s` |
+| SOON: `IN`     | `WHERE <relational predicate> IN <time range>`    | True if predicate was true *at any point* within the provided time range | `where Room = 410 in (now, now -5min)` |
 
+These last two can be approximated with combining them with an `OR` with the same predicate but with a temporal `AT` predicate, e.g.
+
+```sql
+-- with syntactic sugar
+select * where Location/Room = "410" after "1/1/2014";
+-- without
+select * where Location/Room = "410" happens after "1/1/2014" or Location/Room="410 at "1/1/2014";
+```
 
 In this section, we will discuss how to implement those in our SQL expression
 compiler. From above, we know that at the core of each of our relational
@@ -307,7 +317,7 @@ from data
 inner join
 (
         select distinct uuid, dkey, timestamp as maxtime from data
-        where timestamp <= 1234567890
+        where timestamp < 1234567890
         order by timestamp desc
 ) sorted
 on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
