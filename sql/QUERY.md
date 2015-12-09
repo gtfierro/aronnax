@@ -455,6 +455,8 @@ this query language.
 
 ### Computing the Valid Timestamp for a Document
 
+#### Problem
+
 When you receive a document in response to a query, especially a query which
 covered a range of times, it is often important to know the point in time at
 which that document was matched. In Aronnax, tags (a key/value pair) are
@@ -491,3 +493,10 @@ earlier form of the document that is equivalent. Here, because the query knows
 that the returned document does not have a `Metadata/Exposure` key, it looks
 for the latest document change that made that true, which is the edits at time
 1.
+
+#### Fix
+
+There is no clean fix with the relational model, short of running a secondary query to calcuate
+the latest valid time of the document. An intermediary solution is to replace the "valid time"
+field in a document with the time the query was made according to the server (what the server took
+as the "now" time) or whatever timestamp was included
