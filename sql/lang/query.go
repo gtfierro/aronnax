@@ -94,7 +94,7 @@ const QueryEofCode = 1
 const QueryErrCode = 2
 const QueryMaxDepth = 200
 
-//line query.y:309
+//line query.y:312
 const eof = 0
 
 var supported_formats = []string{"1/2/2006",
@@ -122,45 +122,45 @@ func (ql *QueryLex) NextLetter() string {
 }
 
 var termTemplate = `
-	(
-		select distinct data.uuid
-		from data
-		inner join
-		(
-			select distinct uuid, dkey, max(timestamp) as maxtime from data
-			group by dkey, uuid order by timestamp desc
-		) sorted
-		on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-		where data.dval is not null
-			%s
-	) as %s
+    (
+        select distinct data.uuid
+        from data
+        inner join
+        (
+            select distinct uuid, dkey, max(timestamp) as maxtime from data
+            group by dkey, uuid order by timestamp desc
+        ) sorted
+        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+        where data.dval is not null
+            %s
+    ) as %s
 `
 
 var termTemplateUnion = `
-	(
-		select distinct data.uuid
-		from data
-		inner join
-		(
-			select distinct uuid, dkey, max(timestamp) as maxtime from data
-			group by dkey, uuid order by timestamp desc
-		) sorted
-		on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-		where data.dval is not null
-			%s
-	)
+    (
+        select distinct data.uuid
+        from data
+        inner join
+        (
+            select distinct uuid, dkey, max(timestamp) as maxtime from data
+            group by dkey, uuid order by timestamp desc
+        ) sorted
+        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+        where data.dval is not null
+            %s
+    )
 `
 
 var timePredicateSingle = `
-	select distinct uuid, dkey, max(timestamp) as maxtime from data
-	where timestamp %s "%s"
-	group by dkey, uuid order by timestamp desc
+    select distinct uuid, dkey, max(timestamp) as maxtime from data
+    where timestamp %s "%s"
+    group by dkey, uuid order by timestamp desc
 `
 
 var timePredicateRange = `
-	select distinct uuid, dkey, max(timestamp) as maxtime from data
-	where timestamp %s "%s" and timestamp %s "%s"
-	group by dkey, uuid order by timestamp desc
+    select distinct uuid, dkey, max(timestamp) as maxtime from data
+    where timestamp %s "%s" and timestamp %s "%s"
+    group by dkey, uuid order by timestamp desc
 `
 
 func NewQueryLexer(s string) *QueryLex {
@@ -854,18 +854,18 @@ Querydefault:
 		{
 			//TODO: fix!
 			QueryVAL.str = fmt.Sprintf(timePredicateRange, ">=", _time.Now())
-			template := `select distinct uuid, dkey, timestamp as maxtime from data
-					where timestamp >= "%s" and timestamp < "%s"
-					order by timestamp desc`
+			template := `select uuid, dkey, timestamp as maxtime from data
+	                where timestamp >= "%s" and timestamp < "%s"
+	                order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[4].time.Format(_time.RFC3339), QueryDollar[6].time.Format(_time.RFC3339))
 		}
 	case 22:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
 		//line query.y:221
 		{
-			template := `select distinct uuid, dkey, timestamp as maxtime from data
-					where timestamp <  "%s"
-					order by timestamp desc`
+			template := `select uuid, dkey, timestamp as maxtime from data
+	                where timestamp <  "%s"
+	                order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[3].time.Format(_time.RFC3339))
 		}
 	case 23:
@@ -873,34 +873,34 @@ Querydefault:
 		//line query.y:228
 		{
 			template := `select distinct uuid, dkey, max(timestamp) as maxtime from data
-					where timestamp <= "%s"
-					group by dkey, uuid order by timestamp desc`
+	                where timestamp <= "%s"
+	                group by dkey, uuid order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
 		}
 	case 24:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
 		//line query.y:235
 		{
-			template := `select distinct uuid, dkey, timestamp as maxtime from data
-					where timestamp >= "%s"
-					order by timestamp desc`
+			template := `select uuid, dkey, timestamp as maxtime from data
+	                where timestamp >= "%s"
+	                order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[3].time.Format(_time.RFC3339))
 		}
 	case 25:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:245
+		//line query.y:248
 		{
 			QueryVAL.time = QueryDollar[1].time
 		}
 	case 26:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:249
+		//line query.y:252
 		{
 			QueryVAL.time = QueryDollar[1].time.Add(QueryDollar[2].timediff)
 		}
 	case 27:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:255
+		//line query.y:258
 		{
 			foundtime, err := parseAbsTime(QueryDollar[1].str, QueryDollar[2].str)
 			if err != nil {
@@ -910,7 +910,7 @@ Querydefault:
 		}
 	case 28:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:263
+		//line query.y:266
 		{
 			num, err := strconv.ParseInt(QueryDollar[1].str, 10, 64)
 			if err != nil {
@@ -920,7 +920,7 @@ Querydefault:
 		}
 	case 29:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:271
+		//line query.y:274
 		{
 			found := false
 			for _, format := range supported_formats {
@@ -938,13 +938,13 @@ Querydefault:
 		}
 	case 30:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:287
+		//line query.y:290
 		{
 			QueryVAL.time = _time.Now()
 		}
 	case 31:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:293
+		//line query.y:296
 		{
 			var err error
 			QueryVAL.timediff, err = parseReltime(QueryDollar[1].str, QueryDollar[2].str)
@@ -954,7 +954,7 @@ Querydefault:
 		}
 	case 32:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:301
+		//line query.y:304
 		{
 			newDuration, err := parseReltime(QueryDollar[1].str, QueryDollar[2].str)
 			if err != nil {

@@ -27,9 +27,9 @@ CREATE TABLE data
 `
 
 var whereTemplate = `
-select second.uuid, second.dkey, second.dval
+select second.uuid, second.dkey, second.dval, second.timestamp
 from (
-   select data.uuid, data.dkey, data.dval
+   select data.uuid, data.dkey, data.dval, data.timestamp
    from data
    inner join
    (
@@ -96,12 +96,12 @@ func (mbd *mysqlBackend) RemoveData() error {
 }
 
 func (mbd *mysqlBackend) Insert(doc *Document) error {
-	_, err := mbd.db.Exec(doc.GenerateinsertStatement())
+	_, err := mbd.db.Exec(doc.GenerateInsertStatement(true))
 	return err
 }
 
 func (mbd *mysqlBackend) InsertWithTimestamp(doc *Document, timestamp time.Time) error {
-	_, err := mbd.db.Exec(doc.GenerateinsertStatementWithTimestamp(timestamp))
+	_, err := mbd.db.Exec(doc.GenerateInsertStatementWithTimestamp(timestamp))
 	return err
 }
 

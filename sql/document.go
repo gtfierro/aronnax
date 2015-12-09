@@ -9,12 +9,19 @@ import (
 )
 
 type Document struct {
+	// the unique document identifier
 	UUID uuid.UUID
+	// Key->Value pairs this document contains
 	Tags map[string]string
+	// When the keys were applied
+	TagTimes map[string]time.Time
+	// the time at which this document is valid (the max of the tag times)
+	ValidTime time.Time
 }
 
-// Generates a batch INSERT statement
-func (doc *Document) GenerateinsertStatement() string {
+// Generates a batch INSERT statement. If ignoreTagTimes is true, then the tags are
+// applied at time "now" as determined by the MySQL database
+func (doc *Document) GenerateInsertStatement(ignoreTagTimes bool) string {
 	var s = "INSERT INTO data (uuid, dkey, dval) VALUES "
 	for key, val := range doc.Tags {
 		if len(val) == 0 {
@@ -22,13 +29,17 @@ func (doc *Document) GenerateinsertStatement() string {
 		} else {
 			val = `"` + val + `"`
 		}
-		s += fmt.Sprintf(`("%s", "%s", %s),`, doc.UUID.String(), key, val)
+		if ignoreTagTimes {
+			s += fmt.Sprintf(`("%s", "%s", %s),`, doc.UUID.String(), key, val)
+		} else {
+			s += fmt.Sprintf(`("%s", "%s", %s, "%s"),`, doc.UUID.String(), key, val, doc.TagTimes[key].Format(time.RFC3339))
+		}
 	}
 	s = s[:len(s)-1]
 	return s + ";"
 }
 
-func (doc *Document) GenerateinsertStatementWithTimestamp(timestamp time.Time) string {
+func (doc *Document) GenerateInsertStatementWithTimestamp(timestamp time.Time) string {
 	var s = "INSERT INTO data (uuid, dkey, dval, timestamp) VALUES "
 	for key, val := range doc.Tags {
 		if len(val) == 0 {
@@ -58,6 +69,18 @@ func (doc *Document) GenerateValues() []string {
 	return ret
 }
 
+// finds the most recent tag.Time from its list of tags
+// and sets that to doc.ValidTime
+func (doc *Document) CalcMaxTagTime() {
+	latest := time.Time{} // earliest time
+	for _, tagtime := range doc.TagTimes {
+		if tagtime.After(latest) {
+			latest = tagtime
+		}
+	}
+	doc.ValidTime = latest
+}
+
 func (doc *Document) PrettyString() string {
 	if b, err := json.MarshalIndent(doc, "", "  "); err != nil {
 		return fmt.Sprintf("ERROR FORMATTING (%v) %v", err, doc)
@@ -79,22 +102,33 @@ func DocsFromRows(rows *sql.Rows) ([]*Document, error) {
 		var (
 			duuid string
 			dkey  string
-			dval  string
+			dval  sql.NullString
+			dtime time.Time
 		)
-		if err := rows.Scan(&duuid, &dkey, &dval); err != nil {
+		if err := rows.Scan(&duuid, &dkey, &dval, &dtime); err != nil {
 			return docs, err
 		}
 		if doc, found := uniqueDocs[duuid]; found {
-			doc.Tags[dkey] = dval
+			if dval.Valid { // value can be null
+				doc.Tags[dkey] = dval.String
+			} // but we still want to keep track of the time
+			doc.TagTimes[dkey] = dtime
 		} else {
 			parsedUUID, err := uuid.FromString(duuid)
 			if err != nil {
 				return docs, err
 			}
-			doc = &Document{UUID: parsedUUID, Tags: map[string]string{dkey: dval}}
+			doc = &Document{UUID: parsedUUID, Tags: map[string]string{}, TagTimes: map[string]time.Time{dkey: dtime}}
+			if dval.Valid {
+				doc.Tags[dkey] = dval.String
+			}
 			uniqueDocs[duuid] = doc
 			docs = append(docs, doc)
 		}
+	}
+	// add in the valid times for all documents
+	for _, doc := range docs {
+		doc.CalcMaxTagTime()
 	}
 	return docs, nil
 }

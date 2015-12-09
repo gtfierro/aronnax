@@ -140,6 +140,7 @@ func TestRecentDocument(t *testing.T) {
 					"Metadata/Point/Sensor":    "Temperature",
 					"Metadata/Exposure":        "South",
 				},
+				ValidTime: MustParse(time.RFC3339, "1969-12-31T16:00:14Z"),
 			},
 		},
 		{
@@ -159,6 +160,7 @@ func TestRecentDocument(t *testing.T) {
 					"Metadata/Point/Sensor":    "Temperature",
 					"Metadata/Exposure":        "West",
 				},
+				ValidTime: MustParse(time.RFC3339, "1969-12-31T16:00:15Z"),
 			},
 		},
 		{
@@ -178,6 +180,7 @@ func TestRecentDocument(t *testing.T) {
 					"Metadata/Point/Sensor":    "Temperature",
 					"Metadata/Exposure":        "North",
 				},
+				ValidTime: MustParse(time.RFC3339, "1969-12-31T16:00:16Z"),
 			},
 		},
 		{
@@ -197,6 +200,7 @@ func TestRecentDocument(t *testing.T) {
 					"Metadata/Point/Sensor":    "Temperature",
 					"Metadata/Exposure":        "East",
 				},
+				ValidTime: MustParse(time.RFC3339, "1969-12-31T16:00:17Z"),
 			},
 		},
 		{
@@ -215,6 +219,10 @@ func TestRecentDocument(t *testing.T) {
 					"Metadata/Point/Type":      "Sensor",
 					"Metadata/Point/Sensor":    "Temperature",
 				},
+				ValidTime: MustParse(time.RFC3339, "1969-12-31T16:00:19Z"),
+				//TODO: bug here. The test currently returns time 13, rather than 19. This is because it retrieves
+				// the earliest version of the document equivalent to its latest form. Because it doesn't have an Exposure
+				// tag at 19, it looks for the earliset time that it does, which is 13
 			},
 		},
 	} {
@@ -232,6 +240,7 @@ func TestRecentDocument(t *testing.T) {
 			t.Errorf("Doc transform failed! %v", err)
 			continue
 		}
+		(docs[0].TagTimes) = nil
 		if len(docs) != 1 {
 			t.Errorf("Only expected one doc! Got %v", len(docs))
 		} else if !reflect.DeepEqual(test.doc, *(docs[0])) {
