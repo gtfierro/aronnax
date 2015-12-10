@@ -1,6 +1,7 @@
 package main
 
 import (
+	query "./lang"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -17,6 +18,54 @@ type Document struct {
 	TagTimes map[string]time.Time
 	// the time at which this document is valid (the max of the tag times)
 	ValidTime time.Time
+}
+
+//type SelectTerm struct {
+//	Tag       string
+//	Filter    SelectPredicate
+//	StartTime time.Time
+//	EndTime   time.Time
+//}
+func (doc *Document) ApplySelect(selects []query.SelectTerm) {
+	//    for _, term :=  range selects {
+	//        switch term.Filter:
+	//        case t_FIRST:
+	//            fmt.Println("FIRST", doc.findEarliestTag())
+	//        case t_LAST:
+	//            fmt.Println("LAST", doc.findLatestTag())
+	//        case t_ALL:
+	//        case t_AT:
+	//        case t_IAFTER:
+	//        case t_AFTER:
+	//        case t_IBEFORE:
+	//        case t_BEFORE:
+	//        case t_BETWEEN:
+	//        default:
+	//    }
+}
+
+func (doc *Document) findEarliestTag() string {
+	var ret string
+	earliest := time.Now()
+	for key, keytime := range doc.TagTimes {
+		if keytime.Before(earliest) {
+			earliest = keytime
+			ret = key
+		}
+	}
+	return ret
+}
+
+func (doc *Document) findLatestTag() string {
+	var ret string
+	latest := time.Time{}
+	for key, keytime := range doc.TagTimes {
+		if keytime.After(latest) {
+			latest = keytime
+			ret = key
+		}
+	}
+	return ret
 }
 
 // Generates a batch INSERT statement. If ignoreTagTimes is true, then the tags are

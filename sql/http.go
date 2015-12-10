@@ -3,12 +3,10 @@ package main
 import (
 	query "./lang"
 	"bufio"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 )
 
 type httpServer struct {
@@ -26,14 +24,11 @@ func StartHTTPServer(backend *mysqlBackend, port int) {
 //TODO: currently does not support semicolons embedded inside queries
 func (h *httpServer) HandleQuery(w http.ResponseWriter, r *http.Request) {
 	var (
-		parsed       *query.Query
-		parseErr     error
-		rows         *sql.Rows
-		evalErr      error
-		docs         []*Document
-		transformErr error
-		encoder      *json.Encoder
-		now          time.Time
+		parsed   *query.Query
+		parseErr error
+		evalErr  error
+		docs     []*Document
+		encoder  *json.Encoder
 	)
 	reqBody := bufio.NewReader(r.Body)
 	s, err := reqBody.ReadString(';')
@@ -52,18 +47,10 @@ func (h *httpServer) HandleQuery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// eval query
-	rows, now, evalErr = h.Backend.Eval(parsed, nil)
+	docs, evalErr = h.Backend.Eval(parsed)
 	if evalErr != nil {
 		w.WriteHeader(500) // server error
 		w.Write([]byte(evalErr.Error()))
-		goto deliver
-	}
-
-	// transform results into documents
-	docs, transformErr = DocsFromRows(rows, now)
-	if transformErr != nil {
-		w.WriteHeader(500) // server error
-		w.Write([]byte(transformErr.Error()))
 		goto deliver
 	}
 

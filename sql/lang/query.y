@@ -74,7 +74,11 @@ selectTermList	:	selectTerm
 				}
 				;
 
-selectTerm	:	FIRST selectTermValue
+selectTerm	: selectTermValue
+			{
+				$$ = $1
+			}
+			|	FIRST selectTermValue
 			{
 				$2.Filter = FIRST
 				$$ = $2

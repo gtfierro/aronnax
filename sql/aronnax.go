@@ -108,7 +108,55 @@ func (mbd *mysqlBackend) InsertWithTimestamp(doc *Document, timestamp time.Time)
 }
 
 // passes through the error if it is nil
-func (mbd *mysqlBackend) Eval(q *query.Query, err error) (*sql.Rows, time.Time, error) {
+func (mbd *mysqlBackend) Eval(q *query.Query) ([]*Document, error) {
+	var (
+		docs    = []*Document{}
+		err     error
+		evalErr error
+		rows    *sql.Rows
+		tosend  string
+	)
+	// build SQL string using WHERE clause
+	if q.Wheres.SQL != "" {
+		tosend = fmt.Sprintf(whereTemplate, q.Wheres.SQL)
+	}
+	// print generated query if flag is set
+	if *showQuery {
+		fmt.Println(tosend)
+	}
+	// evaluate WHERE clause against the backend
+	if rows, evalErr = mbd.db.Query(tosend); evalErr != nil {
+		return docs, evalErr
+	}
+
+	// transform the returned rows into documents so they are easier to work with
+	if docs, err = DocsFromRows(rows, q.Now); err != nil {
+		return docs, err
+	}
+
+	// apply the select clause
+	for idx, doc := range docs {
+		// for each document, for each term in the select clause, pull out
+		// which keys in the document match
+		fmt.Println(idx, doc)
+		doc.ApplySelect(q.Selects)
+	}
+	fmt.Println(q.Selects)
+	return docs, err
+}
+
+func (mbd *mysqlBackend) Parse(querystring string) (*query.Query, error) {
+	var parseErr error
+	lex := query.NewQueryLexer(querystring)
+	query.QueryParse(lex)
+	if lex.Err != nil {
+		parseErr = fmt.Errorf("ERROR %s %s", lex.Err, querystring)
+	}
+	return lex.Query, parseErr
+}
+
+// passes through the error if it is nil
+func (mbd *mysqlBackend) EvalWhere(q *query.Query, err error) (*sql.Rows, time.Time, error) {
 	var tosend string
 	if q.Wheres.SQL != "" {
 		tosend = fmt.Sprintf(whereTemplate, q.Wheres.SQL)
@@ -124,16 +172,6 @@ func (mbd *mysqlBackend) Eval(q *query.Query, err error) (*sql.Rows, time.Time, 
 	}
 }
 
-func (mbd *mysqlBackend) Parse(querystring string) (*query.Query, error) {
-	var parseErr error
-	lex := query.NewQueryLexer(querystring)
-	query.QueryParse(lex)
-	if lex.Err != nil {
-		parseErr = fmt.Errorf("ERROR %s %s", lex.Err, querystring)
-	}
-	return lex.Query, parseErr
-}
-
 func (mbd *mysqlBackend) StartInteractive() {
 	fi := bufio.NewReader(os.Stdin)
 	for {
@@ -142,18 +180,18 @@ func (mbd *mysqlBackend) StartInteractive() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		rows, now, evalParseErr := mbd.Eval(mbd.Parse(s))
-		if evalParseErr != nil {
-			log.Print("Error parse/eval: ", evalParseErr)
+		parsed, parseErr := mbd.Parse(s)
+		if parseErr != nil {
+			log.Print("Error parse: ", parseErr)
 			continue
 		}
-		if docs, err := DocsFromRows(rows, now); err != nil {
-			log.Print("docs from", err)
+		docs, evalErr := mbd.Eval(parsed)
+		if evalErr != nil {
+			log.Print("Error eval: ", evalErr)
 			continue
-		} else {
-			for _, doc := range docs {
-				fmt.Println(doc.PrettyString())
-			}
+		}
+		for _, doc := range docs {
+			fmt.Println(doc.PrettyString())
 		}
 	}
 }

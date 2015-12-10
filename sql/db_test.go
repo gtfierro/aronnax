@@ -232,7 +232,7 @@ func TestRecentDocument(t *testing.T) {
 			err  error
 		)
 		query := fmt.Sprintf("select * where uuid = '%s';", test.uuid)
-		if rows, _, err = backend.Eval(backend.Parse(query)); err != nil {
+		if rows, _, err = backend.EvalWhere(backend.Parse(query)); err != nil {
 			t.Errorf("Query failed! %v", err)
 			continue
 		}
@@ -331,7 +331,7 @@ func TestWhereRecentDocument(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		if rows, _, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+		if rows, _, err = backend.EvalWhere(backend.Parse(test.querystring)); err != nil {
 			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
@@ -393,7 +393,7 @@ func TestWhereWithNotRecentDocument(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		if rows, _, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+		if rows, _, err = backend.EvalWhere(backend.Parse(test.querystring)); err != nil {
 			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
@@ -479,7 +479,7 @@ func TestWhereWithTimePredicateWithHappensBefore(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		if rows, _, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+		if rows, _, err = backend.EvalWhere(backend.Parse(test.querystring)); err != nil {
 			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
@@ -565,7 +565,7 @@ func TestWhereWithTimePredicateWithBeforeWorkaround(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		if rows, _, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+		if rows, _, err = backend.EvalWhere(backend.Parse(test.querystring)); err != nil {
 			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
@@ -643,7 +643,7 @@ func TestWhereWithTimePredicateWithAt(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		if rows, _, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+		if rows, _, err = backend.EvalWhere(backend.Parse(test.querystring)); err != nil {
 			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
@@ -716,7 +716,7 @@ func TestWhereWithTimePredicateWithHappensAfter(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		if rows, _, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+		if rows, _, err = backend.EvalWhere(backend.Parse(test.querystring)); err != nil {
 			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
@@ -781,7 +781,7 @@ func TestWhereWithTimePredicateWithHappensIn(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		if rows, _, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+		if rows, _, err = backend.EvalWhere(backend.Parse(test.querystring)); err != nil {
 			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
@@ -846,7 +846,7 @@ func TestWhereWithTimePredicateWithHappensInWorkaround(t *testing.T) {
 		for _, uid := range test.uuids {
 			expectedMatches[uid] = false
 		}
-		if rows, _, err = backend.Eval(backend.Parse(test.querystring)); err != nil {
+		if rows, _, err = backend.EvalWhere(backend.Parse(test.querystring)); err != nil {
 			fmt.Println(test.querystring)
 			t.Errorf("Query failed! %v", err)
 			continue
