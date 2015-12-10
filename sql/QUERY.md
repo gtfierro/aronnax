@@ -396,9 +396,26 @@ and data.dkey = "Location/City" and data.dval = "Berkeley"
 ### `FOR`
 
 This one is tricky, because it involves verifying that the relational predicate is true for
-the whole expressed duration. With the exception of this operator, the rest of these
-predicate constructions can be handled by rendering directly into the nested
-`SELECT` clause.
+the whole expressed duration, that is, verifying that a predicate does not change for
+some duration -- not that it is the same at times A and B.
+
+This could be achieved by finding all streams in `[A, B)` that are *not* in the set
+of streams that do not match the predicate in the range `[A, B)`. This accounts
+for changes that may have occured in `[A, B)`, but does not match streams that did
+not experience change in `[A, B)` and matched the predicate some time in `[0, A)`.
+
+To a degree, this is possible with our existing temporal predicates:
+
+```sql
+where <pred> at A and not <~pred>) happens in (A, B)
+-- true at A and doesn't change to be false in [A, B)
+```
+
+Notice that we use `<~pred>` rather than `(not <pred>)`, because even though
+`not` is supposed to be an inversion of the predicate, I'm not sure that our
+implementation follows this.
+
+**TRIAGE: worry about this much later**
 
 ### Applying `NOT`
 
