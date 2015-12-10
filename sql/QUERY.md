@@ -465,6 +465,23 @@ Each of these temporal modifiers can be applied to a tag or group of tags in the
 and the `SELECT` clause should also include the ability to return the actual time that was matched,
 probably through some special tag like `@time`.
 
+### `SELECT` Syntax
+
+| operator | syntax | definition |
+|----------|--------|------------|
+| `FIRST`    | `select first Location/Room`   | returns earliest version of tag that matches where clause |
+| `LAST`    | `select last Location/Room`   | returns latest version of tag that matches where clause |
+| `ALL`    | `select all Location/Room`   | returns all versions of tags matched by where clause |
+| `AT`    | `select Location/Room at <time>`   | returns all version of the tag that have the provided timestamp |
+| `IAFTER`    | `select Location/Room iafter <time>`   | returns the version of the tag most immediately after (not including) the provided timestamp |
+| `IBEFORE`    | `select Location/Room ibefore <time>`   | returns the version of the tag most immediately before (not including) the provided timestamp |
+| `AFTER`    | `select Location/Room after <time>`   | returns *all* versions of the tag after (not including) the provided timestamp |
+| `BEFORE`    | `select Location/Room before <time>`   | returns *all* versions of the tag before (not including) the provided timestamp |
+| `BETWEEN`    | `select Location/Room between (<time>, <time>)`   | returns *all* versions of the tag in `[T1, T2)` |
+
+Now that the background SQL queries are returning the timestamps associated with each tag, these
+should be easy to implement.
+
 ## Difficulties
 
 It occured to me that I should be keeping track of problems that I run into in the process of developing

@@ -14,7 +14,10 @@ type Query struct {
 }
 
 type SelectTerm struct {
-	Tag string
+	Tag       string
+	Filter    SelectPredicate
+	StartTime time.Time
+	EndTime   time.Time
 }
 
 type WhereTerm struct {

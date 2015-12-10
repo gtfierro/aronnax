@@ -24,13 +24,14 @@ import (
 %token <str> LVALUE QSTRING LIKE HAS
 %token <str> NOW SET AT BEFORE AFTER AND AS TO OR IN NOT FOR HAPPENS
 %token <str> LPAREN RPAREN NEWLINE
+%token <str> FIRST LAST IAFTER IBEFORE BETWEEN
 %token NUMBER
 %token SEMICOLON
 
 %token <str> EQ NEQ COMMA ALL
 
 %type <selectTermList> selectTermList selectClause
-%type <selectTerm> selectTerm
+%type <selectTerm> selectTerm selectTermValue
 %type <whereClause> whereClause
 %type <whereTerm> whereTerm
 %type <time> timeref abstime
@@ -73,15 +74,69 @@ selectTermList	:	selectTerm
 				}
 				;
 
-selectTerm	:	LVALUE
+selectTerm	:	FIRST selectTermValue
 			{
-				$$ = SelectTerm{Tag: $1}
+				$2.Filter = FIRST
+				$$ = $2
 			}
-			|	ALL
+			|	LAST selectTermValue
 			{
-				$$ = SelectTerm{Tag: $1}
+				$2.Filter = LAST
+				$$ = $2
+			}
+			|	ALL selectTermValue
+			{
+				$2.Filter = ALL
+				$$ = $2
+			}
+			|	selectTermValue AT timeref
+			{
+				$1.Filter = AT
+				$1.StartTime = $3
+				$$ = $1
+			}
+			|	selectTermValue IAFTER timeref
+			{
+				$1.Filter = IAFTER
+				$1.StartTime = $3
+				$$ = $1
+			}
+			|	selectTermValue IBEFORE timeref
+			{
+				$1.Filter = IBEFORE
+				$1.StartTime = $3
+				$$ = $1
+			}
+			|	selectTermValue AFTER timeref
+			{
+				$1.Filter = AFTER
+				$1.StartTime = $3
+				$$ = $1
+			}
+			|	selectTermValue BEFORE timeref
+			{
+				$1.Filter = BEFORE
+				$1.StartTime = $3
+				$$ = $1
+			}
+			|	selectTermValue IN LPAREN timeref COMMA timeref RPAREN
+			{
+				$1.Filter = BETWEEN
+				$1.StartTime = $4
+				$1.EndTime = $6
+				$$ = $1
 			}
 			;
+
+selectTermValue	:	LVALUE
+				{
+					$$ = SelectTerm{Tag: $1}
+				}
+				|	ALL
+				{
+					$$ = SelectTerm{Tag: $1}
+				}
+				;
 
 
 whereClause :	whereTerm
@@ -314,6 +369,19 @@ reltime		: NUMBER LVALUE
 			;
 %%
 
+type SelectPredicate uint32
+const (
+	t_FIRST	SelectPredicate = FIRST
+	t_LAST SelectPredicate = LAST
+	t_ALL SelectPredicate = ALL
+	t_AT SelectPredicate = AT
+	t_IAFTER SelectPredicate = IAFTER
+	t_AFTER SelectPredicate = AFTER
+	t_IBEFORE SelectPredicate = IBEFORE
+	t_BEFORE SelectPredicate = BEFORE
+	t_BETWEEN SelectPredicate = BETWEEN
+)
+
 const eof = 0
 var supported_formats = []string{"1/2/2006",
 								 "1-2-2006",
@@ -391,9 +459,14 @@ func NewQueryLexer(s string) *QueryLex {
 			{Token: NOW, Pattern: "now"},
 			{Token: SET, Pattern: "set"},
 			{Token: BEFORE, Pattern: "before"},
+			{Token: FIRST, Pattern: "first"},
+			{Token: LAST, Pattern: "last"},
+			{Token: IBEFORE, Pattern: "ibefore"},
+			{Token: BETWEEN, Pattern: "between"},
 			{Token: HAPPENS, Pattern: "happens"},
 			{Token: AT, Pattern: "at"},
 			{Token: AFTER, Pattern: "after"},
+			{Token: IAFTER, Pattern: "iafter"},
 			{Token: COMMA, Pattern: ","},
 			{Token: AND, Pattern: "and"},
 			{Token: AS, Pattern: "as"},

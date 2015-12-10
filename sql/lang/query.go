@@ -47,12 +47,17 @@ const HAPPENS = 57365
 const LPAREN = 57366
 const RPAREN = 57367
 const NEWLINE = 57368
-const NUMBER = 57369
-const SEMICOLON = 57370
-const EQ = 57371
-const NEQ = 57372
-const COMMA = 57373
-const ALL = 57374
+const FIRST = 57369
+const LAST = 57370
+const IAFTER = 57371
+const IBEFORE = 57372
+const BETWEEN = 57373
+const NUMBER = 57374
+const SEMICOLON = 57375
+const EQ = 57376
+const NEQ = 57377
+const COMMA = 57378
+const ALL = 57379
 
 var QueryToknames = [...]string{
 	"$end",
@@ -81,6 +86,11 @@ var QueryToknames = [...]string{
 	"LPAREN",
 	"RPAREN",
 	"NEWLINE",
+	"FIRST",
+	"LAST",
+	"IAFTER",
+	"IBEFORE",
+	"BETWEEN",
 	"NUMBER",
 	"SEMICOLON",
 	"EQ",
@@ -94,7 +104,21 @@ const QueryEofCode = 1
 const QueryErrCode = 2
 const QueryMaxDepth = 200
 
-//line query.y:315
+//line query.y:370
+type SelectPredicate uint32
+
+const (
+	t_FIRST   SelectPredicate = FIRST
+	t_LAST    SelectPredicate = LAST
+	t_ALL     SelectPredicate = ALL
+	t_AT      SelectPredicate = AT
+	t_IAFTER  SelectPredicate = IAFTER
+	t_AFTER   SelectPredicate = AFTER
+	t_IBEFORE SelectPredicate = IBEFORE
+	t_BEFORE  SelectPredicate = BEFORE
+	t_BETWEEN SelectPredicate = BETWEEN
+)
+
 const eof = 0
 
 var supported_formats = []string{"1/2/2006",
@@ -174,9 +198,14 @@ func NewQueryLexer(s string) *QueryLex {
 			{Token: NOW, Pattern: "now"},
 			{Token: SET, Pattern: "set"},
 			{Token: BEFORE, Pattern: "before"},
+			{Token: FIRST, Pattern: "first"},
+			{Token: LAST, Pattern: "last"},
+			{Token: IBEFORE, Pattern: "ibefore"},
+			{Token: BETWEEN, Pattern: "between"},
 			{Token: HAPPENS, Pattern: "happens"},
 			{Token: AT, Pattern: "at"},
 			{Token: AFTER, Pattern: "after"},
+			{Token: IAFTER, Pattern: "iafter"},
 			{Token: COMMA, Pattern: ","},
 			{Token: AND, Pattern: "and"},
 			{Token: AS, Pattern: "as"},
@@ -247,72 +276,86 @@ var QueryExca = [...]int{
 	-2, 0,
 }
 
-const QueryNprod = 34
+const QueryNprod = 43
 const QueryPrivate = 57344
 
 var QueryTokenNames []string
 var QueryStates []string
 
-const QueryLast = 67
+const QueryLast = 91
 
 var QueryAct = [...]int{
 
-	40, 13, 6, 55, 7, 62, 61, 28, 11, 20,
-	9, 43, 56, 25, 44, 67, 23, 27, 66, 22,
-	32, 49, 26, 24, 35, 36, 52, 29, 30, 8,
-	42, 16, 10, 45, 17, 50, 51, 38, 39, 53,
-	54, 34, 4, 37, 33, 15, 58, 48, 18, 47,
-	46, 60, 57, 59, 19, 31, 12, 2, 1, 21,
-	41, 14, 64, 65, 63, 5, 3,
+	33, 26, 56, 51, 6, 11, 11, 86, 84, 74,
+	14, 43, 57, 90, 89, 12, 36, 29, 85, 37,
+	30, 72, 38, 39, 40, 41, 7, 8, 52, 53,
+	50, 28, 73, 55, 31, 17, 9, 20, 24, 23,
+	35, 77, 13, 59, 25, 68, 42, 62, 63, 67,
+	65, 66, 71, 21, 22, 48, 64, 61, 46, 4,
+	60, 45, 75, 76, 49, 47, 78, 79, 70, 80,
+	69, 10, 58, 54, 32, 82, 81, 15, 83, 16,
+	18, 19, 2, 1, 44, 87, 34, 88, 27, 5,
+	3,
 }
 var QueryPact = [...]int{
 
-	53, -1000, -3, 4, -1000, -23, 49, -1000, -1000, 24,
-	-1000, -3, -1000, -19, 0, 24, -2, 48, 24, -1000,
-	-1000, 25, 24, 24, 23, 3, 9, -1000, 42, 41,
-	39, -1000, -4, 24, 24, -1000, -1000, 2, 3, 3,
-	-1000, -15, 45, -1000, -1000, 3, -1000, -1000, -1000, -1000,
-	-1000, -1000, 3, -1000, -1000, -1000, 44, -1000, -25, -26,
-	-15, 3, 3, -1000, -7, -10, -1000, -1000,
+	78, -1000, -1, 9, -1000, -26, 70, -2, -2, -2,
+	24, -1000, 10, -1000, -1, -1000, -1000, -1000, -1000, -1000,
+	8, 8, 8, 8, 8, 22, -22, 42, 10, -6,
+	66, 10, -1000, -1000, -20, 65, -1000, -1000, -1000, -1000,
+	-1000, -1000, 8, -1000, 41, 10, 10, 36, 8, 21,
+	-1000, 62, 60, 44, -1000, -4, -1000, 25, -1000, -27,
+	10, 10, -1000, -1000, 17, 8, 8, -1000, 8, -1000,
+	-1000, -1000, -1000, -20, 8, -1000, -1000, 8, -1000, -1000,
+	-28, -1000, -7, -29, 8, -1000, 8, -11, -12, -1000,
+	-1000,
 }
 var QueryPgo = [...]int{
 
-	0, 42, 66, 65, 1, 61, 0, 60, 3, 59,
-	58,
+	0, 59, 90, 89, 71, 1, 88, 0, 86, 2,
+	84, 83,
 }
 var QueryR1 = [...]int{
 
-	0, 10, 10, 2, 1, 1, 1, 3, 3, 4,
-	4, 4, 4, 4, 4, 4, 5, 5, 5, 5,
-	5, 9, 9, 9, 9, 9, 6, 6, 7, 7,
-	7, 7, 8, 8,
+	0, 11, 11, 2, 1, 1, 1, 3, 3, 3,
+	3, 3, 3, 3, 3, 3, 4, 4, 5, 5,
+	5, 5, 5, 5, 5, 6, 6, 6, 6, 6,
+	10, 10, 10, 10, 10, 7, 7, 8, 8, 8,
+	8, 9, 9,
 }
 var QueryR2 = [...]int{
 
-	0, 5, 3, 1, 1, 3, 2, 1, 1, 1,
-	2, 3, 4, 3, 4, 2, 3, 3, 3, 2,
-	3, 7, 3, 2, 3, 6, 1, 2, 2, 1,
-	1, 1, 2, 3,
+	0, 5, 3, 1, 1, 3, 2, 2, 2, 2,
+	3, 3, 3, 3, 3, 7, 1, 1, 1, 2,
+	3, 4, 3, 4, 2, 3, 3, 3, 2, 3,
+	7, 3, 2, 3, 6, 1, 2, 2, 1, 1,
+	1, 2, 3,
 }
 var QueryChk = [...]int{
 
-	-1000, -10, 4, -2, -1, -3, 5, 7, 32, 6,
-	28, 31, 7, -4, -5, 21, 7, 10, 24, -1,
-	28, -9, 19, 16, 23, 13, 22, -4, 9, 29,
-	30, 7, -4, 19, 16, -4, -4, 20, 14, 15,
-	-6, -7, 27, 8, 11, 24, 8, 8, 8, 25,
-	-4, -4, 24, -6, -6, -8, 27, 7, -6, -6,
-	7, 31, 31, -8, -6, -6, 25, 25,
+	-1000, -11, 4, -2, -1, -3, 5, 27, 28, 37,
+	-4, 7, 6, 33, 36, 7, -4, 37, -4, -4,
+	13, 29, 30, 15, 14, 20, -5, -6, 21, 7,
+	10, 24, -1, -7, -8, 32, 8, 11, -7, -7,
+	-7, -7, 24, 33, -10, 19, 16, 23, 13, 22,
+	-5, 9, 34, 35, 7, -5, -9, 32, 7, -7,
+	19, 16, -5, -5, 20, 14, 15, -7, 24, 8,
+	8, 8, 25, 7, 36, -5, -5, 24, -7, -7,
+	-7, -9, -7, -7, 36, 25, 36, -7, -7, 25,
+	25,
 }
 var QueryDef = [...]int{
 
-	0, -2, 0, 0, 3, 4, 0, 7, 8, 0,
-	2, 0, 6, 0, 9, 0, 0, 0, 0, 5,
-	1, 10, 0, 0, 0, 0, 0, 15, 0, 0,
-	0, 19, 0, 0, 0, 11, 13, 0, 0, 0,
-	23, 26, 29, 30, 31, 0, 16, 17, 18, 20,
-	12, 14, 0, 22, 24, 27, 0, 28, 0, 0,
-	32, 0, 0, 33, 0, 0, 25, 21,
+	0, -2, 0, 0, 3, 4, 0, 0, 0, 17,
+	0, 16, 0, 2, 0, 6, 7, 17, 8, 9,
+	0, 0, 0, 0, 0, 0, 0, 18, 0, 0,
+	0, 0, 5, 10, 35, 38, 39, 40, 11, 12,
+	13, 14, 0, 1, 19, 0, 0, 0, 0, 0,
+	24, 0, 0, 0, 28, 0, 36, 0, 37, 0,
+	0, 0, 20, 22, 0, 0, 0, 32, 0, 25,
+	26, 27, 29, 41, 0, 21, 23, 0, 31, 33,
+	0, 42, 0, 0, 0, 15, 0, 0, 0, 34,
+	30,
 }
 var QueryTok1 = [...]int{
 
@@ -323,7 +366,7 @@ var QueryTok2 = [...]int{
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 	12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
 	22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-	32,
+	32, 33, 34, 35, 36, 37,
 }
 var QueryTok3 = [...]int{
 	0,
@@ -671,56 +714,126 @@ Querydefault:
 
 	case 1:
 		QueryDollar = QueryS[Querypt-5 : Querypt+1]
-		//line query.y:46
+		//line query.y:47
 		{
 			Querylex.(*QueryLex).Query.Selects = QueryDollar[2].selectTermList
 			Querylex.(*QueryLex).Query.Wheres = QueryDollar[4].whereClause
 		}
 	case 2:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:51
+		//line query.y:52
 		{
 			Querylex.(*QueryLex).Query.Selects = QueryDollar[2].selectTermList
 		}
 	case 3:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:57
+		//line query.y:58
 		{
 			QueryVAL.selectTermList = QueryDollar[1].selectTermList
 		}
 	case 4:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:63
+		//line query.y:64
 		{
 			QueryVAL.selectTermList = []SelectTerm{QueryDollar[1].selectTerm}
 		}
 	case 5:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:67
+		//line query.y:68
 		{
 			QueryVAL.selectTermList = append([]SelectTerm{QueryDollar[1].selectTerm}, QueryDollar[3].selectTermList...)
 		}
 	case 6:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:71
+		//line query.y:72
 		{
 			QueryVAL.selectTermList = []SelectTerm{{Tag: QueryDollar[2].str}}
 		}
 	case 7:
-		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:77
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		//line query.y:78
 		{
-			QueryVAL.selectTerm = SelectTerm{Tag: QueryDollar[1].str}
+			QueryDollar[2].selectTerm.Filter = FIRST
+			QueryVAL.selectTerm = QueryDollar[2].selectTerm
 		}
 	case 8:
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		//line query.y:83
+		{
+			QueryDollar[2].selectTerm.Filter = LAST
+			QueryVAL.selectTerm = QueryDollar[2].selectTerm
+		}
+	case 9:
+		QueryDollar = QueryS[Querypt-2 : Querypt+1]
+		//line query.y:88
+		{
+			QueryDollar[2].selectTerm.Filter = ALL
+			QueryVAL.selectTerm = QueryDollar[2].selectTerm
+		}
+	case 10:
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:93
+		{
+			QueryDollar[1].selectTerm.Filter = AT
+			QueryDollar[1].selectTerm.StartTime = QueryDollar[3].time
+			QueryVAL.selectTerm = QueryDollar[1].selectTerm
+		}
+	case 11:
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:99
+		{
+			QueryDollar[1].selectTerm.Filter = IAFTER
+			QueryDollar[1].selectTerm.StartTime = QueryDollar[3].time
+			QueryVAL.selectTerm = QueryDollar[1].selectTerm
+		}
+	case 12:
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:105
+		{
+			QueryDollar[1].selectTerm.Filter = IBEFORE
+			QueryDollar[1].selectTerm.StartTime = QueryDollar[3].time
+			QueryVAL.selectTerm = QueryDollar[1].selectTerm
+		}
+	case 13:
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:111
+		{
+			QueryDollar[1].selectTerm.Filter = AFTER
+			QueryDollar[1].selectTerm.StartTime = QueryDollar[3].time
+			QueryVAL.selectTerm = QueryDollar[1].selectTerm
+		}
+	case 14:
+		QueryDollar = QueryS[Querypt-3 : Querypt+1]
+		//line query.y:117
+		{
+			QueryDollar[1].selectTerm.Filter = BEFORE
+			QueryDollar[1].selectTerm.StartTime = QueryDollar[3].time
+			QueryVAL.selectTerm = QueryDollar[1].selectTerm
+		}
+	case 15:
+		QueryDollar = QueryS[Querypt-7 : Querypt+1]
+		//line query.y:123
+		{
+			QueryDollar[1].selectTerm.Filter = BETWEEN
+			QueryDollar[1].selectTerm.StartTime = QueryDollar[4].time
+			QueryDollar[1].selectTerm.EndTime = QueryDollar[6].time
+			QueryVAL.selectTerm = QueryDollar[1].selectTerm
+		}
+	case 16:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:81
+		//line query.y:132
 		{
 			QueryVAL.selectTerm = SelectTerm{Tag: QueryDollar[1].str}
 		}
-	case 9:
+	case 17:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:88
+		//line query.y:136
+		{
+			QueryVAL.selectTerm = SelectTerm{Tag: QueryDollar[1].str}
+		}
+	case 18:
+		QueryDollar = QueryS[Querypt-1 : Querypt+1]
+		//line query.y:143
 		{
 			letter := Querylex.(*QueryLex).NextLetter()
 			QueryDollar[1].whereTerm.Letter = letter
@@ -730,9 +843,9 @@ Querydefault:
 				QueryVAL.whereClause = WhereClause{SQL: QueryDollar[1].whereTerm.SQL, Letter: QueryDollar[1].whereTerm.Letter}
 			}
 		}
-	case 10:
+	case 19:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:98
+		//line query.y:153
 		{
 			letter := Querylex.(*QueryLex).NextLetter()
 			QueryDollar[1].whereTerm.Letter = letter
@@ -742,9 +855,9 @@ Querydefault:
 				QueryVAL.whereClause = WhereClause{SQL: QueryDollar[1].whereTerm.SQL, Letter: QueryDollar[1].whereTerm.Letter}
 			}
 		}
-	case 11:
+	case 20:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:108
+		//line query.y:163
 		{
 			letter := Querylex.(*QueryLex).NextLetter()
 			QueryDollar[1].whereTerm.Letter = letter
@@ -757,9 +870,9 @@ Querydefault:
 	%s`, firstTerm.SQL, firstTerm.Letter, QueryDollar[3].whereClause.SQL)
 			QueryVAL.whereClause = WhereClause{SQL: sql, Letter: firstTerm.Letter}
 		}
-	case 12:
+	case 21:
 		QueryDollar = QueryS[Querypt-4 : Querypt+1]
-		//line query.y:121
+		//line query.y:176
 		{
 			letter := Querylex.(*QueryLex).NextLetter()
 			QueryDollar[1].whereTerm.Letter = letter
@@ -772,9 +885,9 @@ Querydefault:
 	%s`, firstTerm.SQL, firstTerm.Letter, QueryDollar[4].whereClause.SQL)
 			QueryVAL.whereClause = WhereClause{SQL: sql, Letter: firstTerm.Letter}
 		}
-	case 13:
+	case 22:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:134
+		//line query.y:189
 		{
 			letter := Querylex.(*QueryLex).NextLetter()
 			QueryDollar[1].whereTerm.Letter = letter
@@ -788,9 +901,9 @@ Querydefault:
 	on %s.uuid = %s.uuid`, firstTerm.Letter, firstTerm.SQL, firstTerm.Letter, QueryDollar[3].whereClause.SQL, QueryDollar[3].whereClause.Letter, firstTerm.Letter, QueryDollar[3].whereClause.Letter)
 			QueryVAL.whereClause = WhereClause{SQL: sql, Letter: firstTerm.Letter}
 		}
-	case 14:
+	case 23:
 		QueryDollar = QueryS[Querypt-4 : Querypt+1]
-		//line query.y:148
+		//line query.y:203
 		{
 			letter := Querylex.(*QueryLex).NextLetter()
 			QueryDollar[1].whereTerm.Letter = letter
@@ -804,9 +917,9 @@ Querydefault:
 	on %s.uuid = %s.uuid`, firstTerm.Letter, firstTerm.SQL, firstTerm.Letter, QueryDollar[4].whereClause.SQL, QueryDollar[4].whereClause.Letter, firstTerm.Letter, QueryDollar[4].whereClause.Letter)
 			QueryVAL.whereClause = WhereClause{SQL: sql, Letter: firstTerm.Letter}
 		}
-	case 15:
+	case 24:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:162
+		//line query.y:217
 		{
 			sql := fmt.Sprintf(`
 	select distinct data.uuid
@@ -815,9 +928,9 @@ Querydefault:
 	where data.uuid not in (%s)`, QueryDollar[2].whereClause.SQL)
 			QueryVAL.whereClause = WhereClause{SQL: sql, Letter: QueryDollar[2].whereClause.Letter}
 		}
-	case 16:
+	case 25:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:174
+		//line query.y:229
 		{
 			if QueryDollar[1].str == "uuid" {
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.uuid LIKE %s`, QueryDollar[3].str), IsPredicate: true}
@@ -825,9 +938,9 @@ Querydefault:
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval LIKE %s`, QueryDollar[1].str, QueryDollar[3].str), IsPredicate: true}
 			}
 		}
-	case 17:
+	case 26:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:182
+		//line query.y:237
 		{
 			if QueryDollar[1].str == "uuid" {
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.uuid = %s`, QueryDollar[3].str), IsPredicate: true}
@@ -835,9 +948,9 @@ Querydefault:
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval = %s`, QueryDollar[1].str, QueryDollar[3].str), IsPredicate: true}
 			}
 		}
-	case 18:
+	case 27:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:190
+		//line query.y:245
 		{
 			if QueryDollar[1].str == "uuid" {
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.uuid != %s`, QueryDollar[3].str), IsPredicate: true}
@@ -845,9 +958,9 @@ Querydefault:
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[2].str, Val: QueryDollar[3].str, SQL: fmt.Sprintf(`data.dkey = "%s" and data.dval != %s`, QueryDollar[1].str, QueryDollar[3].str), IsPredicate: true}
 			}
 		}
-	case 19:
+	case 28:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:198
+		//line query.y:253
 		{
 			if QueryDollar[2].str == "uuid" {
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[1].str, Op: QueryDollar[1].str, SQL: `data.uuid is not null`, IsPredicate: true}
@@ -855,72 +968,72 @@ Querydefault:
 				QueryVAL.whereTerm = WhereTerm{Key: QueryDollar[2].str, Op: QueryDollar[1].str, SQL: fmt.Sprintf(`data.dkey = "%s"`, QueryDollar[2].str), IsPredicate: true}
 			}
 		}
-	case 20:
+	case 29:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:206
+		//line query.y:261
 		{
 			QueryVAL.whereTerm = WhereTerm{SQL: fmt.Sprintf(`(%s)`, QueryDollar[2].whereClause.SQL), IsPredicate: false}
 		}
-	case 21:
+	case 30:
 		QueryDollar = QueryS[Querypt-7 : Querypt+1]
-		//line query.y:212
+		//line query.y:267
 		{
 			template := `select uuid, dkey, timestamp as maxtime from data
 					where timestamp >= "%s" and timestamp < "%s"
 					order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[4].time.Format(_time.RFC3339), QueryDollar[6].time.Format(_time.RFC3339))
 		}
-	case 22:
+	case 31:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:219
+		//line query.y:274
 		{
 			template := `select uuid, dkey, timestamp as maxtime from data
 					where timestamp <  "%s"
 					order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[3].time.Format(_time.RFC3339))
 		}
-	case 23:
+	case 32:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:226
+		//line query.y:281
 		{
 			template := `select distinct uuid, dkey, max(timestamp) as maxtime from data
 					where timestamp <= "%s"
 					group by dkey, uuid order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
 		}
-	case 24:
+	case 33:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:233
+		//line query.y:288
 		{
 			template := `select uuid, dkey, timestamp as maxtime from data
 					where timestamp >= "%s"
 					order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[3].time.Format(_time.RFC3339))
 		}
-	case 25:
+	case 34:
 		QueryDollar = QueryS[Querypt-6 : Querypt+1]
-		//line query.y:240
+		//line query.y:295
 		{
 			template := `select uuid, dkey, timestamp as maxtime from data
 					where timestamp >= "%s" and timestamp < "%s"
 					order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[3].time.Format(_time.RFC3339), QueryDollar[5].time.Format(_time.RFC3339))
 		}
-	case 26:
+	case 35:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:249
+		//line query.y:304
 		{
 			QueryVAL.time = QueryDollar[1].time
 		}
-	case 27:
+	case 36:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:253
+		//line query.y:308
 		{
 			QueryVAL.time = QueryDollar[1].time.Add(QueryDollar[2].timediff)
 		}
-	case 28:
+	case 37:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:259
+		//line query.y:314
 		{
 			foundtime, err := parseAbsTime(QueryDollar[1].str, QueryDollar[2].str)
 			if err != nil {
@@ -928,9 +1041,9 @@ Querydefault:
 			}
 			QueryVAL.time = foundtime
 		}
-	case 29:
+	case 38:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:267
+		//line query.y:322
 		{
 			num, err := strconv.ParseInt(QueryDollar[1].str, 10, 64)
 			if err != nil {
@@ -938,9 +1051,9 @@ Querydefault:
 			}
 			QueryVAL.time = _time.Unix(num, 0)
 		}
-	case 30:
+	case 39:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:275
+		//line query.y:330
 		{
 			found := false
 			for _, format := range supported_formats {
@@ -956,17 +1069,17 @@ Querydefault:
 				Querylex.(*QueryLex).Error(fmt.Sprintf("No time format matching \"%v\" found", QueryDollar[1].str))
 			}
 		}
-	case 31:
+	case 40:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:291
+		//line query.y:346
 		{
 			now := Querylex.(*QueryLex).Now
 			Querylex.(*QueryLex).Query.Now = now
 			QueryVAL.time = now
 		}
-	case 32:
+	case 41:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:299
+		//line query.y:354
 		{
 			var err error
 			QueryVAL.timediff, err = parseReltime(QueryDollar[1].str, QueryDollar[2].str)
@@ -974,9 +1087,9 @@ Querydefault:
 				Querylex.(*QueryLex).Error(fmt.Sprintf("Error parsing relative time \"%v %v\" (%v)", QueryDollar[1].str, QueryDollar[2].str, err.Error()))
 			}
 		}
-	case 33:
+	case 42:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:307
+		//line query.y:362
 		{
 			newDuration, err := parseReltime(QueryDollar[1].str, QueryDollar[2].str)
 			if err != nil {
