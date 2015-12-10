@@ -94,7 +94,7 @@ const QueryEofCode = 1
 const QueryErrCode = 2
 const QueryMaxDepth = 200
 
-//line query.y:312
+//line query.y:315
 const eof = 0
 
 var supported_formats = []string{"1/2/2006",
@@ -113,6 +113,7 @@ type QueryLex struct {
 	tokens      []string
 	innertable  int
 	Err         error
+	Now         _time.Time
 }
 
 func (ql *QueryLex) NextLetter() string {
@@ -122,45 +123,45 @@ func (ql *QueryLex) NextLetter() string {
 }
 
 var termTemplate = `
-    (
-        select distinct data.uuid
-        from data
-        inner join
-        (
-            select distinct uuid, dkey, max(timestamp) as maxtime from data
-            group by dkey, uuid order by timestamp desc
-        ) sorted
-        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-        where data.dval is not null
-            %s
-    ) as %s
+	(
+		select distinct data.uuid
+		from data
+		inner join
+		(
+			select distinct uuid, dkey, max(timestamp) as maxtime from data
+			group by dkey, uuid order by timestamp desc
+		) sorted
+		on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+		where data.dval is not null
+			%s
+	) as %s
 `
 
 var termTemplateUnion = `
-    (
-        select distinct data.uuid
-        from data
-        inner join
-        (
-            select distinct uuid, dkey, max(timestamp) as maxtime from data
-            group by dkey, uuid order by timestamp desc
-        ) sorted
-        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
-        where data.dval is not null
-            %s
-    )
+	(
+		select distinct data.uuid
+		from data
+		inner join
+		(
+			select distinct uuid, dkey, max(timestamp) as maxtime from data
+			group by dkey, uuid order by timestamp desc
+		) sorted
+		on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+		where data.dval is not null
+			%s
+	)
 `
 
 var timePredicateSingle = `
-    select distinct uuid, dkey, max(timestamp) as maxtime from data
-    where timestamp %s "%s"
-    group by dkey, uuid order by timestamp desc
+	select distinct uuid, dkey, max(timestamp) as maxtime from data
+	where timestamp %s "%s"
+	group by dkey, uuid order by timestamp desc
 `
 
 var timePredicateRange = `
-    select distinct uuid, dkey, max(timestamp) as maxtime from data
-    where timestamp %s "%s" and timestamp %s "%s"
-    group by dkey, uuid order by timestamp desc
+	select distinct uuid, dkey, max(timestamp) as maxtime from data
+	where timestamp %s "%s" and timestamp %s "%s"
+	group by dkey, uuid order by timestamp desc
 `
 
 func NewQueryLexer(s string) *QueryLex {
@@ -197,10 +198,22 @@ func NewQueryLexer(s string) *QueryLex {
 			{Token: QSTRING, Pattern: "(\"[^\"\\\\]*?(\\.[^\"\\\\]*?)*?\")|('[^'\\\\]*?(\\.[^'\\\\]*?)*?')"},
 		})
 	scanner.SetInput(s)
-	return &QueryLex{Query: &Query{}, querystring: s, scanner: scanner, Err: nil, lasttoken: "", tokens: []string{}}
+	lex := &QueryLex{Query: &Query{}, Now: _time.Now(), querystring: s, scanner: scanner, Err: nil, lasttoken: "", tokens: []string{}}
+	//lex.Rewrite(s)
+	return lex
 }
 
-func (lex *QueryLex) Rewrite() {
+func (lex *QueryLex) Rewrite(s string) {
+	var input = []toki.Token{WHERE}
+	for lex.scanner.Peek() != nil {
+		res := lex.scanner.Next()
+		if res.Token == input[0] {
+			pos := res.Pos.Column
+			fmt.Println("match:", s[pos-1:pos-1+len("WHERE")])
+			fmt.Println("WHERE")
+			break
+		}
+	}
 }
 
 func (lex *QueryLex) Lex(lval *QuerySymType) int {
@@ -234,72 +247,72 @@ var QueryExca = [...]int{
 	-2, 0,
 }
 
-const QueryNprod = 33
+const QueryNprod = 34
 const QueryPrivate = 57344
 
 var QueryTokenNames []string
 var QueryStates []string
 
-const QueryLast = 61
+const QueryLast = 67
 
 var QueryAct = [...]int{
 
-	39, 13, 53, 6, 58, 7, 27, 11, 20, 42,
-	9, 54, 43, 61, 47, 50, 46, 26, 33, 16,
-	31, 32, 17, 45, 34, 35, 28, 29, 41, 4,
-	8, 44, 10, 15, 48, 49, 18, 25, 51, 52,
-	23, 19, 57, 22, 37, 38, 55, 24, 30, 12,
-	36, 56, 2, 1, 21, 40, 14, 5, 3, 60,
-	59,
+	40, 13, 6, 55, 7, 62, 61, 28, 11, 20,
+	9, 43, 56, 25, 44, 67, 23, 27, 66, 22,
+	32, 49, 26, 24, 35, 36, 52, 29, 30, 8,
+	42, 16, 10, 45, 17, 50, 51, 38, 39, 53,
+	54, 34, 4, 37, 33, 15, 58, 48, 18, 47,
+	46, 60, 57, 59, 19, 31, 12, 2, 1, 21,
+	41, 14, 64, 65, 63, 5, 3,
 }
 var QueryPact = [...]int{
 
-	48, -1000, -2, 4, -1000, -24, 42, -1000, -1000, 12,
-	-1000, -2, -1000, -20, 24, 12, -3, 41, 12, -1000,
-	-1000, 2, 12, 12, 30, 1, -1000, 23, 15, 8,
-	-1000, -11, 12, 12, -1000, -1000, -9, 1, 1, -1000,
-	-16, 39, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000,
-	1, -1000, -1000, -1000, 35, -1000, -27, -16, 1, -1000,
-	-12, -1000,
+	53, -1000, -3, 4, -1000, -23, 49, -1000, -1000, 24,
+	-1000, -3, -1000, -19, 0, 24, -2, 48, 24, -1000,
+	-1000, 25, 24, 24, 23, 3, 9, -1000, 42, 41,
+	39, -1000, -4, 24, 24, -1000, -1000, 2, 3, 3,
+	-1000, -15, 45, -1000, -1000, 3, -1000, -1000, -1000, -1000,
+	-1000, -1000, 3, -1000, -1000, -1000, 44, -1000, -25, -26,
+	-15, 3, 3, -1000, -7, -10, -1000, -1000,
 }
 var QueryPgo = [...]int{
 
-	0, 29, 58, 57, 1, 56, 0, 55, 2, 54,
-	53,
+	0, 42, 66, 65, 1, 61, 0, 60, 3, 59,
+	58,
 }
 var QueryR1 = [...]int{
 
 	0, 10, 10, 2, 1, 1, 1, 3, 3, 4,
 	4, 4, 4, 4, 4, 4, 5, 5, 5, 5,
-	5, 9, 9, 9, 9, 6, 6, 7, 7, 7,
-	7, 8, 8,
+	5, 9, 9, 9, 9, 9, 6, 6, 7, 7,
+	7, 7, 8, 8,
 }
 var QueryR2 = [...]int{
 
 	0, 5, 3, 1, 1, 3, 2, 1, 1, 1,
 	2, 3, 4, 3, 4, 2, 3, 3, 3, 2,
-	3, 7, 3, 2, 3, 1, 2, 2, 1, 1,
-	1, 2, 3,
+	3, 7, 3, 2, 3, 6, 1, 2, 2, 1,
+	1, 1, 2, 3,
 }
 var QueryChk = [...]int{
 
 	-1000, -10, 4, -2, -1, -3, 5, 7, 32, 6,
 	28, 31, 7, -4, -5, 21, 7, 10, 24, -1,
-	28, -9, 19, 16, 23, 13, -4, 9, 29, 30,
-	7, -4, 19, 16, -4, -4, 20, 14, 15, -6,
-	-7, 27, 8, 11, 8, 8, 8, 25, -4, -4,
-	24, -6, -6, -8, 27, 7, -6, 7, 31, -8,
-	-6, 25,
+	28, -9, 19, 16, 23, 13, 22, -4, 9, 29,
+	30, 7, -4, 19, 16, -4, -4, 20, 14, 15,
+	-6, -7, 27, 8, 11, 24, 8, 8, 8, 25,
+	-4, -4, 24, -6, -6, -8, 27, 7, -6, -6,
+	7, 31, 31, -8, -6, -6, 25, 25,
 }
 var QueryDef = [...]int{
 
 	0, -2, 0, 0, 3, 4, 0, 7, 8, 0,
 	2, 0, 6, 0, 9, 0, 0, 0, 0, 5,
-	1, 10, 0, 0, 0, 0, 15, 0, 0, 0,
-	19, 0, 0, 0, 11, 13, 0, 0, 0, 23,
-	25, 28, 29, 30, 16, 17, 18, 20, 12, 14,
-	0, 22, 24, 26, 0, 27, 0, 31, 0, 32,
-	0, 21,
+	1, 10, 0, 0, 0, 0, 0, 15, 0, 0,
+	0, 19, 0, 0, 0, 11, 13, 0, 0, 0,
+	23, 26, 29, 30, 31, 0, 16, 17, 18, 20,
+	12, 14, 0, 22, 24, 27, 0, 28, 0, 0,
+	32, 0, 0, 33, 0, 0, 25, 21,
 }
 var QueryTok1 = [...]int{
 
@@ -852,55 +865,62 @@ Querydefault:
 		QueryDollar = QueryS[Querypt-7 : Querypt+1]
 		//line query.y:212
 		{
-			//TODO: fix!
-			QueryVAL.str = fmt.Sprintf(timePredicateRange, ">=", _time.Now())
 			template := `select uuid, dkey, timestamp as maxtime from data
-	                where timestamp >= "%s" and timestamp < "%s"
-	                order by timestamp desc`
+					where timestamp >= "%s" and timestamp < "%s"
+					order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[4].time.Format(_time.RFC3339), QueryDollar[6].time.Format(_time.RFC3339))
 		}
 	case 22:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:221
+		//line query.y:219
 		{
 			template := `select uuid, dkey, timestamp as maxtime from data
-	                where timestamp <  "%s"
-	                order by timestamp desc`
+					where timestamp <  "%s"
+					order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[3].time.Format(_time.RFC3339))
 		}
 	case 23:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:228
+		//line query.y:226
 		{
 			template := `select distinct uuid, dkey, max(timestamp) as maxtime from data
-	                where timestamp <= "%s"
-	                group by dkey, uuid order by timestamp desc`
+					where timestamp <= "%s"
+					group by dkey, uuid order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[2].time.Format(_time.RFC3339))
 		}
 	case 24:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:235
+		//line query.y:233
 		{
 			template := `select uuid, dkey, timestamp as maxtime from data
-	                where timestamp >= "%s"
-	                order by timestamp desc`
+					where timestamp >= "%s"
+					order by timestamp desc`
 			QueryVAL.str = fmt.Sprintf(template, QueryDollar[3].time.Format(_time.RFC3339))
 		}
 	case 25:
+		QueryDollar = QueryS[Querypt-6 : Querypt+1]
+		//line query.y:240
+		{
+			template := `select uuid, dkey, timestamp as maxtime from data
+					where timestamp >= "%s" and timestamp < "%s"
+					order by timestamp desc`
+			QueryVAL.str = fmt.Sprintf(template, QueryDollar[3].time.Format(_time.RFC3339), QueryDollar[5].time.Format(_time.RFC3339))
+		}
+	case 26:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:248
+		//line query.y:249
 		{
 			QueryVAL.time = QueryDollar[1].time
 		}
-	case 26:
+	case 27:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:252
+		//line query.y:253
 		{
 			QueryVAL.time = QueryDollar[1].time.Add(QueryDollar[2].timediff)
 		}
-	case 27:
+	case 28:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:258
+		//line query.y:259
 		{
 			foundtime, err := parseAbsTime(QueryDollar[1].str, QueryDollar[2].str)
 			if err != nil {
@@ -908,9 +928,9 @@ Querydefault:
 			}
 			QueryVAL.time = foundtime
 		}
-	case 28:
+	case 29:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:266
+		//line query.y:267
 		{
 			num, err := strconv.ParseInt(QueryDollar[1].str, 10, 64)
 			if err != nil {
@@ -918,9 +938,9 @@ Querydefault:
 			}
 			QueryVAL.time = _time.Unix(num, 0)
 		}
-	case 29:
+	case 30:
 		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:274
+		//line query.y:275
 		{
 			found := false
 			for _, format := range supported_formats {
@@ -936,15 +956,17 @@ Querydefault:
 				Querylex.(*QueryLex).Error(fmt.Sprintf("No time format matching \"%v\" found", QueryDollar[1].str))
 			}
 		}
-	case 30:
-		QueryDollar = QueryS[Querypt-1 : Querypt+1]
-		//line query.y:290
-		{
-			QueryVAL.time = _time.Now()
-		}
 	case 31:
+		QueryDollar = QueryS[Querypt-1 : Querypt+1]
+		//line query.y:291
+		{
+			now := Querylex.(*QueryLex).Now
+			Querylex.(*QueryLex).Query.Now = now
+			QueryVAL.time = now
+		}
+	case 32:
 		QueryDollar = QueryS[Querypt-2 : Querypt+1]
-		//line query.y:296
+		//line query.y:299
 		{
 			var err error
 			QueryVAL.timediff, err = parseReltime(QueryDollar[1].str, QueryDollar[2].str)
@@ -952,9 +974,9 @@ Querydefault:
 				Querylex.(*QueryLex).Error(fmt.Sprintf("Error parsing relative time \"%v %v\" (%v)", QueryDollar[1].str, QueryDollar[2].str, err.Error()))
 			}
 		}
-	case 32:
+	case 33:
 		QueryDollar = QueryS[Querypt-3 : Querypt+1]
-		//line query.y:304
+		//line query.y:307
 		{
 			newDuration, err := parseReltime(QueryDollar[1].str, QueryDollar[2].str)
 			if err != nil {

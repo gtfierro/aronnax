@@ -90,7 +90,7 @@ func (doc *Document) PrettyString() string {
 }
 
 // Generate a list of documents from the results of a SQL query
-func DocsFromRows(rows *sql.Rows) ([]*Document, error) {
+func DocsFromRows(rows *sql.Rows, now time.Time) ([]*Document, error) {
 	var (
 		uniqueDocs = map[string]*Document{}
 		docs       = []*Document{}
@@ -128,7 +128,11 @@ func DocsFromRows(rows *sql.Rows) ([]*Document, error) {
 	}
 	// add in the valid times for all documents
 	for _, doc := range docs {
-		doc.CalcMaxTagTime()
+		if now == ZERO_TIME {
+			doc.CalcMaxTagTime()
+		} else {
+			doc.ValidTime = now
+		}
 	}
 	return docs, nil
 }

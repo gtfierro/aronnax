@@ -3,12 +3,14 @@ package query
 
 import (
 	"fmt"
+	"time"
 )
 
 type Query struct {
 	Selects []SelectTerm
 	Wheres  WhereClause
 	SQL     string
+	Now     time.Time
 }
 
 type SelectTerm struct {

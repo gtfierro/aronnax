@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+var ZERO_TIME = time.Time{}
+
 type mysqlBackend struct {
 	db *sql.DB
 }
@@ -106,7 +108,7 @@ func (mbd *mysqlBackend) InsertWithTimestamp(doc *Document, timestamp time.Time)
 }
 
 // passes through the error if it is nil
-func (mbd *mysqlBackend) Eval(q *query.Query, err error) (*sql.Rows, error) {
+func (mbd *mysqlBackend) Eval(q *query.Query, err error) (*sql.Rows, time.Time, error) {
 	var tosend string
 	if q.Wheres.SQL != "" {
 		tosend = fmt.Sprintf(whereTemplate, q.Wheres.SQL)
@@ -115,9 +117,10 @@ func (mbd *mysqlBackend) Eval(q *query.Query, err error) (*sql.Rows, error) {
 		fmt.Println(tosend)
 	}
 	if err == nil {
-		return mbd.db.Query(tosend)
+		rows, evalErr := mbd.db.Query(tosend)
+		return rows, q.Now, evalErr
 	} else {
-		return nil, err
+		return nil, q.Now, err
 	}
 }
 
@@ -139,12 +142,14 @@ func (mbd *mysqlBackend) StartInteractive() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		rows, evalParseErr := mbd.Eval(mbd.Parse(s))
+		rows, now, evalParseErr := mbd.Eval(mbd.Parse(s))
 		if evalParseErr != nil {
-			log.Fatal("Error parse/eval: ", evalParseErr)
+			log.Print("Error parse/eval: ", evalParseErr)
+			continue
 		}
-		if docs, err := DocsFromRows(rows); err != nil {
-			log.Fatal("docs from", err)
+		if docs, err := DocsFromRows(rows, now); err != nil {
+			log.Print("docs from", err)
+			continue
 		} else {
 			for _, doc := range docs {
 				fmt.Println(doc.PrettyString())

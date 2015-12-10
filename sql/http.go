@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 type httpServer struct {
@@ -32,6 +33,7 @@ func (h *httpServer) HandleQuery(w http.ResponseWriter, r *http.Request) {
 		docs         []*Document
 		transformErr error
 		encoder      *json.Encoder
+		now          time.Time
 	)
 	reqBody := bufio.NewReader(r.Body)
 	s, err := reqBody.ReadString(';')
@@ -50,7 +52,7 @@ func (h *httpServer) HandleQuery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// eval query
-	rows, evalErr = h.Backend.Eval(parsed, nil)
+	rows, now, evalErr = h.Backend.Eval(parsed, nil)
 	if evalErr != nil {
 		w.WriteHeader(500) // server error
 		w.Write([]byte(evalErr.Error()))
@@ -58,7 +60,7 @@ func (h *httpServer) HandleQuery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// transform results into documents
-	docs, transformErr = DocsFromRows(rows)
+	docs, transformErr = DocsFromRows(rows, now)
 	if transformErr != nil {
 		w.WriteHeader(500) // server error
 		w.Write([]byte(transformErr.Error()))
