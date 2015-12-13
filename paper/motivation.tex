@@ -1,0 +1,54 @@
+\section{Motivating Applications}
+
+As the prices and sizes of sensors drop, there has been a dramatic increase in
+the production of timeseries data. Streams of timeseries data, represented as
+sets of \texttt{<time, value>} pairs, can give applications insights into the
+instantaneous or historical behavior of the physical world.  However, these
+streams of data are only as useful as their contextual information.  This
+contextual information, or \emph{metadata}, contains all data that describes a
+stream, often including at least one of the following:
+
+\begin{itemize}
+\item a unique identifier (UUID)
+\item timezone for the stream's timestamps
+\item engineering units for the stream's values
+\item the unit of time or sampling rate
+\item location (building, floor, room, orientation, etc)
+\item calibration constants
+\item software versions
+\end{itemize}
+
+There has already been substantial research on the application of raw
+timeseries data in the social sciences~\cite{mccleary1980applied},
+econometrics~\cite{lutkepohl2004applied}, electric vehicle
+charging~\cite{sortomme2011optimal}, electric
+grids~\cite{carreras2004evidence}, building occupancy~\cite{richardson2008high}
+and fault detection~\cite{fontugne2013strip}. Common to all of these
+applications of timeseries data is the tacet assumption that a data stream,
+once identified or discovered, will retain consistent metadata. For some circumstances,
+this assumption is valid, but in the domain of physical timeseries data (often
+produced by sensors), this is often not the case.
+
+Sensors will often change
+
+Current applications telemetry platforms and time series databases do not
+account for the inevitable evolutions in metadata for the streams they operate
+on. Here, we describe a family of applications that require the ability to
+perform queries at instantaneous moments in the past or over ranges over time.
+
+\todo{this goes under description of our structures}
+
+Telemetry databases such as Prometheus~\cite{prometheus} and
+InfluxData~\cite{influxdata} will often use a stream's description as its
+unique identifier and further qualify it with a small series of tags; for
+example a stream named \texttt{total\_http\_requests} might have a tag of
+\texttt{hostname=host1.example.com}. With this construction, the database makes
+the assumption that changing any aspect/context of the stream warrants the
+creation of an entirely new timeseries stream with a new identifier. 
+
+This is fine for telemetry data, but when we consider the more general case of
+physical timeseries data, we require a different definition of \emph{stream
+provenance}.
+
+We do not wish to propose a solution to Theseus' Paradox: for our purposes, a UUID is the definition of
+a data source
