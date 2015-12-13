@@ -32,7 +32,7 @@ in the deployment site or environment.
 % need to be more clear on what those circumstances are, exactly. this is linked
 % to the identity of timeseries streams
 
-Current applications telemetry platforms and time series databases do not
+Current applications, telemetry platforms and time series databases do not
 account for the inevitable evolutions in metadata for the streams they operate
 on. Here, we describe a family of applications that require the ability to
 perform queries at instantaneous moments in the past or over ranges over time.
@@ -49,7 +49,7 @@ on what these queries would look like, and maybe talk about how they aren't poss
 without temporal data.
 \fi
 
-\subsection{Timeseries Analysis}
+\subsection{Timeseries Analysis} \label{subsection:timeseriesanalysis}
 
 Without a temporal dimension, metadata describing a timeseries can only
 capture a single static context, which may not be consistent over the
@@ -124,13 +124,44 @@ Two benefits:
 
 \subsection{Metadata Analysis}
 
+Temporal metadata can also be used as a timeseries itself. Sensor timeseries,
+or other data streams attached to physical objects, may experience changes in
+location or orientation over the course of reporting. Maintaining a history of
+these changes allows applications to ask questions such as ``which rooms did
+this CO2 sensor sample from over the past month?'' or ``at time $t$, which
+temperature sensors had a northern exposure?''. Another consumer may wish to
+perform a frequency analysis on the anomalous events detected by the
+application described in Section~\ref{subsection:timeseriesanalysis}, which
+could involve retrieving the history of all anomaly tags applied to a
+collection of streams. This may also include extracting the duration of these
+anomalies, which can be derived from the ``start'' and ``end'' time of each of
+the anomaly tags ($t_0$ and $t_1$ in Figure~\ref{fig:faultdetected}).
 
+While these sorts of queries can be satisfied by storing attributes such as
+room, orientation or exposure as distinct timeseries, this incorrectly treats
+facts such as \texttt{Location/Room = 410 @ time $t_0$} as discrete data points
+rather than continuous events. Note that this approach also does not remove the
+need for metadata, as there must exist some mapping between a data timeseries
+and its location timeseries.  Furthermore, the separation of metadata into
+distinct timeseries can complicate basic queries: any metadata predicate that
+involves multiple tags (e.g. \texttt{Location/Room},
+\texttt{Sensor/Orientation} and \texttt{Sensor/SoftwareVersion}) involves
+querying across as many timeseries.
 
 %- treat metadata as data
 %    - all rooms a sensor was in over past month
 %    - all sensors that were in room XYZ at the time this event happened
 %    - the fault detection app from above, but it wants to look at the history of detected faults
 \subsection{Real-Time}
+
+While beyond the current scope of this work, there is a family of real-time
+applications that can be facilitated by materializing continuous views over a
+collection of streams of timeseries data.
+
+\begin{itemize}
+\item control process takes avg temperature of all sensors in rooms 1,2,3
+\item make a little figure for this?
+\end{itemize}
 
 %Motivating Applications
 %- realtime change monitoring
