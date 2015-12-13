@@ -18,37 +18,81 @@ stream, often including at least one of the following:
 \item software versions
 \end{itemize}
 
-There has already been substantial research on the application of raw
-timeseries data in the social sciences~\cite{mccleary1980applied},
-econometrics~\cite{lutkepohl2004applied}, electric vehicle
-charging~\cite{sortomme2011optimal}, electric
-grids~\cite{carreras2004evidence}, building occupancy~\cite{richardson2008high}
-and fault detection~\cite{fontugne2013strip}. Common to all of these
-applications of timeseries data is the tacet assumption that a data stream,
-once identified or discovered, will retain consistent metadata. For some circumstances,
-this assumption is valid, but in the domain of physical timeseries data (often
-produced by sensors), this is often not the case.
-
-Sensors will often change
+There has already been substantial research on the application of physical
+timeseries data for electric vehicle charging~\cite{sortomme2011optimal},
+electric grids~\cite{carreras2004evidence}, building
+occupancy~\cite{richardson2008high} and fault
+detection~\cite{fontugne2013strip}. Common to all of these applications of
+timeseries data is the tacet assumption that a data stream, once identified or
+discovered, will retain consistent metadata. For some circumstances, this
+assumption is valid, but in the domain of physical timeseries data (often
+produced by sensors), this is often not the case. Metadata can change due to
+changes in location or orientation, repairing configuration error, or changes
+in the deployment site or environment.
+% need to be more clear on what those circumstances are, exactly. this is linked
+% to the identity of timeseries streams
 
 Current applications telemetry platforms and time series databases do not
 account for the inevitable evolutions in metadata for the streams they operate
 on. Here, we describe a family of applications that require the ability to
 perform queries at instantaneous moments in the past or over ranges over time.
+These applications fall into three categories, each of which places its
+own requirements on the underlying metadata storage and retrieval system:
+offline analysis of timeseries data, analysis of metadata, and real-time
+metadata-based streaming.
 
-\todo{this goes under description of our structures}
+\if 0
+For each of these, we want to list what the possible applications are,
+the kinds of queries they will require, the functionality that they require,
+and why current solutions do not make this easy. also maybe have a figure
+on what these queries would look like, and maybe talk about how they aren't possible
+without temporal data.
+\fi
 
-Telemetry databases such as Prometheus~\cite{prometheus} and
-InfluxData~\cite{influxdata} will often use a stream's description as its
-unique identifier and further qualify it with a small series of tags; for
-example a stream named \texttt{total\_http\_requests} might have a tag of
-\texttt{hostname=host1.example.com}. With this construction, the database makes
-the assumption that changing any aspect/context of the stream warrants the
-creation of an entirely new timeseries stream with a new identifier. 
+\subsection{Timeseries Analysis}
 
-This is fine for telemetry data, but when we consider the more general case of
-physical timeseries data, we require a different definition of \emph{stream
-provenance}.
+Without a temporal dimension, metadata describing a timeseries can only
+capture a single static context, which may not be consistent over the
+whole timeseries. Adding duration to metadata means there is no invalidation
+of prior data when metadata does change, enabling downstream consumers
+of the timeseries data to make use more fine-grained descriptions.
 
-We do not wish to propose a solution to Theseus' Paradox: for our purposes, a UUID is the definition of
-a data source
+There are two sample timeseries analysis applications we discuss here: 1) an
+application that computes the average monthly energy usage for a building that
+must account for a calibration correction partway through data collection, and 2)
+a fault detection application that wants to ``tag'' faulty ranges of timeseries data.
+
+
+\if 0
+Figure here: show some timeseries data (maybe a building feed w/ a configuration
+constant change?). App needs to know to correct the data.
+
+another figure: a temperature sensor moving from room to room?
+figure: a plugstrip where what is plugged into it changes
+\fi
+
+\if 0
+have some figure here,
+- list of applications:
+    - sensor move (floor, room, orientation, timezone)
+    - software hanges
+    - reporting rates change
+    - calibration constants change
+    - tagging of transient events: [T1, T2] was a voltage sag
+
+Two benefits:
+1. you know that the tags are correct and not just changed
+2. you can tag events that you discover!
+\fi
+
+\subsection{Metadata Analysis}
+
+%- treat metadata as data
+%    - all rooms a sensor was in over past month
+%    - all sensors that were in room XYZ at the time this event happened
+%    - the fault detection app from above, but it wants to look at the history of detected faults
+\subsection{Real-Time}
+
+%Motivating Applications
+%- realtime change monitoring
+%    - control process takes average of all sensors in rooms 1,2,3
