@@ -1,7 +1,11 @@
 Contextual/Metadata lineage for evolving time series data
 
-Ultimately want to motivate the creation of a database. Paper proves that the characteristics and semantics we need are not offered by current databases. Design and implementation of temporal query language serves to illustrate this.
-the difference w/ the aronnax stuff is that the data you are quering has a time-varying context. The timeseries data itself has well-defined temporal characteristicss (discrete samples, mostly). We want to do "as though" queries 
+Ultimately want to motivate the creation of a database. Paper proves that the
+characteristics and semantics we need are not offered by current databases.
+Design and implementation of temporal query language serves to illustrate this.
+the difference w/ the aronnax stuff is that the data you are quering has a
+time-varying context. The timeseries data itself has well-defined temporal
+characteristicss (discrete samples, mostly). We want to do "as though" queries 
 
 Increasing amoutn of physical information leads to increasing amount of timeseries data
 Timeseries data is only so useful as its context: engineering units, location, orientation, calibration
