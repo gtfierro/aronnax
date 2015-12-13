@@ -59,10 +59,46 @@ of the timeseries data to make use more fine-grained descriptions.
 
 There are two sample timeseries analysis applications we discuss here: 1) an
 application that computes the average monthly energy usage for a building that
-must account for a calibration correction partway through data collection, and 2)
-a fault detection application that wants to ``tag'' faulty ranges of timeseries data.
+must account for a calibration correction partway through data collection, and
+2) a anomaly detection application that wants to ``tag'' anomaly ranges of
+timeseries data.
 
+The first application may operate by pulling energy usage over a full year,
+and then bucket the data by each month and compute the average. The calibration
+constant represents the correction of errors in the measurement process. In Figure~\ref{fig:calibrationconstant},
+the plot represents the measured energy after a calibration transformation is applied: at time $t_0$, the constant
+is $1.1$ and at time $t_1$ the constant is corrected to be $1.5$. Precluding the recalculation and replacement
+of the data in $[t_0, t_1]$, a consumer must be able to map ranges of timeseries data to the correct
+constant. In systems that do not maintain the history of metadata associated with timeseries, a consumer would
+see the constant as it existed either at $t_0$ or at $t_2$, resulting in an incorrect interpretation of the data.
 
+\begin{figure}
+\centering
+\includegraphics[width=.9\linewidth]{figs/calibrationconstant.pdf}
+\caption{The calibration constant for the power meter timeseries changes and is reflected
+in the metadata}
+\label{fig:calibrationconstant}
+\end{figure}
+
+% how does the app work? describe the process. describe the metadata *and* data queries it wants. describe what would happen if it didn't have the metadata queries
+
+The second application applies a set of heuristics to find anomalous events in a range of data; for example, data
+in the range $[t_0, t_1]$ in Figure~\ref{fig:faultdetected}. This time range is ``tagged'' as anomalous in the metadata
+for the stream. The benefit of storing this information in-band with other metadata rather than in an application-specific
+store is that it becomes trivial for further consumers of this data to make more informed decisions about how to treat
+that range of data.
+
+\begin{figure}
+\centering
+\includegraphics[width=.9\linewidth]{figs/faultdetected.pdf}
+\caption{A range of data is tagged as unusual, warranting further investigation}
+\label{fig:faultdetected}
+\end{figure}
+
+In both applications, the benefits of temporal metadata are clear: it guarantees
+correctness and ``freshness'' on descriptions of timeseries data and provides
+discoverable annotations of timeseries data that can be generated and shared across
+consumers.
 
 \if 0
 Figure here: show some timeseries data (maybe a building feed w/ a configuration
@@ -87,6 +123,8 @@ Two benefits:
 \fi
 
 \subsection{Metadata Analysis}
+
+
 
 %- treat metadata as data
 %    - all rooms a sensor was in over past month
