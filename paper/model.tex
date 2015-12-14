@@ -37,10 +37,27 @@ how a temporal dimension can be added. We simplify the representation of our
 model by separating the storage of timeseries data from metadata. Timeseries
 data is placed in a store optimized specifically for timeseries data; stream
 UUIDs are used to associate timeseries streams with their metadata. For
-storing metadata, we have three options: 
+storing metadata, we have three options -- denormalized (NoSQL), vertical
+and horizontal relational (normalized).
 
+For our model, we choose a vertical database representation, also known
+as an Entity-Attribute-Value (EAV) model~\cite{chen1976entity}, containing
+three columns: the stream UUID, a metadata key, and a metadata value. This
+structure is appropriate because there is no strict schema for what metadata
+keys a stream can have, which suggests a sparse representation. While metadata
+models more complex than an unordered set of key-value pairs exist (e.g. XML),
+most can be reduced to a key-value representation.
 
-why eav table? why not relational, why not nosql
+Given this structure, a denormalized representation also seems appropriate,
+but as we will see in Section~\ref{section:temporal}, when the dimension of time
+is included, insertion on an EAV table becomes append-only. EAV tables can also
+naturally extend to include a fourth column for a timestamp; such a transformation
+is non-obvious in a denormalized database.
+
+%we append only, but even though we can add timestmaps in the past, we can
+%have a sort of concurrent garbage collection that attempts to reorder the table.
+%We can edit the table in place, because if there are 2 copies of the record,
+%all queries will still complete correctly.
 
 \subsection{Non-Temporal Query Language}
 
