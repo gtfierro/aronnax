@@ -23,7 +23,7 @@ unique identifier and further qualify it with a small series of tags; for
 example a stream named \texttt{total\_http\_requests} might have a tag of
 \texttt{hostname=host1.example.com}. With this construction, the database makes
 the assumption that changing any aspect or context of the stream warrants the
-creation of an entirely new timeseries stream with a new identifier. 
+creation of an entirely new timeseries stream with a new identifier.
 
 The decision at hand is whether streams should be identified by \emph{what they
 measure} or by \emph{who produces them}. Our model takes the latter approach:
@@ -31,6 +31,14 @@ using a stream UUID as the unit of association enables a more flexible approach
 to how data is described and how it is collected.
 
 \subsection{Data Representations}
+
+Here, we discuss how this model is represented in a database, which influences
+how a temporal dimension can be added. We simplify the representation of our
+model by separating the storage of timeseries data from metadata. Timeseries
+data is placed in a store optimized specifically for timeseries data; stream
+UUIDs are used to associate timeseries streams with their metadata. For
+storing metadata, we have three options: 
+
 
 why eav table? why not relational, why not nosql
 
