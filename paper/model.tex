@@ -40,7 +40,7 @@ UUIDs are used to associate timeseries streams with their metadata. For
 storing metadata, we have three options -- denormalized (NoSQL), vertical
 and horizontal relational (normalized).
 
-For our model, we choose a vertical database representation, also known
+For our model, we choose a vertical database representation (Table~\ref{table:eavstream}), also known
 as an Entity-Attribute-Value (EAV) model~\cite{chen1976entity}, containing
 three columns: the stream UUID, a metadata key, and a metadata value. This
 structure is appropriate because there is no strict schema for what metadata
@@ -54,12 +54,35 @@ is included, insertion on an EAV table becomes append-only. EAV tables can also
 naturally extend to include a fourth column for a timestamp; such a transformation
 is non-obvious in a denormalized database.
 
+\begin{table}
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{UUID} & \textbf{Key} & \textbf{Value} \\
+\hline
+\texttt{d24325e6...} & \texttt{Location/Room}       & \texttt{410} \\
+\texttt{d24325e6...} & \texttt{Location/Building}   & \texttt{Soda} \\
+\texttt{d24325e6...} & \texttt{Point/Type}          & \texttt{Sensor} \\
+\texttt{d24325e6...} & \texttt{Point/Measure}       & \texttt{Power} \\
+\texttt{d24325e6...} & \texttt{Timezone}            & \texttt{UTC -8} \\
+\texttt{d24325e6...} & \texttt{UnitofMeasure}       & \texttt{Watt} \\
+\texttt{d24325e6...} & \texttt{UnitofTime}          & \texttt{milliseconds} \\
+\hline
+\end{tabular}
+\caption{Sample EAV representation of a timeseries stream}
+\label{table:eavstream}
+\end{table}
+
 %we append only, but even though we can add timestmaps in the past, we can
 %have a sort of concurrent garbage collection that attempts to reorder the table.
 %We can edit the table in place, because if there are 2 copies of the record,
 %all queries will still complete correctly.
 
 \subsection{Non-Temporal Query Language}
+
+To provide a basis for the later discussion on a temporal query language, we discuss
+here the design of a query language that integrates our timeseries data and metadata
+models.
 
 \begin{itemize}
 \item First establish what our normal timeseries and metadata looks like
