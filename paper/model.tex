@@ -1,4 +1,11 @@
-\section{Temporal Metadata Model}
+\section{Metadata Model}
+
+In this section, we describe a natural model for a stream of timeseries data
+and its associated metadata. We then discuss the set of possible database
+representations of this metadata, choosing an Entity-Attribute-Value
+(EAV)~\cite{chen1976entity} model. Then, we briefly review a query language
+based on sMAP~\cite{dawson2010smap} designed to retrieve both timeseries and
+metadata using this model.
 
 \begin{itemize}
 \item First establish what our normal timeseries and metadata looks like
@@ -12,14 +19,4 @@
       \end{itemize}
   \item Data representation: EAV table
   \end{itemize}
-\item Discuss current tmporal data models
-    \begin{itemize}
-    \item TODO: make this list
-    \item OURS: how to augment with time: add column to EAV
-    \end{itemize}
-\item discuss sql vs nosql for demo implementation?
-    \begin{itemize}
-    \item SQL more suited for diffs?
-    \item NoSQL more suited for replication?
-    \end{itemize}
 \end{itemize}
