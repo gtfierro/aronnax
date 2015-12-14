@@ -82,7 +82,38 @@ is non-obvious in a denormalized database.
 
 To provide a basis for the later discussion on a temporal query language, we discuss
 here the design of a query language that integrates our timeseries data and metadata
-models.
+models, as seen in Figure~\ref{fig:nontemporalgrammar}.
+
+\setlength{\grammarindent}{8em}
+\setlength{\grammarparsep}{4pt}
+\begin{figure}
+\centering
+\begin{grammar}
+<query> := `select' <selectClause> `where' <whereClause>
+
+<selectClause> := <selectTerm>
+\alt <selectTerm> `,' <selectClause>
+
+<selectTerm> := <lvalue>
+\alt `DATA IN' `(' <time> `,' <time> `)'
+\alt `DATA BEFORE' <time>
+\alt `DATA AFTER' <time>
+
+<whereClause> := <lvalue> `LIKE' <rvalue>
+\alt <lvalue> `=' <rvalue>
+\alt <lvalue> `!=' <rvalue>
+\alt `HAS' <lvalue>
+
+<rvalue> := <string>
+\alt <number>
+\alt <regex>
+\alt <uuid>
+
+<lvalue> := <string>
+\end{grammar}
+\caption{Simplified grammar for the non-temporal query language over timeseries and metadata}
+\label{fig:nontemporalgrammar}
+\end{figure}
 
 \begin{itemize}
 \item First establish what our normal timeseries and metadata looks like
