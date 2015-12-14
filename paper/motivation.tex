@@ -156,12 +156,22 @@ querying across as many timeseries.
 
 While beyond the current scope of this work, there is a family of real-time
 applications that can be facilitated by materializing continuous views over a
-collection of streams of timeseries data.
+collection of streams of timeseries data. Similar to \emph{content-based
+publish-subscribe systems} such as SIENA~\cite{carzaniga2000achieving},
+Gryphon~\cite{strom1998gryphon}, Java Message Service~\cite{hapner2002java},
+Elvin~\cite{segall1997elvin} and Jedi~\cite{cugola2001jedi}, consumers use a
+predicate on the timeseries' metadata as a subscription to streaming readings
+from a set of timeseries.
 
-\begin{itemize}
-\item control process takes avg temperature of all sensors in rooms 1,2,3
-\item make a little figure for this?
-\end{itemize}
+An example of this is a thermostat controller process that computes the
+average temperature reading of a set of mobile temperature sensors~\footnote{These
+could exist on phones or pieces of smart, connected furniture.}, filtered by
+the temperature sensors have the appropriate \texttt{Location/Room} value. As
+the sensors move, their metadata changes, and the controllers adjust their
+sampling accordingly. Building an application with temporally-aware metadata
+grants the ability to perform ``replay'' analyses that evaluate how
+alternative control algorithms might have performed using the same progression
+of sensor movements and samples.
 
 %Motivating Applications
 %- realtime change monitoring
