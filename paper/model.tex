@@ -1,11 +1,40 @@
 \section{Metadata Model}
 
-In this section, we describe a natural model for a stream of timeseries data
-and its associated metadata. We then discuss the set of possible database
-representations of this metadata, choosing an Entity-Attribute-Value
-(EAV)~\cite{chen1976entity} model. Then, we briefly review a query language
-based on sMAP~\cite{dawson2010smap} designed to retrieve both timeseries and
-metadata using this model.
+In this section, we describe a natural model for streams of physical timeseries
+data and its associated metadata. This model is our framework for exploring
+temporal metadata. We then discuss the set of possible database representations
+of the metadata, ultimately choosing an Entity-Attribute-Value
+(EAV)~\cite{chen1976entity} model. Then, we briefly review a query language for
+this model, based on sMAP~\cite{dawson2010smap}, designed to retrieve both
+timeseries data and metadata.
+
+
+\subsection{Timeseries and Metadata}
+
+A \emph{stream} is a virtual representation of a specific sequence of data; for
+a physical timeseries, this might be a sensor or actuator channel. Each stream
+is uniquely identified by a UUID, and consists of a single progression of
+\texttt{<timestamp, value>} pairs and an unordered set of key-value pairs
+(metadata).
+
+Telemetry databases such as Prometheus~\cite{prometheus} and
+InfluxData~\cite{influxdata} will often use a stream's description as its
+unique identifier and further qualify it with a small series of tags; for
+example a stream named \texttt{total\_http\_requests} might have a tag of
+\texttt{hostname=host1.example.com}. With this construction, the database makes
+the assumption that changing any aspect or context of the stream warrants the
+creation of an entirely new timeseries stream with a new identifier. 
+
+The decision at hand is whether streams should be identified by \emph{what they
+measure} or by \emph{who produces them}. Our model takes the latter approach:
+using a stream UUID as the unit of association enables a more flexible approach
+to how data is described and how it is collected.
+
+\subsection{Data Representations}
+
+why eav table? why not relational, why not nosql
+
+\subsection{Non-Temporal Query Language}
 
 \begin{itemize}
 \item First establish what our normal timeseries and metadata looks like
