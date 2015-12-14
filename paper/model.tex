@@ -80,9 +80,15 @@ is non-obvious in a denormalized database.
 
 \subsection{Non-Temporal Query Language}
 
-To provide a basis for the later discussion on a temporal query language, we discuss
-here the design of a query language that integrates our timeseries data and metadata
-models, as seen in Figure~\ref{fig:nontemporalgrammar}.
+To provide a basis for the later discussion on a temporal query language, we
+discuss here the design of a query language that integrates our timeseries data
+and metadata models (Table~\ref{table:eavstream}).  The query language is
+SQL-like; the \syntax{<whereClause>} is evaluated against the metadata store,
+returning the set of streams that match the clause's predicate. The
+\syntax{selectClause} specifies the metadata terms or ranges of timeseries data
+to be returned as results. \texttt{SELECT *} returns all metadata for each
+matched stream.  A simplified version of the grammar is in
+Figure~\ref{fig:nontemporalgrammar}.
 
 \setlength{\grammarindent}{8em}
 \setlength{\grammarparsep}{4pt}
@@ -95,6 +101,8 @@ models, as seen in Figure~\ref{fig:nontemporalgrammar}.
 \alt <selectTerm> `,' <selectClause>
 
 <selectTerm> := <lvalue>
+\alt `*'
+\alt `DISTINCT' <lvalue>
 \alt `DATA IN' `(' <time> `,' <time> `)'
 \alt `DATA BEFORE' <time>
 \alt `DATA AFTER' <time>
@@ -115,16 +123,38 @@ models, as seen in Figure~\ref{fig:nontemporalgrammar}.
 \label{fig:nontemporalgrammar}
 \end{figure}
 
-\begin{itemize}
-\item First establish what our normal timeseries and metadata looks like
-  \begin{itemize}
-  \item document UUID, bag of key-value pairs
-  \item Overview of how data gets deposited: what is current system's opinion on timestamps?
-  \item What does the current ``query language'' for these look like:
-      \begin{itemize}
-      \item selecting timeseries data based on metadata
-      \item selecting metadata based on metadata
-      \end{itemize}
-  \item Data representation: EAV table
-  \end{itemize}
-\end{itemize}
+Here are some examples of static queries that we will later augment with a temporal dimension.
+While not explored here, it can be assumed that the metadata keys are well-known.
+
+\textbf{Example 1:}
+To find the names of all rooms in a building named ``Soda Hall'' that contain an occupancy sensor:
+
+\begin{sqlcode}
+SELECT DISTINCT Location/Room WHERE
+Location/Building = "Soda Hall" AND
+Point/Measure = "Occupancy";
+\end{sqlcode}
+
+\textbf{Example 2:}
+Select the last month of sensor readings for all temperature sensors in Room 410:
+
+\begin{sqlcode}
+SELECT DATA IN (1/11/2015, 1/12/2015) WHERE
+Location/Building = "Soda Hall" AND
+Location/Room = 410 AND
+Point/Measure = "Temperature";
+\end{sqlcode}
+
+%\begin{itemize}
+%\item First establish what our normal timeseries and metadata looks like
+%  \begin{itemize}
+%  \item document UUID, bag of key-value pairs
+%  \item Overview of how data gets deposited: what is current system's opinion on timestamps?
+%  \item What does the current ``query language'' for these look like:
+%      \begin{itemize}
+%      \item selecting timeseries data based on metadata
+%      \item selecting metadata based on metadata
+%      \end{itemize}
+%  \item Data representation: EAV table
+%  \end{itemize}
+%\end{itemize}
