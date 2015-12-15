@@ -129,6 +129,8 @@ to storing persistent records makes it simple to compute the start/end valid tim
 Queries on the state of the database at time $t$ can be performed by ``searching'' backwards in time for 
 records with timestamp $\leq t_0$ that match the provided relational predicate.
 
+This also allows insertions into the past
+
 \if 0
 What about writing into the past? inserts/deletions are easy because they are all just to the end of the log, but
 we can run a garbage collection process that sorts them. If we use a SQL table, our generated SQL queries should
@@ -157,7 +159,9 @@ An illustration of this structure can be seen in Figure~\ref{figure:temporaleave
 \texttt{d24325e6...} & \texttt{Fault/Type} & \texttt{<NULL>} & $t_4$ \\
 \hline
 \end{tabular}
-\caption{Tabular representaion of the temporal entity-attribute-value model}
+\caption{Tabular representaion of the temporal entity-attribute-value model. Times $t_0$ through $t_4$ are real-world timestamps
+that indicate when the fact took place. The \texttt{<NULL>} value at time $t_4$ indicates that the \texttt{Fault/Type} key was deleted
+from the \texttt{d24325e6} stream.}
 \label{table:temporaleavexample}
 \end{table}
 
