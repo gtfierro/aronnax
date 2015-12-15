@@ -69,6 +69,67 @@ have a figure here? start-time vs duration time?
 \item relational algebra accounts for transaction time, evolution of contents as well as schema~\cite{mckenzie1990schema}
 \end{itemize}
 
+\subsection{Proposed Temporal Query Language}
+
+\setlength{\grammarindent}{8em}
+\setlength{\grammarparsep}{4pt}
+\begin{figure}
+\centering
+\begin{grammar}
+<query> := `select' <selectClause> `where' <whereClause>
+
+<selectClause> := <selectTerm>
+\alt <selectTerm> `,' <selectClause>
+
+<selectTerm> := <selectTermValue>
+\alt `FIRST' <selectTermValue>
+\alt `LAST' <selectTermValue>
+\alt `ALL' <selectTermValue>
+\alt <selectTermValue> `AT' <time>
+\alt <selectTermValue> `IAFTER' <time>
+\alt <selectTermValue> `IBEFORE' <time>
+\alt <selectTermValue> `AFTER' <time>
+\alt <selectTermValue> `BEFORE' <time>
+\alt <selectTermValue> `IN' `(' <time> `,' <time> `)'
+
+<selectTermValue> := <lvalue>
+\alt `*'
+\alt `DISTINCT' <lvalue>
+\alt `DATA IN' `(' <time> `,' <time> `)'
+\alt `DATA BEFORE' <time>
+\alt `DATA AFTER' <time>
+
+<whereClause> := <whereTerm> `AND' <whereClause>
+\alt <whereTerm> `OR' <whereClause>
+\alt `NOT' <whereClause>
+\alt `(' <whereClause> `)'
+\alt <whereTerm>
+
+<whereTerm> := <predicate>
+\alt <predicate> <temporalPredicate>
+
+<predicate> := <lvalue> `LIKE' <rvalue>
+\alt <lvalue> `=' <rvalue>
+\alt <lvalue> `!=' <rvalue>
+\alt `HAS' <lvalue>
+
+<temporalPredicate> := `HAPPENS IN' `(' <time> `,' <time> `)'
+\alt `HAPPENS BEFORE' <time>
+\alt `HAPPENS AFTER' <time>
+\alt `AT' <time>
+\alt `FOR' `(' <time> `,' <time> `)'
+
+<rvalue> := <string>
+\alt <number>
+\alt <regex>
+\alt <uuid>
+
+<lvalue> := <string>
+\end{grammar}
+\caption{Simplified grammar for the \emph{temporal} query language over timeseries and metadata}
+\label{fig:temporalgrammar}
+\end{figure}
+
 %[39, 52, 53, 74]
 
 %\begin{itemize}
