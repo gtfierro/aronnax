@@ -63,6 +63,41 @@ have a figure here? start-time vs duration time?
 
 \subsection{Temporal Data Models}
 
+The \textbf{Temporally Oriented Data Model}~\cite{ariav1986temporally} (TODM)
+stores temporal data along the 3 dimensions of objects, attributes and
+time. TODM makes an assumption of temporal isomorphism, that is, ``there is a tight
+correspondence between the database and the temporally concurrent reality it is
+aimed to capture.''\cite{ariav1986temporally}. This seems to preclude
+insertions into the past, but TODM does use this restriction to avoid
+penalizing queries interested in the most current version of an object, which
+is a design goal for our approach as well. We wish to preserve the 3-dimensioanl
+relation of object (UUID), attribute (key-value) and time, but with valid
+and transactional times decoupled.
+
+The model presented in \cite{gadia1988generalized} proposes a two-dimensional
+model that preserves both real world (valid) and transactional timestamps of a
+tuple, but is directed towards fully relational representations of data.  The
+disadvantage of the model -- for a fully general temporal relational database
+-- is that it cannot express valid times that occur after the transaction
+time\footnote{This is not a feature that our model needs to support}.
+
+\todo{think abou this next part}
+Generalized Model for a Relational Temporal
+Database~\cite{gadia1988generalized} makes the observation that ``intervals are
+not closed under union, intersection and complementation, and thus are not
+adequate to model natural language queries involving `or', `and' and `not'.''
+
+The Historical Database Management System (HDBMS)
+model~\cite{sarda1990extensions} uses an extended relational model, in which
+all tuples are stored normally but with the addition of interval timestamps.
+The associated query language, HSQL, uses this extension for operations such as
+time-based joins. 
+
+A point of major simplification in our model is that we do not need to directly
+support joins based on time, meaning we can retain all of our relational
+algebra, and use simple qualifiers on time instants and extents to further
+restrict the evaluations of their associated predicates.
+
 \begin{itemize}
 \item BCDM bitemporal conceptual data model: only captures when facts are valid in reality and when stored in database~\cite{jensen1996semantics}\cite{jensen1994unifying}
 \item incremental relational temporal model: \cite{jensen1991incremental}
