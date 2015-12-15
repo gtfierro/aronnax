@@ -18,7 +18,7 @@ these models are more complicated than needed for a simple EAV table.
 \subsection{What is Time?}
 
 There are two flavors of time that temporal database must deal with:
-\emph{valid time} and \emph{transaction time}~\cite{jensen1999temporal}. 
+\emph{valid time} and \emph{transaction time}~\cite{jensen1999temporal}\cite{jensen1996semantics}. 
 
 \textbf{Valid time} is the extent for which a given \emph{fact} is true. For
 our model, a fact is the association of a key-value pair with a stream,
@@ -30,11 +30,13 @@ two databases (timeseries and metadata), it is also the point of interaction
 for consumers of data.
 
 A fact's valid time can be qualified either by a single time (``start'') or by
-a duration (``start'' and ``end''). The use of a start-time lends itself to
-diff-based storage, where facts for each \texttt{<uuid, key>} pair are
-considered valid until a new fact is written for the same \texttt{<uuid, key>}
-pair. This also removes the need to invalidate past facts, which is a drawback
-of the bitemporal model (BCDM).
+a duration (``start'' and ``end''). Duration-based facts are used in most of
+the established relational models (I believe because they make temporal joins
+easier to reason about).  The use of a start-time lends itself to diff-based
+storage, where facts for each \texttt{<uuid, key>} pair are considered valid
+until a new fact is written for the same \texttt{<uuid, key>} pair. This also
+removes the need to invalidate past facts, which is a drawback of the
+bitemporal model (BCDM).
 
 \textbf{Transaction time} is a logical timestamp that represents when a fact
 takes place in relation to other facts. In a temporal database where all
@@ -44,6 +46,16 @@ times must be separate. In our demo implementation, transaction time is made
 implicit through the use of transactions on the underlying database. Unlike
 valid times, which maybe added in the past, transaction times are strictly
 monotonic.
+
+A temporal database must decide whether or not to make these timestamps
+explicit in the representation and query interface.  While these two views of
+time are orthogonal~\cite{snodgrass1986temporal}, some databases such as
+POSTGRES~\cite{stonebraker1990implementation} conflate the two into transaction
+time and only maintain a history of changes so far as to resolve concurrent
+transactions. Transaction times are useful for ordering incoming operations,
+but do not need to be factored into the query model. Thus, our model makes
+valid timestamps explicit in the storage and retrieval of facts, but
+transaction times are kept internal to the DBMS.
 
 \if 0
 have a figure here? start-time vs duration time?
