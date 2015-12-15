@@ -41,11 +41,23 @@ takes place in relation to other facts. In a temporal database where all
 entries are made at the current time, transaction time can be conflated with
 valid time, but if the database allows retroactive inserts, then these two
 times must be separate. In our demo implementation, transaction time is made
-implicit through the use of transactions on the underlying database.
+implicit through the use of transactions on the underlying database. Unlike
+valid times, which maybe added in the past, transaction times are strictly
+monotonic.
 
 \if 0
 have a figure here? start-time vs duration time?
 \fi
+
+\subsection{Temporal Data Models}
+
+\begin{itemize}
+\item BCDM bitemporal conceptual data model: only captures when facts are valid in reality and when stored in database~\cite{jensen1996semantics}\cite{jensen1994unifying}
+\item incremental relational temporal model: \cite{jensen1991incremental}
+\item relational algebra accounts for transaction time, evolution of contents as well as schema~\cite{mckenzie1990schema}
+\end{itemize}
+
+%[39, 52, 53, 74]
 
 %\begin{itemize}
 %\item Discuss current tmporal data models
@@ -64,8 +76,6 @@ Some related work:
 \begin{itemize}
 \item $<tt, vt>$ (timestamp, validtime) for temporal data~\cite{jensen1999temporal},
 also stratum vs integrated approaches for implementing temporal databases
-\item pervasive computing requires temporal contextual information, which
-can quickly become stale~\cite{henricksen2002modeling}
 \item extending relational algebra for temporal data?~\cite{lorentzos1988extending}
 \item list of temporal terms~\cite{dyreson1994consensus}
 \end{itemize}
