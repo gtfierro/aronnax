@@ -61,7 +61,7 @@ transaction times are kept internal to the DBMS.
 have a figure here? start-time vs duration time?
 \fi
 
-\subsection{Temporal Data Models}
+\subsection{Established Temporal Data Models}
 
 The \textbf{Temporally Oriented Data Model}~\cite{ariav1986temporally} (TODM)
 stores temporal data along the 3 dimensions of objects, attributes and
@@ -105,14 +105,94 @@ start/end time and transaction start/end time. However, due to the complexity
 is much work to be done on evaluating the performance of the extended
 relational algebra as well as how to efficiently implement a compliant
 database.
+\todo{bcdm has to be updated at every tick to be correct? This is very slow!}
 
-\begin{itemize}
-%\item BCDM bitemporal conceptual data model: only captures when facts are valid in reality and when stored in database~\cite{jensen1996semantics}\cite{jensen1994unifying}
-\item incremental relational temporal model: \cite{jensen1991incremental}
-\item relational algebra accounts for transaction time, evolution of contents as well as schema~\cite{mckenzie1990schema}
-\end{itemize}
+%\begin{itemize}
+%%\item BCDM bitemporal conceptual data model: only captures when facts are valid in reality and when stored in database~\cite{jensen1996semantics}\cite{jensen1994unifying}
+%\item incremental relational temporal model: \cite{jensen1991incremental}
+%\item relational algebra accounts for transaction time, evolution of contents as well as schema~\cite{mckenzie1990schema}
+%\end{itemize}
+
+\subsection{EAV-Based Temporal Data Model}
+
+We choose a natural extension of the entity-attribute-value model described in Section~\ref{section:model}.
+Because of our restrictions on the usual temporal models -- not needing to support joins on time or fully
+general relational algebra, and only supporting queries on valid time -- our temporal extension can remain
+simple.
+
+\textbf{Construction.} we extend the entity-attribute-value model with a 4th dimension representing the initial
+valid time of a fact. Each fact (row) can take one of two forms: an insertion of \texttt{<uuid, key, value, timestamp>}
+or a deletion with \texttt{<uuid, key, NULL, timestamp>}. For an example fact $<u_0, k_0, v_0, t_0>$, the \texttt{value} $v_0$ is valid (true) for the tuple $<u_0, k_0>$
+with real-world \texttt{timestamp} $t_0$ starting at time $t_0$ and extending to the current time or until another
+tuple with $<u_0, k_0>$ and real-world \texttt{timestamp} $t_1$ is inserted with $t_1 > t_0$. This diff-based approach
+to storing persistent records makes it simple to compute the start/end valid times explicit in other temporal models.
+Queries on the state of the database at time $t$ can be performed by ``searching'' backwards in time for 
+records with timestamp $\leq t_0$ that match the provided relational predicate.
+
+\if 0
+What about writing into the past? inserts/deletions are easy because they are all just to the end of the log, but
+we can run a garbage collection process that sorts them. If we use a SQL table, our generated SQL queries should
+be able to avoid detecing duplicates in the result set, so no blocking needs to happen on running the log reordering
+\fi
+
+An illustration of this structure can be seen in Figure~\ref{figure:temporaleavexample} and Table~\ref{table:temporaleavexample}.
+
+\begin{figure}
+\centering
+\includegraphics[width=.9\linewidth]{figs/time.pdf}
+\caption{Visualization of the temporal EAV model in Table~\ref{table:temporaleavexample}}
+\label{figure:temporaleavexample}
+\end{figure}
+
+\begin{table}
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{UUID} & \textbf{Key} & \textbf{Value} & \textbf{Valid Time} \\
+\hline
+\end{tabular}
+\caption{Tabular representaion of the temporal entity-attribute-value model}
+\label{table:temporaleavexample}
+\end{table}
+
+\textbf{Where does time come from?}
+
+Both our non-temporal (Figure~\ref{fig:nontemporalgrammar}) and temporal (Figure~\ref{fig:temporalgrammar}) query languages
+support queries across two databases (timeseries and metadata). In designing the temporal model, we must account for
+whose notion of time (client's or server's) is used for the valid time.
+
+\if 0
+clients need to be able to query each others streams
+    - suggests server time
+clients want to write into the past
+    - suggests client time
+    - maybe client can compute the real timestamp?
+        client reports its current time and the diff to the time it wants to write at.
+        server then shifts this up or down depending on what its current time is.
+        This doesn't really account for time stretching?
+    - clients write into past infrequently, so its okay to have this coordination be more expensive
+optimize for common case: clients writing to current form of document -- just a log append
+\fi
+\if 0
+THIS IS NOT NEW: find cites!
+We choose a natural extension of the non-temporal entity-attribute-valuel model.
+We track valid time, but use transactional time for logical ordering of queries/insertions
+extend EAV table with 4th column for time
+Insertions can occur with any valid time <= current time
+We extend the query language with syntax to support qualifying the usual
+relational predicates with time. 
+\fi
 
 \subsection{Proposed Temporal Query Language}
+
+\if 0
+First, lets establish a model for expressiveness: how do we know we've "covered" the space?
+
+Want a diagram with our expressiveness timeline, with two streams, representing two attributes. We
+have the usual one dimensional aspects we want to cover, but also draw a box/tetris shape over
+the two streams at once to emphasize that we want to be able to cover across relations *and* across
+time in the same query.
+\fi
 
 Figure~\ref{fig:temporalgrammar} contains a simplified grammar of our proposed temporal query language.
 
