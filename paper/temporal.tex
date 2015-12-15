@@ -1,18 +1,65 @@
 \section{Temporal Metadata Model} \label{section:temporal}
 
+In this section, we extend our metadata model with a temporal dimension that
+enables the applications in Section~\ref{section:motivation}. To do this effectively, we first
+discuss our notions of \emph{time} and how to mitigate discrepancies between client and server.
+We then examine established temporal data models such as the Bitemporal Conceptual Data Model (BCDM).
+Because most research into temporal data models has been conerned with relational or spatial models,
+these models are more complicated than needed for a simple EAV table.
+
 \begin{itemize}
-\item Discuss current tmporal data models
-    \begin{itemize}
-    \item TODO: make this list
-    \item OURS: how to augment with time: add column to EAV
-    \end{itemize}
-\item discuss sql vs nosql for demo implementation?
-    \begin{itemize}
-    \item SQL more suited for diffs?
-    \item NoSQL more suited for replication?
-    \end{itemize}
+\item then start talking about temporal query languages?
+\item temporal query language tquel~\cite{snodgrass1987temporal}
+\item tsql2~\cite{snodgrass2012tsql2}
+\item tquery~\cite{kahn1991tquery}
+\item differentiate from continuous query languages like CQL~\cite{arasu2006cql}
 \end{itemize}
 
+\subsection{What is Time?}
+
+There are two flavors of time that temporal database must deal with:
+\emph{valid time} and \emph{transaction time}~\cite{jensen1999temporal}. 
+
+\textbf{Valid time} is the extent for which a given \emph{fact} is true. For
+our model, a fact is the association of a key-value pair with a stream,
+changing the value associated with a stream's key, or removing a key-value pair
+from a stream's metadata. Valid time is expressed in terms of real-world time
+and is how metadata facts are aligned with timeseries data, which is stored
+using real-world time. Because valid time is the coordinating aspect across the
+two databases (timeseries and metadata), it is also the point of interaction
+for consumers of data.
+
+A fact's valid time can be qualified either by a single time (``start'') or by
+a duration (``start'' and ``end''). The use of a start-time lends itself to
+diff-based storage, where facts for each \texttt{<uuid, key>} pair are
+considered valid until a new fact is written for the same \texttt{<uuid, key>}
+pair. This also removes the need to invalidate past facts, which is a drawback
+of the bitemporal model (BCDM).
+
+\textbf{Transaction time} is a logical timestamp that represents when a fact
+takes place in relation to other facts. In a temporal database where all
+entries are made at the current time, transaction time can be conflated with
+valid time, but if the database allows retroactive inserts, then these two
+times must be separate. In our demo implementation, transaction time is made
+implicit through the use of transactions on the underlying database.
+
+\if 0
+have a figure here? start-time vs duration time?
+\fi
+
+%\begin{itemize}
+%\item Discuss current tmporal data models
+%    \begin{itemize}
+%    \item TODO: make this list
+%    \item OURS: how to augment with time: add column to EAV
+%    \end{itemize}
+%\item discuss sql vs nosql for demo implementation?
+%    \begin{itemize}
+%    \item SQL more suited for diffs?
+%    \item NoSQL more suited for replication?
+%    \end{itemize}
+%\end{itemize}
+%
 Some related work:
 \begin{itemize}
 \item $<tt, vt>$ (timestamp, validtime) for temporal data~\cite{jensen1999temporal},
@@ -22,11 +69,3 @@ can quickly become stale~\cite{henricksen2002modeling}
 \item extending relational algebra for temporal data?~\cite{lorentzos1988extending}
 \item list of temporal terms~\cite{dyreson1994consensus}
 \end{itemize}
-Languages to look at
-\begin{itemize}
-\item temporal query language tquel~\cite{snodgrass1987temporal}
-\item tsql2~\cite{snodgrass2012tsql2}
-\item tquery~\cite{kahn1991tquery}
-\item differentiate from continuous query languages like CQL~\cite{arasu2006cql}
-\end{itemize}
-

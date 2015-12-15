@@ -107,7 +107,13 @@ Figure~\ref{fig:nontemporalgrammar}.
 \alt `DATA BEFORE' <time>
 \alt `DATA AFTER' <time>
 
-<whereClause> := <lvalue> `LIKE' <rvalue>
+<whereClause> := <whereTerm> `AND' <whereClause>
+\alt <whereTerm> `OR' <whereClause>
+\alt `NOT' <whereClause>
+\alt `(' <whereClause> `)'
+\alt <whereTerm>
+
+<whereTerm> := <lvalue> `LIKE' <rvalue>
 \alt <lvalue> `=' <rvalue>
 \alt <lvalue> `!=' <rvalue>
 \alt `HAS' <lvalue>
