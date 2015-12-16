@@ -63,6 +63,8 @@ have a figure here? start-time vs duration time?
 
 \subsection{Established Temporal Data Models}
 
+
+
 The \textbf{Temporally Oriented Data Model}~\cite{ariav1986temporally} (TODM)
 stores temporal data along the 3 dimensions of objects, attributes and
 time. TODM makes an assumption of temporal isomorphism, that is, ``there is a tight
@@ -104,8 +106,9 @@ start/end time and transaction start/end time. However, due to the complexity
 (and completeness) of the model, \cite{jensen1999temporal} asserts that there
 is much work to be done on evaluating the performance of the extended
 relational algebra as well as how to efficiently implement a compliant
-database.
-\todo{bcdm has to be updated at every tick to be correct? This is very slow!}
+database. Additionally, without optimizations discussed in
+\cite{jensen1999temporal}, BCDM requires updating the valid and transaction
+timestamps at every clock tick.
 
 %\begin{itemize}
 %%\item BCDM bitemporal conceptual data model: only captures when facts are valid in reality and when stored in database~\cite{jensen1996semantics}\cite{jensen1994unifying}
@@ -120,7 +123,7 @@ Because of our restrictions on the usual temporal models -- not needing to suppo
 general relational algebra, and only supporting queries on valid time -- our temporal extension can remain
 simple.
 
-\textbf{Construction.} we extend the entity-attribute-value model with a 4th dimension representing the initial
+\textbf{Construction.} We extend the entity-attribute-value model with a 4th dimension representing the initial
 valid time of a fact. Each fact (row) can take one of two forms: an insertion of \texttt{<uuid, key, value, timestamp>}
 or a deletion with \texttt{<uuid, key, NULL, timestamp>}. For an example fact $<u_0, k_0, v_0, t_0>$, the \texttt{value} $v_0$ is valid (true) for the tuple $<u_0, k_0>$
 with real-world \texttt{timestamp} $t_0$ starting at time $t_0$ and extending to the current time or until another
@@ -129,7 +132,12 @@ to storing persistent records makes it simple to compute the start/end valid tim
 Queries on the state of the database at time $t$ can be performed by ``searching'' backwards in time for 
 records with timestamp $\leq t_0$ that match the provided relational predicate.
 
-This also allows insertions into the past
+All edits to the database can be thought of appending onto a log, which offers some interesting opportunities
+for the eventual storage engine (see Section~\ref{section:futurework}). For our proof-of-concept implementation
+over MySQL (Section~\ref{section:implementation}), the ``append-only'' nature of the database does not preclude
+deleting ``mistake'' records, which do not factor into the history of metadata that can be queried. Also,
+the ``append-only'' structure permits writing records whose valid times are in the past, such as for a retroactive anomaly
+tagging application. 
 
 \if 0
 What about writing into the past? inserts/deletions are easy because they are all just to the end of the log, but
@@ -150,7 +158,7 @@ An illustration of this structure can be seen in Figure~\ref{figure:temporaleave
 \centering
 \begin{tabular}{|l|c|c|c|}
 \hline
-\textbf{UUID} & \textbf{Key} & \textbf{Value} & \textbf{Valid Time} \\
+\textbf{UUID} & \textbf{Key} & \textbf{Value} & \textbf{Time} \\
 \hline
 \texttt{d24325e6...} & \texttt{Location/Room} & \texttt{410} & $t_0$ \\
 \texttt{d24325e6...} & \texttt{Fault/Type} & \texttt{Power Outage} & $t_1$ \\
