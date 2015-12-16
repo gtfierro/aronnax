@@ -1,1 +1,28 @@
 \section{Future Work} \label{section:futurework}
+
+The future work on this project will most likely be broken up into three main stages:
+
+Firstly, finishing up the implementation of the \syntax{<select>} and \syntax{<where>} temporal operators
+over a MySQL table will help solidify the query semantics and provide the quickest path to a working prototype.
+A working prototype enables creating real applications and discovering which access patterns are typical
+in production settings under real work loads.
+
+The next step is the development of a specialized storage and query system,
+taking into consideration the access patterns established by the prototype
+applications. Because the temporal entity-attribute-value table is append-only,
+it might effectively be implemented using a log. The implicit reliance on transaction timestamps
+for ordering coupled with the historical nature of the table makes it a candidate for a variation on multiversion
+timestamp-ordered concurrency control~\cite{bernstein1981concurrency}.
+
+It is unclear what index structures would look like for this database
+structure, but a possible invariant of consistent indexes might be a strict
+ordering of valid timestamps in the database table (which would enable fast
+lookups of ``previous'' or ``next'' timestamp). In this case, allowing
+insertions with non-current (past) valid timestamps would violate the index's
+invariant, requiring some form of garbage collection to reorder the log.
+Ideally this would be accomplished without the need for a locking mechanism --
+storing timestamps in sorted byte-order may present an opportunity for an
+atomic compare-and-swap structure.
+
+The last step is to explore how such a database might be distributed across a
+cluster of machines in order to improve reliability and throughput.
