@@ -23,9 +23,12 @@ unique identifier and further qualify it with a small series of tags; for
 example a stream named \texttt{total\_http\_requests} might have a tag of
 \texttt{hostname=host1.example.com}. With this construction, the database makes
 the assumption that changing any aspect or context of the stream warrants the
-creation of an entirely new timeseries stream with a new identifier.
-\todo{is this correct? or do they just store metadata with EVERY reading? This
-is obviously inefficient}
+creation of an entirely new timeseries stream with a new identifier. An
+alternative used by other telemetry databases is to store all metadata for a
+data point at every data point. This offers the most flexibility in allowing
+metadata to change over time, but does not preserve the origin of data (unless
+that is manually captured in the metadata) and can introduce a substantial
+storage overhead.
 
 The decision at hand is whether streams should be identified by \emph{what they
 measure} or by \emph{who produces them}. Our model takes the latter approach:
