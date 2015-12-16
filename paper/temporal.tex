@@ -18,7 +18,7 @@ these models are more complicated than needed for a simple EAV table.
 \subsection{What is Time?}
 
 There are two flavors of time that temporal database must deal with:
-\emph{valid time} and \emph{transaction time}~\cite{jensen1999temporal}\cite{jensen1996semantics}. 
+\emph{valid time} and \emph{transaction time}~\cite{jensen1999temporal}\cite{jensen1996semantics}.
 
 \textbf{Valid time} is the extent for which a given \emph{fact} is true. For
 our model, a fact is the association of a key-value pair with a stream,
@@ -94,7 +94,7 @@ The \textbf{Historical Database Management System} (HDBMS)
 model~\cite{sarda1990extensions} uses an extended relational model, in which
 all tuples are stored normally but with the addition of interval timestamps.
 The associated query language, HSQL, uses this extension for operations such as
-time-based joins. 
+time-based joins.
 
 A point of major simplification in our model is that we do not need to directly
 support joins based on time, meaning we can retain all of our relational
@@ -131,7 +131,7 @@ with real-world \texttt{timestamp} $t_0$ starting at time $t_0$ and extending to
 tuple with $<u_0, k_0>$ and real-world \texttt{timestamp} $t_1$ is inserted with $t_1 > t_0$. All insert and delete operations
 can contain valid timestamps $\leq$ the current database time. This diff-based approach
 to storing persistent records makes it simple to compute the start/end valid times explicit in other temporal models.
-Queries on the state of the database at time $t$ can be performed by ``searching'' backwards in time for 
+Queries on the state of the database at time $t$ can be performed by ``searching'' backwards in time for
 records with timestamp $\leq t_0$ that match the provided relational predicate.
 
 All edits to the database can be thought of appending onto a log, which offers some interesting opportunities
@@ -139,7 +139,7 @@ for the eventual storage engine (see Section~\ref{section:futurework}). For our 
 over MySQL (Section~\ref{section:implementation}), the ``append-only'' nature of the database does not preclude
 deleting ``mistake'' records, which do not factor into the history of metadata that can be queried. Also,
 the ``append-only'' structure permits writing records whose valid times are in the past, such as for a retroactive anomaly
-tagging application. 
+tagging application.
 
 \if 0
 What about writing into the past? inserts/deletions are easy because they are all just to the end of the log, but
@@ -204,7 +204,7 @@ All insertions and deletions done at the tail of the log (i.e. at the current ti
 do not include an explicit client-generated timestamp, using the database server's current
 time. Expressing a relative time in the past (e.g. ``10 minutes ago'' or ``now -10min'')
 can be resolved with server-generated timestamps, but may not precisely represent
-a client's intention due to delays in the network and in the underlying DBMS. 
+a client's intention due to delays in the network and in the underlying DBMS.
 When a client wants to express an \emph{absolute} time in the past, the difference
 between the client's expressed timestamp and current timestamp is used as an offset
 for the result of a clock synchronization round with the server.
@@ -228,7 +228,7 @@ We track valid time, but use transactional time for logical ordering of queries/
 extend EAV table with 4th column for time
 Insertions can occur with any valid time <= current time
 We extend the query language with syntax to support qualifying the usual
-relational predicates with time. 
+relational predicates with time.
 \fi
 
 \subsection{Proposed Temporal Query Language}
@@ -236,6 +236,46 @@ relational predicates with time.
 In this section, we discuss the expressive model for a temporal query language to operate
 over the temporal entity-attribute-value model described above. This is followed by a review
 of the temporal extensions of the language mentioned in Section~\ref{section:model}.
+
+We define our expressive model over a hypothetical history of a single metadata key for a single stream, illustrated
+in Figure~\ref{fig:expressivemodel}. This hypothetical stream contains a full cycle of changes on a single key; our query
+model must be able to describe and discover each of the following labeled segments
+
+\begin{enumerate}
+\item Before the tag exists: $0 \leq t < t_1$
+\item The moment the tag is created (version 1): $t = t_1$
+\item While version 1 of the tag is true: $t_1 \leq t < t_2$
+\item When version 2 of the tag becomes true: $t = t_2$
+\item While version 2 of the tag is true: $t_2 \leq t < t_3$
+\item When the tag is deleted: $t = t_3$
+\item While the stream no longer has the tag: $t \geq t_3$
+\end{enumerate}
+
+To be sufficiently expressive, our \syntax{<where>} clause operators should be
+able to restrict the time domain of a relational predicate to any one of the
+seven stages in a tag's life. As illustrated in
+Figure~\ref{fig:temporalgrammar}, a \syntax{<where>} clause consists of a set
+of \syntax{<whereTerm>}s joined by the usual relational operators
+\syntax{`AND'}, \syntax{`OR'}, and \syntax{`NOT'}.  The specification of each
+\syntax{<whereTerm>} has a relational predicate and an optional temporal
+predicate that only matches streams that fulfill both.
+
+Our language supports the following temporal operators for \syntax{<where>} terms:
+
+\begin{itemize}
+\item \texttt{FOR}
+\item \texttt{AT}
+\item \texttt{HAPPENS BEFORE}
+\item \texttt{HAPPENS AFTER}
+\item \texttt{HAPPENS IN}
+\item \texttt{BEFORE}
+\item \texttt{AFTER}
+\item \texttt{IN}
+\end{itemize}
+
+\todo{go over where clause operators here}
+
+The \syntax{select} clause 
 
 \if 0
 First, lets establish a model for expressiveness: how do we know we've "covered" the space?
@@ -253,33 +293,33 @@ Figure~\ref{fig:temporalgrammar} contains a simplified grammar of our proposed t
 \begin{figure}
 \centering
 \begin{grammar}
-<query> := `select' <selectClause> `where' <whereClause>
+<query> := `select' <select> `where' <where>
 
-<selectClause> := <selectTerm>
-\alt <selectTerm> `,' <selectClause>
+<select> := <selectTerm>
+\alt <selectTerm> `,' <select>
 
-<selectTerm> := <selectTermValue>
-\alt `FIRST' <selectTermValue>
-\alt `LAST' <selectTermValue>
-\alt `ALL' <selectTermValue>
-\alt <selectTermValue> `AT' <time>
-\alt <selectTermValue> `IAFTER' <time>
-\alt <selectTermValue> `IBEFORE' <time>
-\alt <selectTermValue> `AFTER' <time>
-\alt <selectTermValue> `BEFORE' <time>
-\alt <selectTermValue> `IN' `(' <time> `,' <time> `)'
+<selectTerm> := <termValue>
+\alt `FIRST' <termValue>
+\alt `LAST' <termValue>
+\alt `ALL' <termValue>
+\alt <termValue> `AT' <time>
+\alt <termValue> `IAFTER' <time>
+\alt <termValue> `IBEFORE' <time>
+\alt <termValue> `AFTER' <time>
+\alt <termValue> `BEFORE' <time>
+\alt <termValue> `IN' `(' <time> `,' <time> `)'
 
-<selectTermValue> := <lvalue>
+<termValue> := <lvalue>
 \alt `*'
 \alt `DISTINCT' <lvalue>
 \alt `DATA IN' `(' <time> `,' <time> `)'
 \alt `DATA BEFORE' <time>
 \alt `DATA AFTER' <time>
 
-<whereClause> := <whereTerm> `AND' <whereClause>
-\alt <whereTerm> `OR' <whereClause>
-\alt `NOT' <whereClause>
-\alt `(' <whereClause> `)'
+<where> := <whereTerm> `AND' <where>
+\alt <whereTerm> `OR' <where>
+\alt `NOT' <where>
+\alt `(' <where> `)'
 \alt <whereTerm>
 
 <whereTerm> := <predicate>

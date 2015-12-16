@@ -85,9 +85,9 @@ is non-obvious in a denormalized database.
 To provide a basis for the later discussion on a temporal query language, we
 discuss here the design of a query language that integrates our timeseries data
 and metadata models (Table~\ref{table:eavstream}).  The query language is
-SQL-like; the \syntax{<whereClause>} is evaluated against the metadata store,
+SQL-like; the \syntax{<where>} clause is evaluated against the metadata store,
 returning the set of streams that match the clause's predicate. The
-\syntax{selectClause} specifies the metadata terms or ranges of timeseries data
+\syntax{select} clause specifies the metadata terms or ranges of timeseries data
 to be returned as results. \texttt{SELECT *} returns all metadata for each
 matched stream.  A simplified version of the grammar is in
 Figure~\ref{fig:nontemporalgrammar}.
@@ -97,10 +97,10 @@ Figure~\ref{fig:nontemporalgrammar}.
 \begin{figure}
 \centering
 \begin{grammar}
-<query> := `select' <selectClause> `where' <whereClause>
+<query> := `select' <select> `where' <where>
 
-<selectClause> := <selectTerm>
-\alt <selectTerm> `,' <selectClause>
+<select> := <selectTerm>
+\alt <selectTerm> `,' <select>
 
 <selectTerm> := <lvalue>
 \alt `*'
@@ -109,10 +109,10 @@ Figure~\ref{fig:nontemporalgrammar}.
 \alt `DATA BEFORE' <time>
 \alt `DATA AFTER' <time>
 
-<whereClause> := <whereTerm> `AND' <whereClause>
-\alt <whereTerm> `OR' <whereClause>
-\alt `NOT' <whereClause>
-\alt `(' <whereClause> `)'
+<where> := <whereTerm> `AND' <where>
+\alt <whereTerm> `OR' <where>
+\alt `NOT' <where>
+\alt `(' <where> `)'
 \alt <whereTerm>
 
 <whereTerm> := <lvalue> `LIKE' <rvalue>
