@@ -295,8 +295,7 @@ This is the role of the \syntax{<select>} clause, which we also extend with the
 temporal operators described below. Each \syntax{<select>} operator takes as
 input the array of \texttt{<key, value, timestamp>} tuples that match the
 \syntax{<where>} clause for each stream (\texttt{uuid}) -- essentially a
-\texttt{GROUP BY uuid}.  The special rule \syntax{<termValue := <value>
-`@time'} in Figure~\ref{fig:temporalgrammar} returns the valid timestamp of the
+\texttt{GROUP BY uuid}.  The special rule \syntax{<termValue> := <value> `@time'} in Figure~\ref{fig:temporalgrammar} returns the valid timestamp of the
 matched record as well as the value of the key.
 
 \begin{itemize}
@@ -314,7 +313,10 @@ matched record as well as the value of the key.
 \item \texttt{<tag> BETWEEN (time1, time2)}: selects all versions of \syntax{<tag>} that become valid in \texttt{[time1, time2)}
 \end{itemize}
 
-\todo{we probably want to demonstrate how to combine the selct + where clauses to cover each of the 7 segments}
+A key point of the proposed temporal query language is that it decouples the temporal constraints on the \syntax{<select>} and \syntax{<where>} clauses.
+Stream UUIDs make this possible by create a logical mapping between the timeseries and temporal metadata databases. Once a UUID is matched by the evaluation
+of a relational and possibly temporal predicate, data can be extracted from any point in its history.
+
 
 \setlength{\grammarindent}{8em}
 \setlength{\grammarparsep}{4pt}
