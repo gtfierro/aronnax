@@ -63,7 +63,8 @@ have a figure here? start-time vs duration time?
 
 \subsection{Established Temporal Data Models}
 
-
+In this section, we review a few of the major temporal data models proposed that
+most closely match our use cases.
 
 The \textbf{Temporally Oriented Data Model}~\cite{ariav1986temporally} (TODM)
 stores temporal data along the 3 dimensions of objects, attributes and
@@ -127,7 +128,8 @@ simple.
 valid time of a fact. Each fact (row) can take one of two forms: an insertion of \texttt{<uuid, key, value, timestamp>}
 or a deletion with \texttt{<uuid, key, NULL, timestamp>}. For an example fact $<u_0, k_0, v_0, t_0>$, the \texttt{value} $v_0$ is valid (true) for the tuple $<u_0, k_0>$
 with real-world \texttt{timestamp} $t_0$ starting at time $t_0$ and extending to the current time or until another
-tuple with $<u_0, k_0>$ and real-world \texttt{timestamp} $t_1$ is inserted with $t_1 > t_0$. This diff-based approach
+tuple with $<u_0, k_0>$ and real-world \texttt{timestamp} $t_1$ is inserted with $t_1 > t_0$. All insert and delete operations
+can contain valid timestamps $\leq$ the current database time. This diff-based approach
 to storing persistent records makes it simple to compute the start/end valid times explicit in other temporal models.
 Queries on the state of the database at time $t$ can be performed by ``searching'' backwards in time for 
 records with timestamp $\leq t_0$ that match the provided relational predicate.
@@ -174,10 +176,38 @@ from the \texttt{d24325e6} stream.}
 \end{table}
 
 \textbf{Where does time come from?}
+Both our non-temporal (Figure~\ref{fig:nontemporalgrammar}) and temporal
+(Figure~\ref{fig:temporalgrammar}) query languages support queries across two
+databases (timeseries and metadata). In designing the temporal model, we must
+account for whose notion of time (client's or server's) is used for the valid
+time. There are several requirements we must account for:
 
-Both our non-temporal (Figure~\ref{fig:nontemporalgrammar}) and temporal (Figure~\ref{fig:temporalgrammar}) query languages
-support queries across two databases (timeseries and metadata). In designing the temporal model, we must account for
-whose notion of time (client's or server's) is used for the valid time.
+\begin{itemize}
+\item all streams should have a consistent notion of time (suggests server-generated timestamps)
+\item queries may operate across multiple streams (suggests server-generated timestamps)
+\item writes into the past are permitted (suggests client-generated timestamps)
+\item operating on the end of a stream should be cheap
+\end{itemize}
+
+Though many questions of a global notion of time can be solved (or simplified)
+with the use of a clock synchronization protocol such as NTP, this assumption
+does not hold for low-power embedded devices without a real-time clock, and to
+properly account for clock drift, NTP would likely have to be re-run on every
+insert or query. Operating on the most recent metadata version is the most
+common temporal pattern and therefor should not require substantial overhead.
+Queries that cover segments of time or operate in the past are less likely to
+be used in real-time applications and can sustain some overhead for time
+coordination.
+
+Our approach is straightforward and leverages our expected patterns of interaction.
+All insertions and deletions done at the tail of the log (i.e. at the current time)
+do not include an explicit client-generated timestamp, using the database server's current
+time. Expressing a relative time in the past (e.g. ``10 minutes ago'' or ``now -10min'')
+can be resolved with server-generated timestamps, but may not precisely represent
+a client's intention due to delays in the network and in the underlying DBMS. 
+When a client wants to express an \emph{absolute} time in the past, the difference
+between the client's expressed timestamp and current timestamp is used as an offset
+for the result of a clock synchronization round with the server.
 
 \if 0
 clients need to be able to query each others streams
