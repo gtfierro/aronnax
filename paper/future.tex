@@ -10,17 +10,17 @@ in production settings under real work loads.
 The next step is the development of a specialized storage and query system,
 taking into consideration the access patterns established by the prototype
 applications. Because the temporal entity-attribute-value table is append-only,
-it might effectively be implemented using a log. The implicit reliance on transaction timestamps
+it might effectively be implemented using a log. The reliance on transaction timestamps
 for ordering coupled with the historical nature of the table makes it a candidate for a variation on multiversion
 timestamp-ordered concurrency control~\cite{bernstein1981concurrency}.
 
 It is unclear what index structures would look like for this database
 structure, but a possible invariant of consistent indexes might be a strict
-ordering of valid timestamps in the database table (which would enable fast
-lookups of ``previous'' or ``next'' timestamp). In this case, allowing
+ordering of valid timestamps in the database table, which would enable fast
+lookups of ``previous'' or ``next'' timestamp. In this case, allowing
 insertions with non-current (past) valid timestamps would violate the index's
 invariant, requiring some form of garbage collection to reorder the log.
-Ideally this would be accomplished without the need for a locking mechanism --
+Ideally this would be accomplished without the need for a locking mechanism;
 storing timestamps in sorted byte-order may present an opportunity for an
 atomic compare-and-swap structure.
 

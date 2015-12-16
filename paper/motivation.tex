@@ -28,16 +28,16 @@ of the timeseries data to make use more fine-grained descriptions.
 There are two sample timeseries analysis applications we discuss here: 1) an
 application that computes the average monthly energy usage for a building that
 must account for a calibration correction partway through data collection, and
-2) a anomaly detection application that wants to ``tag'' anomaly ranges of
+2) a anomaly detection application that wants to ``tag'' anomalous ranges of
 timeseries data.
 
-The first application may operate by pulling energy usage over a full year,
-and then bucket the data by each month and compute the average. The calibration
+The first application operates by pulling energy usage over a full year,
+bucketing the data by each month and computing the average. The calibration
 constant represents the correction of errors in the measurement process. In Figure~\ref{fig:calibrationconstant},
 the plot represents the measured energy after a calibration transformation is applied: at time $t_0$, the constant
-is $1.1$ and at time $t_1$ the constant is corrected to be $1.5$. Precluding the recalculation and replacement
-of the data in $[t_0, t_1]$, a consumer must be able to map ranges of timeseries data to the correct
-constant. In systems that do not maintain the history of metadata associated with timeseries, a consumer would
+is $1.1$ and at time $t_1$ the constant is corrected to be $1.5$. 
+A consumer of this data must be able to map ranges of timeseries data to the correct
+constant so that the full range of data can be interpreted with a consistent calibration. In systems that do not maintain the history of metadata associated with timeseries, a consumer would
 see the constant as it existed either at $t_0$ or at $t_2$, resulting in an incorrect interpretation of the data.
 
 \begin{figure}

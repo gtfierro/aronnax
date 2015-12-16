@@ -1,4 +1,4 @@
-\section{POC Implementation} \label{section:implementation}
+\section{Implementation} \label{section:implementation}
 
 Here, we discuss the implementation of the temporal query language over a
 temporal entity-attribute-query MySQL table. The project is under active
@@ -108,7 +108,7 @@ union
 
 \subsection{Temporal Predicates}
 
-One of the advantages of the basic relational model above is that they extend naturally to incorporate
+One of the advantages of the generated queries for the basic relational model above is that they extend naturally to incorporate
 the temporal predicates. For most of these, the implementation can be done entirely in the innermost \syntax{<select>}
 clause for each subquery.
 
@@ -132,7 +132,7 @@ order by timestamp desc
 
 \texttt{IN} is a natural combination of these two, but the implementation of
 \texttt{FOR} is slightly more copmlicated because we must doubly assert that
-not only is the fact is true between the two timestamps and that it does not
+not only is the fact is true between the two timestamps but also that it does not
 become false. To implement \texttt{FOR}, we must assert that the predicate is
 true at the lower bound of our time range and that though there may be changes
 involving the \texttt{<uuid, key, value>} pair concerned by the predicate, none

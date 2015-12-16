@@ -5,7 +5,7 @@ data and its associated metadata. This model is our framework for exploring
 temporal metadata. We then discuss the set of possible database representations
 of the metadata, ultimately choosing an Entity-Attribute-Value
 (EAV)~\cite{chen1976entity} model. Then, we briefly review a query language for
-this model, based on sMAP~\cite{dawson2010smap}, designed to retrieve both
+this model designed to retrieve both
 timeseries data and metadata.
 
 
@@ -33,13 +33,13 @@ storage overhead.
 The decision at hand is whether streams should be identified by \emph{what they
 measure} or by \emph{who produces them}. Our model takes the latter approach:
 using a stream UUID as the unit of association enables a more flexible approach
-to how data is described and how it is collected.
+to how data is described and how it is collected\footnote{(and allows us to mostly sidestep a Ship of Theseus discussion)}.
 
 \subsection{Data Representations}
 
 Here, we discuss how this model is represented in a database, which influences
 how a temporal dimension can be added. We simplify the representation of our
-model by separating the storage of timeseries data from metadata. Timeseries
+combined model by separating the storage of timeseries data from metadata. Timeseries
 data is placed in a store optimized specifically for timeseries data; stream
 UUIDs are used to associate timeseries streams with their metadata. For
 storing metadata, we have three options -- denormalized (NoSQL), vertical
@@ -51,7 +51,8 @@ three columns: the stream UUID, a metadata key, and a metadata value. This
 structure is appropriate because there is no strict schema for what metadata
 keys a stream can have, which suggests a sparse representation. While metadata
 models more complex than an unordered set of key-value pairs exist (e.g. XML),
-most can be reduced to a key-value representation.
+most can be reduced to a key-value representation. We do not explore the NoSQL option
+here, but most NoSQL representations can also be reduced to key-value pairs.
 
 Given this structure, a denormalized representation also seems appropriate,
 but as we will see in Section~\ref{section:temporal}, when the dimension of time
@@ -86,7 +87,7 @@ is non-obvious in a denormalized database.
 \subsection{Non-Temporal Query Language}
 
 To provide a basis for the later discussion on a temporal query language, we
-discuss here the design of a query language that integrates our timeseries data
+introduce a query language that integrates our timeseries data
 and metadata models (Table~\ref{table:eavstream}).  The query language is
 SQL-like; the \syntax{<where>} clause is evaluated against the metadata store,
 returning the set of streams that match the clause's predicate. The
@@ -135,7 +136,7 @@ Figure~\ref{fig:nontemporalgrammar}.
 \end{figure}
 
 Here are some examples of static queries that we will later augment with a temporal dimension.
-While not explored here, it can be assumed that the metadata keys are well-known.
+It can be assumed that the metadata keys are well-known.
 
 \textbf{Example 1:}
 To find the names of all rooms in a building named ``Soda Hall'' that contain an occupancy sensor:
@@ -150,7 +151,7 @@ Point/Measure = "Occupancy";
 Select the last month of sensor readings for all temperature sensors in Room 410:
 
 \begin{sqlcode}
-SELECT DATA IN (1/11/2015, 1/12/2015) WHERE
+SELECT DATA IN (11/1/2015, 12/1/2015) WHERE
 Location/Building = "Soda Hall" AND
 Location/Room = 410 AND
 Point/Measure = "Temperature";

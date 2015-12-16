@@ -24,7 +24,7 @@ There are two flavors of time that temporal database must deal with:
 our model, a fact is the association of a key-value pair with a stream,
 changing the value associated with a stream's key, or removing a key-value pair
 from a stream's metadata. Valid time is expressed in terms of real-world time
-and is how metadata facts are aligned with timeseries data, which is stored
+and is how metadata facts are aligned with timeseries data, which is also stored
 using real-world time. Because valid time is the coordinating aspect across the
 two databases (timeseries and metadata), it is also the point of interaction
 for consumers of data.
@@ -43,7 +43,7 @@ takes place in relation to other facts. In a temporal database where all
 entries are made at the current time, transaction time can be conflated with
 valid time, but if the database allows retroactive inserts, then these two
 times must be separate. In our demo implementation, transaction time is made
-implicit through the use of transactions on the underlying database. Unlike
+implicit through the use of transactions on the underlying RDBMS. Unlike
 valid times, which maybe added in the past, transaction times are strictly
 monotonic.
 
@@ -67,13 +67,13 @@ In this section, we review a few of the major temporal data models proposed that
 most closely match our use cases.
 
 The \textbf{Temporally Oriented Data Model}~\cite{ariav1986temporally} (TODM)
-stores temporal data along the 3 dimensions of objects, attributes and
+stores temporal data along the three dimensions of objects, attributes and
 time. TODM makes an assumption of temporal isomorphism, that is, ``there is a tight
 correspondence between the database and the temporally concurrent reality it is
-aimed to capture.''\cite{ariav1986temporally}. This seems to preclude
+aimed to capture.''\cite{ariav1986temporally}. This precludes
 insertions into the past, but TODM does use this restriction to avoid
 penalizing queries interested in the most current version of an object, which
-is a design goal for our approach as well. We wish to preserve the 3-dimensioanl
+is a design goal for our approach as well. We wish to preserve the three-dimensioanl
 relation of object (UUID), attribute (key-value) and time, but with valid
 and transactional times decoupled.
 
@@ -130,11 +130,11 @@ or a deletion with \texttt{<uuid, key, NULL, timestamp>}. For an example fact $<
 with real-world \texttt{timestamp} $t_0$ starting at time $t_0$ and extending to the current time or until another
 tuple with $<u_0, k_0>$ and real-world \texttt{timestamp} $t_1$ is inserted with $t_1 > t_0$. All insert and delete operations
 can contain valid timestamps $\leq$ the current database time. This diff-based approach
-to storing persistent records makes it simple to compute the start/end valid times explicit in other temporal models.
+to storing persistent records makes it simple to compute the start/end valid times made explicit in other temporal models.
 Queries on the state of the database at time $t$ can be performed by ``searching'' backwards in time for
-records with timestamp $\leq t_0$ that match the provided relational predicate.
+records with timestamp $\leq t$ that match the provided relational predicate.
 
-All edits to the database can be thought of appending onto a log, which offers some interesting opportunities
+All edits to the database can be thought of as appending onto a log, which offers some interesting opportunities
 for the eventual storage engine (see Section~\ref{section:futurework}). For our proof-of-concept implementation
 over MySQL (Section~\ref{section:implementation}), the ``append-only'' nature of the database does not preclude
 deleting ``mistake'' records, which do not factor into the history of metadata that can be queried. Also,
@@ -194,14 +194,14 @@ with the use of a clock synchronization protocol such as NTP, this assumption
 does not hold for low-power embedded devices without a real-time clock, and to
 properly account for clock drift, NTP would likely have to be re-run on every
 insert or query. Operating on the most recent metadata version is the most
-common temporal pattern and therefor should not require substantial overhead.
+common temporal pattern and therefore should not incur substantial overhead.
 Queries that cover segments of time or operate in the past are less likely to
 be used in real-time applications and can sustain some overhead for time
 coordination.
 
 Our approach is straightforward and leverages our expected patterns of interaction.
 All insertions and deletions done at the tail of the log (i.e. at the current time)
-do not include an explicit client-generated timestamp, using the database server's current
+do not include an explicit client-generated timestamp, instead using the database server's current
 time. Expressing a relative time in the past (e.g. ``10 minutes ago'' or ``now -10min'')
 can be resolved with server-generated timestamps, but may not precisely represent
 a client's intention due to delays in the network and in the underlying DBMS.
@@ -314,7 +314,7 @@ matched record as well as the value of the key.
 \end{itemize}
 
 A key point of the proposed temporal query language is that it decouples the temporal constraints on the \syntax{<select>} and \syntax{<where>} clauses.
-Stream UUIDs make this possible by create a logical mapping between the timeseries and temporal metadata databases. Once a UUID is matched by the evaluation
+Stream UUIDs make this possible by creating a mapping between the timeseries and temporal metadata databases. Once a UUID is matched by the evaluation
 of a relational and possibly temporal predicate, data can be extracted from any point in its history.
 
 

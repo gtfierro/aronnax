@@ -35,17 +35,17 @@ a stream of timeseries data, often including at least one of the following:
 Most timeseries database systems that deal with metadata  make the tacet
 assumption that a data stream, once identified or discovered, will retain
 consistent metadata. This simplified model is insufficient for the many
-timeseries (such as those produced by sensors) that do evolve over time.
-Metadata can change due to changes in location or orientation, repairing
-configuration error, changes in the deployment site or environment or even
-changes in server and software configurations. More generally, pervasive
-computing requires temporal contextual information, which can become stale over
-time~\cite{henricksen2002modeling}.
+timeseries (such as those produced by sensors) that do experience changing
+contexts.  Metadata can change due to changes in location or orientation,
+repairing configuration error, changes in the deployment site, environment or
+even server and software configuration. More generally, pervasive computing
+requires a temporal dimension for contextual information, which can otherwise
+become stale over time~\cite{henricksen2002modeling}.
 
-In this paper, we define a combined model for timeseries data and static
+In this paper, we define a combined model for timeseries data with static
 metadata and discuss how to extend it temporally to describe and store varying
 metadata. This model is contrasted with more general relational temporal models
 from the literature. We then design a temporal query language for the proposed
-combined timeseries data and temporal metadata, and discuss a proof-of-concept
+combined timeseries data with temporal metadata, and discuss a proof-of-concept
 implementation written in Go using Yacc over an entity-attribute-value-time MySQL
-table.
+table\footnote{Tenatively named Aronnax: \url{https://github.com/gtfierro/aronnax}}.
