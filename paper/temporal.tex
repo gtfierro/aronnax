@@ -288,16 +288,24 @@ the given time.
 HAPPENS BEFORE time1) OR (<predicate> AT time1)}
 \end{itemize}
 
-The \syntax{select} clause 
+\todo{we probably want to demonstrate how to combine the where clauses  to cover each of the 7 segments}
 
-\if 0
-First, lets establish a model for expressiveness: how do we know we've "covered" the space?
+The evaluation of the \syntax{<where>} clause results in a set of stream UUIDs,
+but is not sufficient to extract timeseries and metadata from those streams.
+This is the role of the \syntax{<select>} clause, which we also extend
+temporally with the following operators:
 
-Want a diagram with our expressiveness timeline, with two streams, representing two attributes. We
-have the usual one dimensional aspects we want to cover, but also draw a box/tetris shape over
-the two streams at once to emphasize that we want to be able to cover across relations *and* across
-time in the same query.
-\fi
+\begin{itemize}
+\item \texttt{FIRST <term>}
+\item \texttt{LAST <term>}
+\item \texttt{ALL <term>}
+\item \texttt{<term> AT time1}
+\item \texttt{<term> IAFTER time1}
+\item \texttt{<term> IBEFORE time1}
+\item \texttt{<term> AFTER time1}
+\item \texttt{<term> BEFORE time1}
+\item \texttt{<term> IN (time1, time2)}
+\end{itemize}
 
 Figure~\ref{fig:temporalgrammar} contains a simplified grammar of our proposed temporal query language.
 
