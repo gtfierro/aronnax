@@ -1,1 +1,80 @@
-\section{Proof-of-Concept Implementation} \label{section:implementation}
+\section{POC Implementation} \label{section:implementation}
+
+Here, we discuss the implementation of the temporal query language over a
+temporal entity-attribute-query MySQL table. The project is under active
+development and is available
+online\footnote{\url{https://github.com/gtfierro/aronnax/tree/master/sql}}.
+While the implementation is not yet complete, it illustrates the nontriviality
+of incorporating time with an EAV table, and some of the limits of SQL.
+
+Our implementation is based around a compiler that translates our temporal
+query language into a SQL query. The compiler is written in the Go~\cite{go} version
+of Yacc~\cite{johnson1975yacc}\cite{goyacc}. 
+
+The current implementation supports automatic server-generated timestamps (provided by MySQL's \texttt{TIMESTAMP}
+data type) as well as voluntary client-generated timestamps. The temporal entity-attribute-value MySQL schema is as
+follows:
+\begin{sqlcode}
+CREATE TABLE data
+(
+    uuid CHAR(37) NOT NULL,
+    dkey VARCHAR(128) NOT NULL,
+    dval VARCHAR(128) NULL,
+    timestamp TIMESTAMP NOT NULL
+);
+\end{sqlcode}
+
+We now build up the set of subqueries required to implement the temporal query language.
+
+\subsection{Basic Relational Predicates}
+
+We begin by simplifying the problem to executing a non-temporal relational predicate on only current
+metadata. This is more complex than simply emulating relational logic on an EAV table, because each
+predicate must identify the most recent version of each \texttt{<uuid, dkey, dval>} tuple from the full
+stored history. The query for this is straightforward:
+
+\begin{sqlcode}
+select distinct uuid, dkey, max(timestamp) 
+from data 
+group by dkey order by timestamp desc;
+\end{sqlcode}
+
+We now want to filter the set of tuples by those that match the provided relational predicate. For this
+example, we'll use the equality predicate \texttt{Location/Room = '410'}. The following query, which is
+the compiled form of \texttt{select * where Location/Room = '410'} returns
+all tuples for each stream (\texttt{uuid}) in a tuple that matches the predicate:
+
+\begin{sqlcode}
+select data.uuid, data.dkey, data.dval
+from data
+inner join
+(
+    select distinct uuid, dkey, max(timestamp) as maxtime 
+    from data 
+    group by dkey, uuid order by timestamp desc
+) filtered
+on 
+    data.uuid = filtered.uuid 
+    and data.dkey = filtered.dkey 
+    and data.timestamp = filtered.maxtime
+where data.dval is not null
+and (data.dkey = "Location/Room" and data.dval = "410");
+\end{sqlcode}
+
+The relational predicates must be applied \emph{after} the temporal filtering,
+otherwise the generated query will return streams that matched the predicate at
+any point in the past.
+
+
+\if 0
+how the language was made:
+yacc w/ go
+
+how to do a simple "where locatin/room = 410 at now"
+walk through the whole SQL query
+
+then extend! with AND, OR, NOT
+
+how to do temporal extensions on WHERE
+
+\fi
