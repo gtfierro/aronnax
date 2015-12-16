@@ -1,0 +1,51 @@
+\section{Introduction}
+
+\if 0
+This is essentially a summary of the paper, so do a good job here.
+\fi
+
+Trends in Big Data, the dropping prices and sizes of sensors and the increasing
+ease of monitoring and recording every possible metric mean that there is more
+timeseries data now than ever before.  Streams of timeseries data, represented
+as sets of \texttt{<time, value>} pairs, can give applications insights into
+the instantaneous or historical behavior of the physical world.  There is
+substantial research on the application of timeseries data across many fields
+including the social sciences~\cite{mccleary1980applied},
+econometrics~\cite{lutkepohl2004applied} and extending into the physical world
+for electric vehicle charging~\cite{sortomme2011optimal}, electric
+grids~\cite{carreras2004evidence}, building occupancy~\cite{richardson2008high}
+and fault detection~\cite{fontugne2013strip}.
+
+Though it is simple to store large volumes
+of timeseries data, the data is only as useful as its contextual information.
+This contextual information, or \emph{metadata}, contains all data that describes
+a stream of timeseries data, often including at least one of the following:
+
+\begin{itemize}
+\item a unique identifier (UUID)
+\item timezone for the stream's timestamps
+\item engineering units for the stream's values
+\item the unit of time or sampling rate
+\item location (building, floor, room, orientation, etc)
+\item calibration constants
+\item software versions
+\end{itemize}
+
+
+Most timeseries database systems that deal with metadata  make the tacet
+assumption that a data stream, once identified or discovered, will retain
+consistent metadata. This simplified model is insufficient for the many
+timeseries (such as those produced by sensors) that do evolve over time.
+Metadata can change due to changes in location or orientation, repairing
+configuration error, changes in the deployment site or environment or even
+changes in server and software configurations. More generally, pervasive
+computing requires temporal contextual information, which can become stale over
+time~\cite{henricksen2002modeling}.
+
+In this paper, we define a combined model for timeseries data and static
+metadata and discuss how to extend it temporally to describe and store varying
+metadata. This model is contrasted with more general relational temporal models
+from the literature. We then design a temporal query language for the proposed
+combined timeseries data and temporal metadata, and discuss a proof-of-concept
+implementation written in Go using Yacc over an entity-attribute-value-time MySQL
+table.

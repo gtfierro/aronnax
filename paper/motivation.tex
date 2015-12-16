@@ -1,37 +1,5 @@
 \section{Motivating Applications} \label{section:motivation}
 
-As the prices and sizes of sensors drop, there has been a dramatic increase in
-the production of timeseries data. Streams of timeseries data, represented as
-sets of \texttt{<time, value>} pairs, can give applications insights into the
-instantaneous or historical behavior of the physical world.  However, these
-streams of data are only as useful as their contextual information.  This
-contextual information, or \emph{metadata}, contains all data that describes a
-stream, often including at least one of the following:
-
-\begin{itemize}
-\item a unique identifier (UUID)
-\item timezone for the stream's timestamps
-\item engineering units for the stream's values
-\item the unit of time or sampling rate
-\item location (building, floor, room, orientation, etc)
-\item calibration constants
-\item software versions
-\end{itemize}
-
-There has already been substantial research on the application of physical
-timeseries data for electric vehicle charging~\cite{sortomme2011optimal},
-electric grids~\cite{carreras2004evidence}, building
-occupancy~\cite{richardson2008high} and fault
-detection~\cite{fontugne2013strip}. Common to all of these applications of
-timeseries data is the tacet assumption that a data stream, once identified or
-discovered, will retain consistent metadata. For some circumstances, this
-assumption is valid, but in the domain of physical timeseries data (often
-produced by sensors), this is often not the case. Metadata can change due to
-changes in location or orientation, repairing configuration error, or changes
-in the deployment site or environment. More generally, pervasive computing
-requires temporal contextual information, which can become stale over
-time~\cite{henricksen2002modeling}.
-
 Current applications, telemetry platforms and time series databases do not
 account for the inevitable evolutions in metadata for the streams they operate
 on. Here, we describe a family of applications that require the ability to
