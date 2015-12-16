@@ -267,21 +267,26 @@ of \syntax{<whereTerm>}s joined by the usual relational operators
 \syntax{`AND'}, \syntax{`OR'}, and \syntax{`NOT'}.  The specification of each
 \syntax{<whereTerm>} has a relational predicate and an optional temporal
 predicate that only matches streams that fulfill both.
-
 Our language supports the following temporal operators for \syntax{<where>} terms:
 
 \begin{itemize}
-\item \texttt{FOR}
-\item \texttt{AT}
-\item \texttt{HAPPENS BEFORE}
-\item \texttt{HAPPENS AFTER}
-\item \texttt{HAPPENS IN}
-\item \texttt{BEFORE}
-\item \texttt{AFTER}
-\item \texttt{IN}
-\end{itemize}
+\item \texttt{<predicate> FOR (time1, time2)}: matches \syntax{<predicate>}
+for the entire duration of \texttt{[time1, time2)} (inclusive lower-bound, exclusive upper-bound)
 
-\todo{go over where clause operators here}
+\item \texttt{<predicate> AT time1}: matches \syntax{<predicate>} at the given time
+
+\item \texttt{<predicate> HAPPENS BEFORE time1}: matches if \syntax{<predicate>} true at any time before (but not including)
+the given time.
+
+\item \texttt{<predicate> HAPPENS AFTER time1}: matches if \syntax{<predicate>} true at any time after (but not including)
+the given time.
+
+\item \texttt{<predicate> HAPPENS IN (time1, time2)}: matches if \syntax{<predicate>} \emph{becomes} true at any time in \texttt{[time1, time2)}.
+
+\item \texttt{<predicate> BEFORE time1}, \texttt{<predicate> AFTER time1}, \texttt{<predicate> IN time1}: syntactic sugar for the corresponding
+\texttt{HAPPENS} operators but \emph{including} the given time. For example, \texttt{<predicate> BEFORE time1} $\rightarrow$ \texttt{(<predicate>
+HAPPENS BEFORE time1) OR (<predicate> AT time1)}
+\end{itemize}
 
 The \syntax{select} clause 
 
