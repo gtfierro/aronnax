@@ -235,7 +235,8 @@ relational predicates with time.
 
 In this section, we discuss the expressive model for a temporal query language to operate
 over the temporal entity-attribute-value model described above. This is followed by a review
-of the temporal extensions of the language mentioned in Section~\ref{section:model}.
+of the temporal extensions of the language from Section~\ref{section:model}.
+Figure~\ref{fig:temporalgrammar} contains a simplified grammar of our proposed temporal query language.
 
 We define our expressive model over a hypothetical history of a single metadata key for a single stream, illustrated
 in Figure~\ref{fig:expressivemodel}. This hypothetical stream contains a full cycle of changes on a single key; our query
@@ -288,26 +289,32 @@ the given time.
 HAPPENS BEFORE time1) OR (<predicate> AT time1)}
 \end{itemize}
 
-\todo{we probably want to demonstrate how to combine the where clauses  to cover each of the 7 segments}
-
 The evaluation of the \syntax{<where>} clause results in a set of stream UUIDs,
 but is not sufficient to extract timeseries and metadata from those streams.
-This is the role of the \syntax{<select>} clause, which we also extend
-temporally with the following operators:
+This is the role of the \syntax{<select>} clause, which we also extend with the
+temporal operators described below. Each \syntax{<select>} operator takes as
+input the array of \texttt{<key, value, timestamp>} tuples that match the
+\syntax{<where>} clause for each stream (\texttt{uuid}) -- essentially a
+\texttt{GROUP BY uuid}.  The special rule \syntax{<termValue := <value>
+`@time'} in Figure~\ref{fig:temporalgrammar} returns the valid timestamp of the
+matched record as well as the value of the key.
 
 \begin{itemize}
-\item \texttt{FIRST <term>}
-\item \texttt{LAST <term>}
-\item \texttt{ALL <term>}
-\item \texttt{<term> AT time1}
-\item \texttt{<term> IAFTER time1}
-\item \texttt{<term> IBEFORE time1}
-\item \texttt{<term> AFTER time1}
-\item \texttt{<term> BEFORE time1}
-\item \texttt{<term> IN (time1, time2)}
+\item \texttt{FIRST <tag>}: selects the least recent (earliest) version of \syntax{<tag>} within the returned time range for each document matched by the \syntax{<where>} clause
+\item \texttt{LAST <tag>}: selects the most recent (latest) version of \syntax{<tag>} within the returned time range for each document matched by the \syntax{<where>} clause
+\item \texttt{ALL <tag>}: selects all versions of \syntax{<tag>} within the returned time range for each document matched by the \syntax{<where>} clause
+\item \texttt{<tag> AT time1}: selects the version of \syntax{<tag>} applied
+    exactly at timestamp \texttt{time1} for each document matched by the
+    \syntax{<where>} clause, but is not restricted by the time range defined by the
+    \syntax{<where>} clause. This is true for the operators detailed below as well
+\item \texttt{<tag> IAFTER time1}: selects the version of \syntax{<tag>} that becomes valid most immediately after the provided timestamp
+\item \texttt{<tag> IBEFORE time1}: selects the version of \syntax{<tag>} that becomes valid most immediately before the provided timestamp
+\item \texttt{<tag> AFTER time1}: selects all versions of \syntax{<tag>} that become valid after (not including) the provided timestamp
+\item \texttt{<tag> BEFORE time1}: selects all versions of \syntax{<tag>} that become valid before (not including) the provided timestamp
+\item \texttt{<tag> BETWEEN (time1, time2)}: selects all versions of \syntax{<tag>} that become valid in \texttt{[time1, time2)}
 \end{itemize}
 
-Figure~\ref{fig:temporalgrammar} contains a simplified grammar of our proposed temporal query language.
+\todo{we probably want to demonstrate how to combine the selct + where clauses to cover each of the 7 segments}
 
 \setlength{\grammarindent}{8em}
 \setlength{\grammarparsep}{4pt}
@@ -328,9 +335,10 @@ Figure~\ref{fig:temporalgrammar} contains a simplified grammar of our proposed t
 \alt <termValue> `IBEFORE' <time>
 \alt <termValue> `AFTER' <time>
 \alt <termValue> `BEFORE' <time>
-\alt <termValue> `IN' `(' <time> `,' <time> `)'
+\alt <termValue> `BETWEEN' `(' <time> `,' <time> `)'
 
 <termValue> := <lvalue>
+\alt <lvalue> `@time'
 \alt `*'
 \alt `DISTINCT' <lvalue>
 \alt `DATA IN' `(' <time> `,' <time> `)'
