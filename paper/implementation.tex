@@ -65,6 +65,46 @@ The relational predicates must be applied \emph{after} the temporal filtering,
 otherwise the generated query will return streams that matched the predicate at
 any point in the past.
 
+Next, we build up an implementation of \syntax{`AND'} and \syntax{`OR'}. \syntax{`AND'}
+is an intersection (\texttt{INNER JOIN}) between two sets; thus we can implement \syntax{`AND'}
+as an inner join on \texttt{uuid} between two subqueries like the above:
+
+\begin{sqlcode}
+SELECT A.uuid FROM
+(<subquery 1>) as A
+inner join
+(<subquery 2>) as B
+on
+A.uuid = B.uuid;
+\end{sqlcode}
+
+\syntax{`OR'} is a union (\texttt{UNION}) between two sets, leading to a straightward implementation:
+
+\begin{sqlcode}
+SELECT uuid FROM
+(<subquery 1>) as A
+union
+(<subquery 2>);
+\end{sqlcode}
+
+These constructions of \syntax{`AND'} and \syntax{`OR'} are easily combinable:
+
+\begin{sqlcode}
+
+SELECT A.uuid FROM
+(<subquery 1>) as A
+inner join
+(<subquery 2>) as B
+on A.uuid = B.uuid
+union
+(
+  SELECT C.uuid FROM
+  (<subquery 3>) as C
+  inner join
+  (<subquery 4>) as D
+  on C.uuid = D.uuid
+);
+\end{sqlcode}
 
 \if 0
 how the language was made:
