@@ -9,7 +9,7 @@ of incorporating time with an EAV table, and some of the limits of SQL.
 
 Our implementation is based around a compiler that translates our temporal
 query language into a SQL query. The compiler is written in the Go~\cite{go} version
-of Yacc~\cite{johnson1975yacc}\cite{goyacc}. 
+of Yacc~\cite{johnson1975yacc}\cite{goyacc}.
 
 The current implementation supports automatic server-generated timestamps (provided by MySQL's \texttt{TIMESTAMP}
 data type) as well as voluntary client-generated timestamps. The temporal entity-attribute-value MySQL schema is as
@@ -34,8 +34,8 @@ predicate must identify the most recent version of each \texttt{<uuid, dkey, dva
 stored history. The query for this is straightforward:
 
 \begin{sqlcode}
-select distinct uuid, dkey, max(timestamp) 
-from data 
+select distinct uuid, dkey, max(timestamp)
+from data
 group by dkey order by timestamp desc;
 \end{sqlcode}
 
@@ -49,13 +49,13 @@ select data.uuid, data.dkey, data.dval
 from data
 inner join
 (
-    select distinct uuid, dkey, max(timestamp) as maxtime 
-    from data 
+    select distinct uuid, dkey, max(timestamp) as maxtime
+    from data
     group by dkey, uuid order by timestamp desc
 ) filtered
-on 
-    data.uuid = filtered.uuid 
-    and data.dkey = filtered.dkey 
+on
+    data.uuid = filtered.uuid
+    and data.dkey = filtered.dkey
     and data.timestamp = filtered.maxtime
 where data.dval is not null
 and (data.dkey = "Location/Room" and data.dval = "410");
@@ -106,15 +106,55 @@ union
 );
 \end{sqlcode}
 
-\if 0
-how the language was made:
-yacc w/ go
+\subsection{Temporal Predicates}
 
-how to do a simple "where locatin/room = 410 at now"
-walk through the whole SQL query
+One of the advantages of the basic relational model above is that they extend naturally to incorporate
+the temporal predicates. For most of these, the implementation can be done entirely in the innermost \syntax{<select>}
+clause for each subquery.
 
-then extend! with AND, OR, NOT
+\texttt{AT} is implemented by restricting the ``current'' query to all facts inserted before the given time:
 
-how to do temporal extensions on WHERE
+\begin{sqlcode}
+select distinct uuid, dkey, max(timestamp) as maxtime
+from data where timestamp <= 1234567890
+group by dkey, uuid order by timestamp desc
+\end{sqlcode}
 
-\fi
+For \texttt{HAPPENS BEFORE} and \texttt{HAPPENS AFTER} we remove the \texttt{max} aggregator to return all facts that meet the predicate
+before or after the given timestamp:
+
+\begin{sqlcode}
+select distinct uuid, dkey, timestamp as maxtime
+from data
+where timestamp < 1234567890 -- or > for AFTER
+order by timestamp desc
+\end{sqlcode}
+
+\texttt{IN} is a natural combination of these two, but the implementation of
+\texttt{FOR} is slightly more copmlicated because we must doubly assert that
+not only is the fact is true between the two timestamps and that it does not
+become false. To implement \texttt{FOR}, we must assert that the predicate is
+true at the lower bound of our time range and that though there may be changes
+involving the \texttt{<uuid, key, value>} pair concerned by the predicate, none
+of those changes invalidate the predicate. This is necessary for predicates
+involving \syntax{`!='}, \syntax{`LIKE'} or \syntax{`HAS'}.
+
+\subsection{Reflection}
+
+Although this proof-of-concept implementation is not complete, the length and
+complexity (see the Appendix) of the generated SQL queries suggests that there is an opportunity
+for a more appropriate solution. The general expressiveness of the full
+relational model becomes much more complex when time is added as a dimension.
+Temporal query languages such as TQuel~\cite{snodgrass1987temporal},
+TSQL2~\cite{snodgrass2012tsql2} and Tquery~\cite{kahn1991tquery} define clear
+semantics for time-based joins across relations, valid and transactional times,
+which do not apply to our simpler metadata model.
+Additiionally, these do not permit decoupled temporal predicates for both
+\syntax{<select>} and \syntax{<where>} clauses, which our model requires for
+querying across two separate databases.
+
+
+%\begin{sqlcode}
+%-- WHERE <pred> FOR (A, B)
+%WHERE <pred> at A and not <~pred> happens in (A, B)
+%\end{sqlcode}

@@ -1,0 +1,73 @@
+\section*{Appendix}
+
+For the following temporal query:
+
+\begin{sqlcode}
+select * where Metadata/Exposure = 'South' at now
+and Location/Room = '411' at now
+and Location/Building = 'Soda' at now
+\end{sqlcode}
+
+we generate the following SQL query
+
+\onecolumn
+\begin{sqlcode}
+select second.uuid, second.dkey, second.dval
+from (
+   select data.uuid, data.dkey, data.dval
+   from data
+   inner join
+   (
+        select distinct uuid, dkey, max(timestamp) as maxtime from data
+        group by dkey, uuid order by timestamp desc
+   ) sorted
+   on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+   where data.dval is not null
+) as second
+right join
+(
+    select distinct a.uuid from
+    (
+        select distinct data.uuid
+        from data
+        inner join
+        (
+            select distinct uuid, dkey, max(timestamp) as maxtime from data
+            group by dkey, uuid order by timestamp desc
+        ) sorted
+        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+        where data.dval is not null
+            and (data.dkey = "Metadata/Exposure" and data.dval = 'South')
+    ) as a
+    inner join
+    (
+        select distinct data.uuid
+        from data
+        inner join
+        (
+            select distinct uuid, dkey, max(timestamp) as maxtime from data
+            group by dkey, uuid order by timestamp desc
+        ) sorted
+        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+        where data.dval is not null
+            and (data.dkey = "Location/Room" and data.dval = "411")
+    ) b
+    on a.uuid = b.uuid
+    inner join
+    (
+        select distinct data.uuid
+        from data
+        inner join
+        (
+            select distinct uuid, dkey, max(timestamp) as maxtime from data
+            group by dkey, uuid order by timestamp desc
+        ) sorted
+        on data.uuid = sorted.uuid and data.dkey = sorted.dkey and data.timestamp = sorted.maxtime
+        where data.dval is not null
+            and (data.dkey = "Location/Building" and data.dval = "Soda")
+    ) c
+    on b.uuid = c.uuid
+) internal
+on internal.uuid = second.uuid;
+\end{sqlcode}
+\twocolumn
